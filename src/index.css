@@ -1,0 +1,359 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Prevent accidental touch interactions */
+  .touch-safe {
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Form specific touch safety */
+  .form-touch-safe {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer base {
+  html {
+    font-family: Inter, system-ui, sans-serif;
+    /* Prevent horizontal scrolling */
+    overflow-x: hidden;
+    /* Better text rendering on Android */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-dictionary-white text-dictionary-secondary;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Android-specific optimizations */
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@layer components {
+
+  /* Simplified Button Styles */
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 border;
+  }
+
+  .btn-primary {
+    @apply bg-dictionary-blue text-dictionary-white border-dictionary-blue hover:bg-blue-600;
+  }
+
+  .btn-secondary {
+    @apply btn border-dictionary-border-light text-dictionary-secondary bg-dictionary-white hover:bg-dictionary-bg-tertiary focus:ring-dictionary-blue;
+  }
+
+  .btn-lg {
+    @apply px-6 py-3 text-base;
+  }
+
+  /* Input styles - Dictionary optimized */
+  /* Simplified Input Styles */
+  .input {
+    @apply block w-full px-3 py-2 border border-dictionary-border-light rounded-md shadow-sm placeholder-dictionary-tertiary focus:outline-none focus:ring-1 focus:ring-dictionary-blue focus:border-dictionary-blue text-dictionary-primary bg-dictionary-white;
+  }
+
+  .input.error {
+    @apply border-dictionary-red text-dictionary-red placeholder-red-300 focus:ring-dictionary-red focus:border-dictionary-red;
+  }
+
+  /* Simplified Card Styles */
+  .card {
+    @apply bg-dictionary-white shadow-sm rounded-lg border border-dictionary-border-light;
+  }
+
+  .card-header {
+    @apply px-6 py-4 border-b border-dictionary-border-light;
+  }
+
+  .card-body {
+    @apply px-6 py-4;
+  }
+
+  .card-footer {
+    @apply px-6 py-4 border-t border-dictionary-border-light;
+  }
+
+  /* Loading spinner - Dictionary optimized */
+  .spinner {
+    @apply inline-block w-4 h-4 border-2 border-dictionary-border-light border-t-dictionary-blue rounded-full animate-spin;
+  }
+
+  /* Skeleton loading - Dictionary optimized */
+  .skeleton {
+    @apply bg-dictionary-bg-tertiary animate-pulse rounded;
+  }
+
+  /* Search highlight - Dictionary optimized */
+  .search-highlight {
+    @apply bg-dictionary-bg-tertiary font-medium rounded px-1;
+  }
+
+  /* Language-specific fonts */
+  .font-lisu {
+    font-family: 'Noto Sans Lisu', 'Lisu Unicode', sans-serif;
+    @apply text-lg;
+  }
+
+  /* Dictionary-specific styles */
+  .definition-text {
+    @apply text-dictionary-secondary leading-relaxed;
+  }
+
+  .word-entry {
+    @apply text-dictionary-primary font-semibold text-lg;
+  }
+
+  .part-of-speech {
+    @apply text-dictionary-tertiary text-sm italic;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(99 102 241);
+  }
+
+  /* Glass morphism effect */
+  .glass-card {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 1rem;
+  }
+
+  /* Line clamp utilities */
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+
+  /* Android-specific responsive utilities */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+  }
+
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  .no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  .hardware-accelerate {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
+  }
+}
+
+@layer utilities {
+
+  /* Text utilities */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Mobile-first responsive utilities */
+  .mobile-container {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .mobile-container {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .mobile-container {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .mobile-container {
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .animate-slide-down {
+    animation: slideDown 0.3s ease-out;
+  }
+
+  /* Focus utilities */
+  .focus-visible-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30 focus-visible:ring-offset-2;
+  }
+
+  /* Print utilities */
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+
+    .print-break-before {
+      break-before: page;
+    }
+
+    .print-break-after {
+      break-after: page;
+    }
+  }
+}
+
+/* Dark mode support (future enhancement) */
+@media (prefers-color-scheme: dark) {
+  .dark-mode {
+    @apply bg-slate-900 text-slate-100;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .high-contrast {
+    @apply border-2 border-black;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .motion-reduce {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Android-specific optimizations */
+@media screen and (max-width: 640px) {
+
+  /* Touch-friendly interactions */
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  /* Prevent zoom on input focus for Android */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* Improve scrolling performance */
+  .glass-card {
+    -webkit-overflow-scrolling: touch;
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  /* Reduce backdrop blur for better performance on Android */
+  .backdrop-blur-md {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+}
+
+/* Extra small screens (xs) - Custom breakpoint */
+@media screen and (max-width: 480px) {
+  .xs\:hidden {
+    display: none;
+  }
+
+  .xs\:inline {
+    display: inline;
+  }
+
+  .xs\:block {
+    display: block;
+  }
+}
+
+/* Link Preview Enhancements */
+@layer utilities {
+  .link-preview {
+    @apply transition-all duration-200 hover:shadow-lg hover:scale-[1.02];
+  }
+
+  .link-preview:hover {
+    transform: translateY(-1px);
+  }
+
+  .link-preview-image {
+    @apply transition-transform duration-300;
+  }
+
+  .link-preview:hover .link-preview-image {
+    @apply scale-105;
+  }
+}
