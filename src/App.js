@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 
@@ -13,10 +14,16 @@ import AdminRoute from './components/Auth/AdminRoute';
 
 // Pages
 import Home from './pages/Home';
-import Search from './pages/Search';
+import Dictionary from './pages/Dictionary';
+import WordDetail from './pages/WordDetail';
 import About from './pages/About';
+import Contact from './pages/Contact';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import VerifyEmail from './pages/VerifyEmail';
+import AuthCallback from './pages/AuthCallback';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
@@ -27,6 +34,11 @@ import AdminSearch from './components/admin/AdminSearch';
 import NotFound from './pages/NotFound';
 import ServerError from './pages/ServerError';
 import Discussions from './pages/Discussions';
+import DiscussionThread from './pages/DiscussionThread';
+import Members from './pages/Members';
+import UserProfile from './pages/UserProfile';
+// import Tags from './pages/Tags';
+// import Chat from './pages/Chat';
 
 // Toaster component that responds to theme
 const ThemedToaster = () => {
@@ -74,9 +86,11 @@ const queryClient = new QueryClient({
 const ConditionalFooter = () => {
   const location = useLocation();
   const isDiscussionsPage = location.pathname.startsWith('/discussions');
+  const isTagsPage = location.pathname.startsWith('/tags');
+  const isChatPage = location.pathname.startsWith('/chat');
 
-  // Don't render footer on discussions pages
-  if (isDiscussionsPage) {
+  // Don't render footer on discussions, tags, or chat pages
+  if (isDiscussionsPage || isTagsPage || isChatPage) {
     return null;
   }
 
@@ -85,74 +99,88 @@ const ConditionalFooter = () => {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <Router>
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-300">
-              <Navbar />
-              <main className="flex-grow">
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/search" element={<Search />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/discussions" element={<Discussions />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
+    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID || ''}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
+            <Router>
+              <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-300">
+                <Navbar />
+                <main className="flex-grow">
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/search" element={<Dictionary />} />
+                    <Route path="/dictionary" element={<Dictionary />} />
+                    <Route path="/words/:id" element={<WordDetail />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/discussions" element={<Discussions />} />
+                    <Route path="/discussions/:id" element={<DiscussionThread />} />
+                    <Route path="/discussions/members" element={<Members />} />
+                    <Route path="/users/:userId" element={<UserProfile />} />
+                    {/* <Route path="/tags" element={<Tags />} /> */}
+                    {/* <Route path="/chat" element={<Chat />} /> */}
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/verify-email" element={<VerifyEmail />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/auth/callback" element={<AuthCallback />} />
 
-                  {/* Protected Routes */}
-                  <Route path="/dashboard" element={
-                    <PrivateRoute>
-                      <Dashboard />
-                    </PrivateRoute>
-                  } />
-                  <Route path="/profile" element={
-                    <PrivateRoute>
-                      <Profile />
-                    </PrivateRoute>
-                  } />
+                    {/* Protected Routes */}
+                    <Route path="/dashboard" element={
+                      <PrivateRoute>
+                        <Dashboard />
+                      </PrivateRoute>
+                    } />
+                    <Route path="/profile" element={
+                      <PrivateRoute>
+                        <Profile />
+                      </PrivateRoute>
+                    } />
 
-                  {/* Admin Routes */}
-                  <Route path="/admin" element={
-                    <AdminRoute>
-                      <AdminDashboard />
-                    </AdminRoute>
-                  } />
-                  <Route path="/admin/words" element={
-                    <AdminRoute>
-                      <AdminWords />
-                    </AdminRoute>
-                  } />
-                  <Route path="/admin/users" element={
-                    <AdminRoute>
-                      <AdminUsers />
-                    </AdminRoute>
-                  } />
-                  <Route path="/admin/settings" element={
-                    <AdminRoute>
-                      <AdminSettings />
-                    </AdminRoute>
-                  } />
-                  <Route path="/admin/search" element={
-                    <AdminRoute>
-                      <AdminSearch />
-                    </AdminRoute>
-                  } />
+                    {/* Admin Routes */}
+                    <Route path="/admin" element={
+                      <AdminRoute>
+                        <AdminDashboard />
+                      </AdminRoute>
+                    } />
+                    <Route path="/admin/words" element={
+                      <AdminRoute>
+                        <AdminWords />
+                      </AdminRoute>
+                    } />
+                    <Route path="/admin/users" element={
+                      <AdminRoute>
+                        <AdminUsers />
+                      </AdminRoute>
+                    } />
+                    <Route path="/admin/settings" element={
+                      <AdminRoute>
+                        <AdminSettings />
+                      </AdminRoute>
+                    } />
+                    <Route path="/admin/search" element={
+                      <AdminRoute>
+                        <AdminSearch />
+                      </AdminRoute>
+                    } />
 
-                  {/* Error Pages */}
-                  <Route path="/500" element={<ServerError />} />
+                    {/* Error Pages */}
+                    <Route path="/500" element={<ServerError />} />
 
-                  {/* Catch-all route for 404 */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
-              <ConditionalFooter />
-              <ThemedToaster />
-            </div>
-          </Router>
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+                    {/* Catch-all route for 404 */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+                <ConditionalFooter />
+                <ThemedToaster />
+              </div>
+            </Router>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </GoogleOAuthProvider>
   );
 }
 

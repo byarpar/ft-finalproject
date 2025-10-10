@@ -82,7 +82,7 @@ const SearchBar = ({
       if (onSearch) {
         onSearch(trimmedQuery);
       } else {
-        navigate(`/search?q=${encodeURIComponent(trimmedQuery)}`);
+        navigate(`/dictionary?q=${encodeURIComponent(trimmedQuery)}`);
       }
     }
   };

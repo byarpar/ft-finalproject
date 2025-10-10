@@ -5,7 +5,6 @@ import {
 import { BookmarkIcon as BookmarkSolidIcon } from '@heroicons/react/24/solid';
 import { useMutation, useQueryClient } from 'react-query';
 import { discussionsAPI } from '../../services/api';
-import toast from 'react-hot-toast';
 
 const SaveButton = ({ discussion, currentUser, className = '' }) => {
   const [isSaved, setIsSaved] = useState(discussion.is_saved || false);
@@ -62,12 +61,9 @@ const SaveButton = ({ discussion, currentUser, className = '' }) => {
         if (context?.previousData) {
           queryClient.setQueryData(['discussions'], context.previousData);
         }
-        const errorMessage = err.response?.data?.error || 'Failed to save discussion';
-        toast.error(errorMessage);
       },
       onSuccess: (data, variables) => {
-        const { currentlySaved } = variables;
-        toast.success(currentlySaved ? 'Discussion unsaved' : 'Discussion saved!');
+        // Discussion save/unsave completed successfully
       },
       onSettled: () => {
         setIsLoading(false);
@@ -82,7 +78,6 @@ const SaveButton = ({ discussion, currentUser, className = '' }) => {
     e.stopPropagation();
 
     if (!currentUser) {
-      toast.error('Please log in to save discussions');
       return;
     }
 
@@ -115,9 +110,7 @@ const SaveButton = ({ discussion, currentUser, className = '' }) => {
       title={
         !currentUser
           ? 'Log in to save discussions'
-          : isSaved
-            ? 'Remove from saved'
-            : 'Save for later'
+          : ''
       }
     >
       {isLoading ? (
@@ -131,13 +124,6 @@ const SaveButton = ({ discussion, currentUser, className = '' }) => {
       <span className="select-none">
         {discussion.save_count || 0}
       </span>
-
-      {/* Tooltip for better UX */}
-      {currentUser && (
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 dark:bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-          {isSaved ? 'Remove from saved' : 'Save for later'}
-        </div>
-      )}
     </button>
   );
 };

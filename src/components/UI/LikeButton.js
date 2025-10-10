@@ -3,7 +3,6 @@ import { HeartIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { useMutation, useQueryClient } from 'react-query';
 import { discussionsAPI } from '../../services/api';
-import toast from 'react-hot-toast';
 
 const LikeButton = ({ discussion, currentUser, className = '' }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -37,39 +36,35 @@ const LikeButton = ({ discussion, currentUser, className = '' }) => {
     });
   };
 
-  // Like mutation with optimistic updates
+  // Like mutation with simplified logic
   const likeMutation = useMutation(
     (discussionId) => discussionsAPI.likeDiscussion(discussionId),
     {
       onMutate: async (discussionId) => {
         setIsLoading(true);
-
         // Cancel any outgoing refetches
         await queryClient.cancelQueries(['discussions']);
-
-        // Snapshot the previous value
+        // Snapshot the previous value for rollback
         const previousData = queryClient.getQueriesData(['discussions']);
 
-        // Optimistically update
-        updateDiscussionInCache(discussionId, {
-          is_liked: true,
-          like_count: likeCount + 1
-        });
+        // Simple optimistic update: if not liked, set to liked with count + 1
+        if (!isLiked) {
+          updateDiscussionInCache(discussionId, {
+            is_liked: true,
+            like_count: likeCount + 1
+          });
+        }
 
         return { previousData, discussionId };
       },
       onSuccess: (data, discussionId) => {
-        // Update with server response
+        // Update with server response - this is the authoritative source
         if (data?.data) {
           updateDiscussionInCache(discussionId, {
             is_liked: data.data.is_liked,
             like_count: data.data.like_count
           });
         }
-        toast.success('Discussion liked!', {
-          icon: '❤️',
-          duration: 2000
-        });
       },
       onError: (error, discussionId, context) => {
         // Revert optimistic update
@@ -78,52 +73,42 @@ const LikeButton = ({ discussion, currentUser, className = '' }) => {
             queryClient.setQueryData(queryKey, data);
           });
         }
-
-        const errorMessage = error.response?.data?.error?.message ||
-          error.response?.data?.error ||
-          'Failed to like discussion';
-        toast.error(errorMessage);
       },
       onSettled: () => {
         setIsLoading(false);
-        // Invalidate and refetch discussions to ensure consistency
-        queryClient.invalidateQueries(['discussions']);
       }
     }
   );
 
-  // Unlike mutation with optimistic updates
+  // Unlike mutation with simplified logic
   const unlikeMutation = useMutation(
     (discussionId) => discussionsAPI.unlikeDiscussion(discussionId),
     {
       onMutate: async (discussionId) => {
         setIsLoading(true);
-
         // Cancel any outgoing refetches
         await queryClient.cancelQueries(['discussions']);
-
-        // Snapshot the previous value
+        // Snapshot the previous value for rollback
         const previousData = queryClient.getQueriesData(['discussions']);
 
-        // Optimistically update
-        updateDiscussionInCache(discussionId, {
-          is_liked: false,
-          like_count: Math.max(likeCount - 1, 0)
-        });
+        // Simple optimistic update: if liked, set to not liked with count - 1
+        if (isLiked) {
+          updateDiscussionInCache(discussionId, {
+            is_liked: false,
+            like_count: Math.max(likeCount - 1, 0)
+          });
+        }
 
         return { previousData, discussionId };
       },
       onSuccess: (data, discussionId) => {
-        // Update with server response
+        // Update with server response - this is the authoritative source
         if (data?.data) {
           updateDiscussionInCache(discussionId, {
             is_liked: data.data.is_liked,
             like_count: data.data.like_count
           });
         }
-        toast.success('Discussion unliked', {
-          duration: 2000
-        });
       },
       onError: (error, discussionId, context) => {
         // Revert optimistic update
@@ -132,16 +117,9 @@ const LikeButton = ({ discussion, currentUser, className = '' }) => {
             queryClient.setQueryData(queryKey, data);
           });
         }
-
-        const errorMessage = error.response?.data?.error?.message ||
-          error.response?.data?.error ||
-          'Failed to unlike discussion';
-        toast.error(errorMessage);
       },
       onSettled: () => {
         setIsLoading(false);
-        // Invalidate and refetch discussions to ensure consistency
-        queryClient.invalidateQueries(['discussions']);
       }
     }
   );
@@ -151,7 +129,6 @@ const LikeButton = ({ discussion, currentUser, className = '' }) => {
     e.stopPropagation();
 
     if (!currentUser) {
-      toast.error('Please login to like discussions');
       return;
     }
 

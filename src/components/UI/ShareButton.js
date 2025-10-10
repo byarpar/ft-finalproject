@@ -63,11 +63,10 @@ const ShareButton = ({ discussion, className = '' }) => {
       const url = generateShareUrl();
       await navigator.clipboard.writeText(url);
       trackShare('copy', 'clipboard');
-      toast.success('Link copied to clipboard!');
+      toast.success('Link copied!');
       setIsOpen(false);
     } catch (error) {
       console.error('Failed to copy:', error);
-      toast.error('Failed to copy link');
     } finally {
       setIsLoading(false);
     }
@@ -127,7 +126,6 @@ const ShareButton = ({ discussion, className = '' }) => {
       } catch (error) {
         if (error.name !== 'AbortError') {
           console.error('Native share failed:', error);
-          toast.error('Failed to share');
         }
       } finally {
         setIsLoading(false);

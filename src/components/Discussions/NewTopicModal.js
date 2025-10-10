@@ -1,292 +1,300 @@
 import React, { useState } from 'react';
-import { useMutation, useQueryClient } from 'react-query';
-import Modal from '../UI/Modal';
+import { XMarkIcon, PlusIcon, TagIcon } from '@heroicons/react/24/outline';
 import { discussionsAPI } from '../../services/api';
+import toast from 'react-hot-toast';
 
-const NewTopicModal = ({ isOpen, onClose }) => {
+const NewTopicModal = ({ isOpen, onClose, onSuccess, categories = [] }) => {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    category: 'general',
-    tags: ''
+    category: '',
+    tags: []
   });
-  const [errors, setErrors] = useState({});
+  const [tagInput, setTagInput] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const queryClient = useQueryClient();
+  if (!isOpen) return null;
 
-  const createMutation = useMutation({
-    mutationFn: discussionsAPI.createDiscussion,
-    onSuccess: (data) => {
-      // Invalidate discussions queries to refresh the list
-      queryClient.invalidateQueries({ queryKey: ['discussions'] });
-
-      // Reset form and close modal
-      setFormData({
-        title: '',
-        content: '',
-        category: 'general',
-        tags: ''
-      });
-      setErrors({});
-      onClose();
-    },
-    onError: (error) => {
-      console.error('Error creating discussion:', error);
-      setErrors({ submit: 'Failed to create discussion. Please try again.' });
-    }
-  });
-
-  const handleInputChange = (e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
+  };
 
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
+  const handleAddTag = () => {
+    const tag = tagInput.trim().toLowerCase();
+    if (tag && !formData.tags.includes(tag) && formData.tags.length < 5) {
+      setFormData(prev => ({
         ...prev,
-        [name]: ''
+        tags: [...prev.tags, tag]
       }));
+      setTagInput('');
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.title.trim()) {
-      newErrors.title = 'Title is required';
-    } else if (formData.title.length < 5) {
-      newErrors.title = 'Title must be at least 5 characters long';
-    }
-
-    if (!formData.content.trim()) {
-      newErrors.content = 'Content is required';
-    } else if (formData.content.length < 10) {
-      newErrors.content = 'Content must be at least 10 characters long';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const handleRemoveTag = (tagToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }));
   };
 
-  const handleSubmit = (e) => {
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddTag();
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    e.stopPropagation();
 
-    if (!validateForm()) {
+    // Validation
+    if (!formData.title.trim()) {
+      toast.error('Please enter a title');
+      return;
+    }
+    if (!formData.content.trim()) {
+      toast.error('Please enter some content');
+      return;
+    }
+    if (!formData.category) {
+      toast.error('Please select a category');
       return;
     }
 
-    // Double-check we're not already submitting
-    if (createMutation.isPending) {
-      return;
-    }
+    try {
+      setIsSubmitting(true);
 
-    // Additional mobile touch protection
-    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    if (isMobileDevice && e.nativeEvent && e.nativeEvent.type === 'touchend') {
-      // Add a small delay for mobile touches to prevent accidental double-taps
-      setTimeout(() => {
-        if (!createMutation.isPending) {
-          submitDiscussion();
-        }
-      }, 100);
-    } else {
-      submitDiscussion();
-    }
-  };
+      // Create discussion
+      const response = await discussionsAPI.createDiscussion({
+        title: formData.title.trim(),
+        content: formData.content.trim(),
+        category: formData.category,
+        tags: formData.tags
+      });
 
-  const submitDiscussion = () => {
-    const discussionData = {
-      title: formData.title.trim(),
-      content: formData.content.trim(),
-      category: formData.category,
-      tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
-    };
+      toast.success('Discussion created successfully!');
 
-    createMutation.mutate(discussionData);
-  };
-
-  const handleClose = () => {
-    if (!createMutation.isPending) {
+      // Reset form
       setFormData({
         title: '',
         content: '',
-        category: 'general',
-        tags: ''
+        category: '',
+        tags: []
       });
-      setErrors({});
+      setTagInput('');
+
+      // Call success callback and close modal
+      if (onSuccess) {
+        onSuccess(response);
+      }
+      onClose();
+
+    } catch (error) {
+      console.error('Error creating discussion:', error);
+      toast.error(error.response?.data?.error || 'Failed to create discussion');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    if (!isSubmitting) {
+      setFormData({
+        title: '',
+        content: '',
+        category: '',
+        tags: []
+      });
+      setTagInput('');
       onClose();
     }
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={handleClose}
-      title="Create New Discussion"
-      size="lg"
-    >
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-6 form-touch-safe"
-        style={{ touchAction: 'manipulation' }}
-        onTouchStart={(e) => {
-          // Prevent form submission on accidental touch
-          const target = e.target;
-          if (target.type === 'submit' && createMutation.isPending) {
-            e.preventDefault();
-            e.stopPropagation();
-          }
-        }}
-      >
-        {/* Title */}
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-            Title *
-          </label>
-          <input
-            type="text"
-            id="title"
-            name="title"
-            value={formData.title}
-            onChange={handleInputChange}
-            placeholder="Enter discussion title..."
-            className={`
-              w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-              ${errors.title ? 'border-red-300' : 'border-gray-300'}
-            `}
-            disabled={createMutation.isPending}
-          />
-          {errors.title && (
-            <p className="mt-1 text-sm text-red-600">{errors.title}</p>
-          )}
-        </div>
-
-        {/* Category */}
-        <div>
-          <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
-            Category
-          </label>
-          <select
-            id="category"
-            name="category"
-            value={formData.category}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            disabled={createMutation.isPending}
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-3xl w-full my-8">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Start New Discussion
+          </h2>
+          <button
+            onClick={handleClose}
+            disabled={isSubmitting}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
           >
-            <option value="general">General Discussion</option>
-            <option value="language">Language Learning</option>
-            <option value="culture">Culture & Traditions</option>
-            <option value="translation">Translation Help</option>
-            <option value="pronunciation">Pronunciation</option>
-            <option value="etymology">Etymology</option>
-            <option value="other">Other</option>
-          </select>
+            <XMarkIcon className="w-6 h-6 text-gray-500 dark:text-gray-400" />
+          </button>
         </div>
 
-        {/* Tags */}
-        <div>
-          <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
-            Tags
-          </label>
-          <input
-            type="text"
-            id="tags"
-            name="tags"
-            value={formData.tags}
-            onChange={handleInputChange}
-            placeholder="Enter tags separated by commas..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            disabled={createMutation.isPending}
-          />
-          <p className="mt-1 text-sm text-gray-500">
-            Separate multiple tags with commas (e.g., grammar, verb, tense)
-          </p>
-        </div>
-
-        {/* Content */}
-        <div>
-          <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
-            Content *
-          </label>
-          <textarea
-            id="content"
-            name="content"
-            value={formData.content}
-            onChange={handleInputChange}
-            placeholder="Write your discussion content here..."
-            rows={6}
-            className={`
-              w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-vertical
-              ${errors.content ? 'border-red-300' : 'border-gray-300'}
-            `}
-            disabled={createMutation.isPending}
-          />
-          {errors.content && (
-            <p className="mt-1 text-sm text-red-600">{errors.content}</p>
-          )}
-        </div>
-
-        {/* Submit Error */}
-        {errors.submit && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-3">
-            <p className="text-sm text-red-600">{errors.submit}</p>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Title */}
+          <div>
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Title <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              placeholder="What's your question or topic?"
+              maxLength={200}
+              disabled={isSubmitting}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white placeholder-gray-400 disabled:opacity-50"
+              required
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {formData.title.length}/200 characters
+            </p>
           </div>
-        )}
 
-        {/* Actions */}
-        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleClose();
-            }}
-            disabled={createMutation.isPending}
-            style={{ touchAction: 'manipulation' }}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-safe"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={createMutation.isPending}
-            style={{ touchAction: 'manipulation' }}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-safe"
-            onTouchStart={(e) => {
-              // Prevent accidental touch activation
-              if (createMutation.isPending) {
-                e.preventDefault();
-                e.stopPropagation();
-              }
-            }}
-            onTouchEnd={(e) => {
-              // Additional safety check
-              if (createMutation.isPending) {
-                e.preventDefault();
-                e.stopPropagation();
-              }
-            }}
-          >
-            {createMutation.isPending ? (
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Creating...</span>
+          {/* Category */}
+          <div>
+            <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Category <span className="text-red-500">*</span>
+            </label>
+            <select
+              id="category"
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              disabled={isSubmitting}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50"
+              required
+            >
+              <option value="">Select a category</option>
+              {categories.filter(cat => cat.id !== 'all').map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Content */}
+          <div>
+            <label htmlFor="content" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Content <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              id="content"
+              name="content"
+              value={formData.content}
+              onChange={handleChange}
+              placeholder="Share your thoughts, ask your question, or start a discussion..."
+              rows={8}
+              maxLength={5000}
+              disabled={isSubmitting}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white placeholder-gray-400 resize-none disabled:opacity-50"
+              required
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {formData.content.length}/5000 characters
+            </p>
+          </div>
+
+          {/* Tags */}
+          <div>
+            <label htmlFor="tags" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Tags (Optional)
+            </label>
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                id="tags"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Add a tag and press Enter"
+                maxLength={30}
+                disabled={isSubmitting || formData.tags.length >= 5}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white placeholder-gray-400 disabled:opacity-50"
+              />
+              <button
+                type="button"
+                onClick={handleAddTag}
+                disabled={isSubmitting || !tagInput.trim() || formData.tags.length >= 5}
+                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <PlusIcon className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Display added tags */}
+            {formData.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {formData.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center gap-2 px-3 py-1 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded-full text-sm"
+                  >
+                    <TagIcon className="w-3 h-3" />
+                    #{tag}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tag)}
+                      disabled={isSubmitting}
+                      className="hover:text-teal-900 dark:hover:text-teal-100 disabled:opacity-50"
+                    >
+                      <XMarkIcon className="w-4 h-4" />
+                    </button>
+                  </span>
+                ))}
               </div>
-            ) : (
-              'Create Discussion'
             )}
-          </button>
-        </div>
-      </form>
-    </Modal>
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              Add up to 5 tags to help others find your discussion
+            </p>
+          </div>
+
+          {/* Guidelines reminder */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-2">
+              Before you post:
+            </h4>
+            <ul className="text-sm text-blue-800 dark:text-blue-400 space-y-1">
+              <li>• Be clear and specific in your question or topic</li>
+              <li>• Check if a similar discussion already exists</li>
+              <li>• Be respectful and follow community guidelines</li>
+              <li>• Use appropriate tags to reach the right audience</li>
+            </ul>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+            <button
+              type="button"
+              onClick={handleClose}
+              disabled={isSubmitting}
+              className="px-6 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                'Create Discussion'
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 };
 

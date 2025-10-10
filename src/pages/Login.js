@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { BookOpenIcon } from '@heroicons/react/24/outline';
-import { toast } from 'react-hot-toast';
+import { BookOpenIcon, GlobeAltIcon, LightBulbIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -26,13 +25,7 @@ const Login = () => {
       [name]: value
     }));
 
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
+    // Don't clear any errors - let them stay visible
   };
 
   const validateForm = () => {
@@ -63,202 +56,324 @@ const Login = () => {
       const result = await login(formData.email, formData.password);
 
       if (result.success) {
-        toast.success('Login successful!', {
-          position: 'top-center',
-          duration: 2000,
-        });
         navigate(from, { replace: true });
       } else {
-        // Show specific error messages based on backend response
-        const errorMessage =
-          (result.error && (result.error.details || result.error.message)) ||
-          result.error ||
-          'Login failed';
-        let displayMessage = '';
-        let toastMessage = '';
+        // Use backend error messages only
+        const errorData = result.error?.data || {};
+        const backendMessage = result.error?.details || result.error?.message || '';
 
-        if (typeof errorMessage === 'string') {
-          if (errorMessage.toLowerCase().includes('email or password is incorrect')) {
-            displayMessage = 'Invalid email or password. Please check your credentials and try again.';
-            toastMessage = 'Invalid credentials. Please check your email and password.';
-          } else if (
-            errorMessage.toLowerCase().includes('account deactivated') ||
-            errorMessage.toLowerCase().includes('account disabled') ||
-            errorMessage.toLowerCase().includes('deactivated')
-          ) {
-            displayMessage = 'Your account has been deactivated. Please contact support for assistance.';
-            toastMessage = 'Account deactivated. Please contact support to reactivate your account.';
-          } else {
-            displayMessage = errorMessage || 'Login failed. Please check your credentials.';
-            toastMessage = errorMessage || 'Login failed. Please verify your credentials.';
-          }
-        } else {
-          displayMessage = 'Login failed. Please check your credentials.';
-          toastMessage = 'Login failed. Please verify your credentials.';
-        }
-
-        toast.error(toastMessage, {
-          position: 'top-center',
-          duration: 6000,
+        // Set error state with backend message
+        setErrors({
+          general: backendMessage,
+          accountNotFound: errorData.accountNotFound || false,
+          accountDeleted: errorData.accountDeleted || false
         });
-        setErrors({ general: displayMessage });
+
+        // Email not verified - redirect to verification page after showing message
+        if (errorData.requiresVerification) {
+          setTimeout(() => {
+            navigate('/verify-email', {
+              state: {
+                email: errorData.email || formData.email
+              }
+            });
+          }, 1500);
+        }
       }
     } catch (error) {
       console.error('Login error:', error);
-      toast.error('Connection failed. Please check your internet connection.', {
-        position: 'top-center',
-        duration: 6000,
+      setErrors({
+        general: 'Network error. Unable to connect to server.'
       });
-      setErrors({ general: 'Connection failed. Please check your internet connection and try again.' });
     } finally {
       setLoading(false);
     }
   };
 
+  const handleGoogleLogin = () => {
+    // Redirect to backend Google OAuth route
+    // REACT_APP_BACKEND_URL doesn't include /api, so we add it
+    window.location.href = `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001'}/api/auth/google`;
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        {/* Header */}
-        <div>
-          <div className="flex justify-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <BookOpenIcon className="h-12 w-12 text-primary-600" />
-            </Link>
-          </div>
-          <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-            Sign in to your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link
-              to="/register"
-              className="font-medium text-primary-600 hover:text-primary-500"
-            >
-              create a new account
-            </Link>
-          </p>
+    <div className="min-h-screen flex flex-col lg:flex-row">
+      {/* Left Side - Visual Storytelling / Branding Block (55-60%) */}
+      <div
+        className="lg:w-[58%] relative overflow-hidden flex items-center justify-center p-8 lg:p-12 min-h-[400px] lg:min-h-screen"
+        style={{
+          backgroundImage: 'linear-gradient(to bottom right, rgba(15, 118, 110, 0.92), rgba(13, 148, 136, 0.88)), url(/images/hero/lisu-people.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        {/* Diagonal accent overlay */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-0 right-0 w-full h-full bg-white transform origin-top-right rotate-12 translate-x-1/2"></div>
         </div>
 
-        {/* Form */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        {/* Central Content */}
+        <div className="relative z-10 text-center max-w-lg">
+          {/* Custom Illustration - Discovery & Learning */}
+          <div className="mb-8 flex justify-center">
+            <div className="relative w-64 h-64">
+              {/* Large decorative circle with learning/discovery motif */}
+              <div className="absolute inset-0 bg-gradient-to-br from-teal-800/90 to-teal-600/80 rounded-full shadow-2xl flex items-center justify-center backdrop-blur-sm">
+                {/* Inner content - Book, Globe, Lightbulb arrangement */}
+                <div className="relative w-48 h-48">
+                  {/* Center - Open Book (Main symbol) */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                    <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center shadow-xl">
+                      <BookOpenIcon className="w-11 h-11 text-white" />
+                    </div>
+                  </div>
+
+                  {/* Top - Lightbulb (Discovery/Knowledge) */}
+                  <div className="absolute top-2 left-1/2 -translate-x-1/2">
+                    <div className="w-14 h-14 bg-teal-400 rounded-full flex items-center justify-center shadow-lg">
+                      <LightBulbIcon className="w-7 h-7 text-teal-900" />
+                    </div>
+                  </div>
+
+                  {/* Bottom - Community */}
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
+                    <div className="w-14 h-14 bg-orange-400 rounded-full flex items-center justify-center shadow-lg">
+                      <UserGroupIcon className="w-8 h-8 text-orange-900" />
+                    </div>
+                  </div>
+
+                  {/* Left - Globe (Language/Culture) */}
+                  <div className="absolute top-1/2 left-0 -translate-y-1/2">
+                    <div className="w-14 h-14 bg-orange-300 rounded-full flex items-center justify-center shadow-lg">
+                      <GlobeAltIcon className="w-7 h-7 text-orange-900" />
+                    </div>
+                  </div>
+
+                  {/* Right - Another knowledge symbol */}
+                  <div className="absolute top-1/2 right-0 -translate-y-1/2">
+                    <div className="w-14 h-14 bg-teal-300 rounded-full flex items-center justify-center shadow-lg">
+                      <svg className="w-7 h-7 text-teal-900" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" />
+                        <path d="M2 17L12 22L22 17V11L12 16L2 11V17Z" opacity="0.7" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* Decorative elements - connecting paths */}
+                  <svg className="absolute inset-0 w-full h-full" viewBox="0 0 192 192">
+                    <circle cx="96" cy="96" r="70" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="2" strokeDasharray="4 4" />
+                    <circle cx="96" cy="96" r="50" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="3 3" />
+                  </svg>
+
+                  {/* Floating particles/stars */}
+                  <div className="absolute top-4 right-8">
+                    <div className="w-2 h-2 bg-teal-300 rounded-full animate-pulse"></div>
+                  </div>
+                  <div className="absolute bottom-8 left-6">
+                    <div className="w-2 h-2 bg-orange-300 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                  </div>
+                  <div className="absolute top-12 left-4">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+                  </div>
+                  <div className="absolute bottom-12 right-6">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" style={{ animationDelay: '1.5s' }}></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Outer decorative elements */}
+              <div className="absolute -top-4 -left-4 w-16 h-16 border-4 border-teal-400/30 rounded-full"></div>
+              <div className="absolute -bottom-4 -right-4 w-12 h-12 border-4 border-orange-400/30 rounded-full"></div>
+            </div>
+          </div>
+
+          {/* Bold Message */}
+          <h1 className="text-4xl lg:text-5xl xl:text-6xl font-extrabold text-white mb-4 tracking-tight leading-tight">
+            CONTINUE YOUR<br />DISCOVERY
+          </h1>
+
+          {/* Supporting Tagline */}
+          <p className="text-lg lg:text-xl text-teal-50 font-light max-w-md mx-auto">
+            Welcome back to your journey of exploring and preserving the Lisu language
+          </p>
+        </div>
+      </div>
+
+      {/* Right Side - Login Form (40-45%) */}
+      <div className="lg:w-[42%] bg-gray-50 flex items-center justify-center p-6 lg:p-12 min-h-screen lg:min-h-0">
+        <div className="w-full max-w-md">
+          {/* Heading */}
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-gray-900">
+              Log In to Your Account
+            </h2>
+          </div>
+
+          {/* Error Message */}
           {errors.general && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-4">
-              <p className="text-sm text-red-600">{errors.general}</p>
+            <div className={`mb-6 border rounded-lg p-4 ${errors.accountDeleted || errors.accountNotFound
+              ? 'bg-red-100 border-red-300'
+              : 'bg-red-50 border-red-200'
+              }`}>
+              <div className="flex items-start">
+                {(errors.accountDeleted || errors.accountNotFound) && (
+                  <svg className="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                )}
+                <div className="flex-1">
+                  <p className={`text-sm ${errors.accountDeleted || errors.accountNotFound
+                    ? 'text-red-700 font-semibold'
+                    : 'text-red-600'
+                    }`}>
+                    {errors.general}
+                  </p>
+
+                  {/* Show verification help if email not verified */}
+                  {errors.general.toLowerCase().includes('verify') && !errors.accountNotFound && formData.email && (
+                    <div className="mt-3 pt-3 border-t border-red-300">
+                      <p className="text-sm text-red-800 font-medium mb-2">
+                        Need help with verification?
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => navigate('/verify-email', { state: { email: formData.email } })}
+                        className="text-sm text-teal-600 hover:text-teal-700 font-semibold underline"
+                      >
+                        → Go to Verification Page
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
-          <div className="space-y-6">
-            {/* Email */}
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email Address
               </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={`input ${errors.email ? 'input-error' : ''}`}
-                  placeholder="Enter your email"
-                />
-                {errors.email && (
-                  <p className="mt-2 text-sm text-red-600">{errors.email}</p>
-                )}
-              </div>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                autoComplete="email"
+                value={formData.email}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors bg-white`}
+                placeholder="your.email@example.com"
+              />
+              {errors.email && (
+                <p className="mt-2 text-sm text-red-600">{errors.email}</p>
+              )}
             </div>
 
-            {/* Password */}
+            {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
-              <div className="mt-1">
+              <input
+                type="password"
+                id="password"
+                name="password"
+                autoComplete="current-password"
+                value={formData.password}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors bg-white`}
+                placeholder="Enter your password"
+              />
+              {errors.password && (
+                <p className="mt-2 text-sm text-red-600">{errors.password}</p>
+              )}
+            </div>
+
+            {/* Remember Me and Forgot Password */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
                 <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className={`input ${errors.password ? 'input-error' : ''}`}
-                  placeholder="Enter your password"
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
                 />
-                {errors.password && (
-                  <p className="mt-2 text-sm text-red-600">{errors.password}</p>
-                )}
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                  Remember me
+                </label>
+              </div>
+
+              <div className="text-sm">
+                <Link
+                  to="/forgot-password"
+                  className="text-teal-600 hover:text-teal-700 font-medium"
+                >
+                  Forgot password?
+                </Link>
               </div>
             </div>
-          </div>
 
-          {/* Remember me and forgot password */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                Remember me
-              </label>
-            </div>
-
-            <div className="text-sm">
-              <Link
-                to="/forgot-password"
-                className="font-medium text-primary-600 hover:text-primary-500"
+            {/* Log In Button */}
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-6 py-3.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Forgot your password?
-              </Link>
+                {loading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Logging In...
+                  </span>
+                ) : (
+                  'Log In'
+                )}
+              </button>
             </div>
-          </div>
 
-          {/* Submit button */}
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary w-full justify-center"
-            >
-              {loading ? (
-                <>
-                  <div className="spinner mr-2" />
-                  Signing in...
-                </>
-              ) : (
-                'Sign in'
-              )}
-            </button>
-          </div>
-
-          {/* Demo credentials */}
-          <div className="mt-6 p-4 bg-blue-50 rounded-md">
-            <h3 className="text-sm font-medium text-blue-800 mb-2">Demo Credentials</h3>
-            <div className="text-sm text-blue-700 space-y-1">
-              <p><strong>Admin:</strong> admin@dictionary.com / admin123</p>
-              <p><strong>User:</strong> user@dictionary.com / user123</p>
+            {/* Divider */}
+            <div className="relative pt-2">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-gray-50 text-gray-500">Or continue with</span>
+              </div>
             </div>
-          </div>
-        </form>
 
-        {/* Footer links */}
-        <div className="text-center">
-          <p className="text-sm text-gray-600">
-            By signing in, you agree to our{' '}
-            <Link to="/terms" className="text-primary-600 hover:text-primary-500">
-              Terms of Service
-            </Link>
-            {' '}and{' '}
-            <Link to="/privacy" className="text-primary-600 hover:text-primary-500">
-              Privacy Policy
-            </Link>
-          </p>
+            {/* Social Login Buttons */}
+            <div className="space-y-3 pt-2">
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                className="w-full flex items-center justify-center px-4 py-3 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm font-medium text-gray-700 shadow-sm"
+              >
+                <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                </svg>
+                Continue with Google
+              </button>
+            </div>
+
+            {/* Sign Up Link */}
+            <div className="text-center pt-4">
+              <p className="text-sm text-gray-600">
+                Don't have an account?{' '}
+                <Link to="/register" className="text-teal-600 hover:text-teal-700 font-semibold">
+                  Sign Up
+                </Link>
+              </p>
+            </div>
+          </form>
         </div>
       </div>
     </div>

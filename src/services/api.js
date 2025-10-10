@@ -73,6 +73,7 @@ export const wordsAPI = {
 // Discussions API
 export const discussionsAPI = {
   getDiscussions: (params = {}) => api.get('/discussions', { params }).then(res => res.data),
+  getDiscussionById: (id) => api.get(`/discussions/${id}`).then(res => res.data),
   createDiscussion: (data) => {
     // Handle FormData for file uploads
     const config = {};
@@ -99,7 +100,6 @@ export const discussionsAPI = {
   // Save/Bookmark functionality
   saveDiscussion: (id) => api.post(`/discussions/${id}/save`).then(res => res.data),
   unsaveDiscussion: (id) => api.delete(`/discussions/${id}/save`).then(res => res.data),
-  getSavedDiscussions: (params = {}) => api.get('/discussions/user/saved', { params }).then(res => res.data),
 
   // Share functionality
   shareDiscussion: (id, shareData) => api.post(`/discussions/${id}/share`, shareData).then(res => res.data),
@@ -108,6 +108,26 @@ export const discussionsAPI = {
   likeDiscussion: (id) => api.post(`/discussions/${id}/like`).then(res => res.data),
   unlikeDiscussion: (id) => api.delete(`/discussions/${id}/like`).then(res => res.data),
   getLikedDiscussions: (params = {}) => api.get('/discussions/user/liked', { params }).then(res => res.data),
+
+  // Report functionality
+  reportDiscussion: (id, reportData) => api.post(`/discussions/${id}/report`, reportData).then(res => res.data),
+};
+
+// Tags API
+export const tagsAPI = {
+  getAllTags: () => api.get('/tags').then(res => res.data),
+  getPopularTags: (limit = 10) => api.get('/tags/popular', { params: { limit } }).then(res => res.data),
+};
+
+// Chat API
+export const chatAPI = {
+  getRooms: () => api.get('/chat/rooms').then(res => res.data),
+  getRoomMessages: (roomSlug, params = {}) => api.get(`/chat/rooms/${roomSlug}/messages`, { params }).then(res => res.data),
+  sendMessage: (roomSlug, message) => api.post(`/chat/rooms/${roomSlug}/messages`, { message }).then(res => res.data),
+  editMessage: (messageId, message) => api.put(`/chat/messages/${messageId}`, { message }).then(res => res.data),
+  deleteMessage: (messageId) => api.delete(`/chat/messages/${messageId}`).then(res => res.data),
+  getRoomMembers: (roomSlug) => api.get(`/chat/rooms/${roomSlug}/members`).then(res => res.data),
+  updateOnlineStatus: (roomSlug, isOnline) => api.put(`/chat/rooms/${roomSlug}/status`, { isOnline }).then(res => res.data),
 };
 
 // Answers API
@@ -183,6 +203,13 @@ export const adminAPI = {
   // Import/Export endpoints
   importWords: (data) => api.post('/admin/words/import', data).then(res => res.data),
   exportWords: (params = {}) => api.get('/admin/words/export', { params }).then(res => res.data),
+};
+
+// Users API (Public)
+export const usersAPI = {
+  getAllUsers: (params = {}) => api.get('/users', { params }).then(res => res.data),
+  getUserProfile: (userId) => api.get(`/users/${userId}`).then(res => res.data),
+  getUserStats: (userId) => api.get(`/users/${userId}/stats`).then(res => res.data),
 };
 
 // Search API

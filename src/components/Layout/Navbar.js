@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext';
 import {
   MagnifyingGlassIcon,
   Bars3Icon,
@@ -10,18 +9,17 @@ import {
   ShieldCheckIcon,
   ArrowRightOnRectangleIcon,
   ChartPieIcon,
-  InformationCircleIcon,
-  ChatBubbleLeftRightIcon,
-  SunIcon,
-  MoonIcon
+  Cog6ToothIcon,
+  ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { user, logout } = useAuth();
-  const { darkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     logout();
@@ -29,166 +27,207 @@ const Navbar = () => {
     setProfileDropdownOpen(false);
   };
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/dictionary?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+    }
+  };
+
+  const isActive = (path) => {
+    return location.pathname === path;
+  };
+
   const navigationLinks = [
-    { name: 'Home', href: '/', icon: null },
-    { name: 'Search', href: '/search', icon: MagnifyingGlassIcon },
-    { name: 'Discussions', href: '/discussions', icon: ChatBubbleLeftRightIcon },
-    { name: 'About', href: '/about', icon: InformationCircleIcon },
+    { name: 'Dictionary', href: '/dictionary' },
+    { name: 'Discussions', href: '/discussions' },
+    { name: 'About Us', href: '/about' },
+    { name: 'Contact', href: '/contact' }
   ];
 
   return (
-    <nav className="bg-white dark:bg-gray-900 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 transition-all duration-300 shadow-sm">
-      <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 xl:px-12">
-        <div className="flex items-center justify-between h-16 lg:h-20 w-full">
-          {/* Left Side - Logo and Title */}
+    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+
+          {/* Logo and Site Branding - Left Side */}
           <div className="flex items-center flex-shrink-0">
             <Link to="/" className="flex items-center space-x-3 group">
-              <div className="relative">
-                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-600 to-blue-500 dark:from-blue-500 dark:to-blue-400 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
-                  <svg 
-                    width="24" 
-                    height="24" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="text-white w-5 h-5 lg:w-6 lg:h-6"
-                  >
-                    <path 
-                      d="M4 6h16v12H4V6zm2 2v8h12V8H6zm2 2h8m-8 2h8m-8 2h5" 
-                      stroke="currentColor" 
-                      strokeWidth="1.5" 
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </div>
+              {/* Logo */}
+              <div className="w-10 h-10 bg-gradient-to-br from-teal-600 to-teal-500 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-200">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="text-white"
+                >
+                  <path
+                    d="M4 6h16v12H4V6zm2 2v8h12V8H6zm2 2h8m-8 2h8m-8 2h5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
               </div>
-              <div className="block">
-                <h1 className="text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-                  <span className="md:hidden">ELD</span>
-                  <span className="hidden md:inline">English-Lisu Dictionary</span>
+              {/* Site Name */}
+              <div className="hidden sm:block">
+                <h1 className="text-lg font-bold text-gray-800 tracking-tight">
+                  LISU
                 </h1>
-                <p className="text-xs lg:text-sm xl:text-base text-blue-600 dark:text-blue-300 hidden lg:block font-medium">
-                  Language Learning Platform
-                </p>
+                <p className="text-xs text-gray-500 -mt-1">DICTIONARY</p>
               </div>
             </Link>
           </div>
 
-          {/* Center - Desktop Navigation */}
-          <div className="hidden md:flex items-center justify-center flex-1 space-x-2 lg:space-x-4 xl:space-x-6 max-w-2xl mx-8">
-            {navigationLinks.map((link) => {
-              const Icon = link.icon;
-              return (
-                <Link
-                  key={link.name}
-                  to={link.href}
-                  className="flex items-center px-4 py-2 lg:px-6 lg:py-3 text-sm lg:text-base font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg lg:rounded-xl transition-all duration-200 border border-transparent hover:border-blue-200 dark:hover:border-blue-800 whitespace-nowrap"
-                >
-                  {Icon && <Icon className="w-4 h-4 lg:w-5 lg:h-5 mr-2" />}
-                  {link.name}
-                </Link>
-              );
-            })}
+          {/* Primary Navigation Links - Center Left */}
+          <div className="hidden md:flex items-center space-x-1 ml-8">
+            {navigationLinks.map((link) => (
+              <Link
+                key={link.name}
+                to={link.href}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${isActive(link.href)
+                  ? 'bg-teal-50 text-teal-700 border-b-2 border-teal-600'
+                  : 'text-gray-700 hover:text-teal-600 hover:bg-gray-50'
+                  }`}
+              >
+                {link.name}
+              </Link>
+            ))}
           </div>
 
-          {/* Right Side - User Profile and Controls */}
-          <div className="flex items-center space-x-3 lg:space-x-4 flex-shrink-0">
-            {/* Dark Mode Toggle */}
-            <button
-              onClick={toggleDarkMode}
-              className="p-2.5 lg:p-3 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg lg:rounded-xl transition-all duration-200 border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
-              aria-label="Toggle dark mode"
-            >
-              {darkMode ? (
-                <SunIcon className="w-5 h-5 lg:w-6 lg:h-6" />
-              ) : (
-                <MoonIcon className="w-5 h-5 lg:w-6 lg:h-6" />
-              )}
-            </button>
+          {/* Universal Search Bar - Center */}
+          <div className="hidden md:flex flex-1 max-w-md mx-4">
+            <form onSubmit={handleSearch} className="w-full">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Discussions"
+                  className="w-full pl-4 pr-10 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-gray-50"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-0 top-0 h-full px-3 text-white bg-teal-600 hover:bg-teal-700 rounded-r-md transition-colors duration-200"
+                  aria-label="Search"
+                >
+                  <MagnifyingGlassIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </form>
+          </div>
 
+          {/* User Account & Authentication - Right Side */}
+          <div className="flex items-center space-x-3">
             {user ? (
               <div className="relative">
                 <button
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="flex items-center p-2 lg:p-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg lg:rounded-xl transition-all duration-200 border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                  className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-full transition-all duration-200"
+                  aria-label="User menu"
                 >
-                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-blue-600 to-blue-500 dark:from-blue-500 dark:to-blue-400 rounded-full flex items-center justify-center shadow-lg">
-                    <UserIcon className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
+                  <div className="w-8 h-8 bg-gradient-to-br from-teal-600 to-teal-500 rounded-full flex items-center justify-center shadow-sm overflow-hidden">
+                    {user.profile_photo_url ? (
+                      <img
+                        src={user.profile_photo_url}
+                        alt={user.full_name || 'User'}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <UserIcon className={`w-5 h-5 text-white ${user.profile_photo_url ? 'hidden' : ''}`} />
                   </div>
                 </button>
 
                 {/* Dropdown Menu */}
                 {profileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 lg:w-64 bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 py-2 z-50 backdrop-blur-md">
-                    {user.full_name && (
-                      <div className="px-4 py-2 lg:px-6 lg:py-3 border-b border-gray-200/50 dark:border-gray-700/50">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-500 dark:from-blue-500 dark:to-blue-400 rounded-full flex items-center justify-center shadow-lg">
-                            <span className="text-white font-medium text-sm">
-                              {user.full_name?.[0]?.toUpperCase() || 'U'}
-                            </span>
-                          </div>
-                          <p className="text-sm lg:text-base font-medium text-gray-900 dark:text-white truncate">
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setProfileDropdownOpen(false)}
+                    />
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                      {user.full_name && (
+                        <div className="px-4 py-3 border-b border-gray-100">
+                          <p className="text-sm font-medium text-gray-900 truncate">
                             {user.full_name}
                           </p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {user.email}
+                          </p>
                         </div>
-                      </div>
-                    )}
-                    
-                    <div className="py-1">
-                      <Link
-                        to="/dashboard"
-                        className="flex items-center px-4 py-2 lg:px-6 lg:py-3 text-sm lg:text-base text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/20"
-                        onClick={() => setProfileDropdownOpen(false)}
-                      >
-                        <ChartPieIcon className="w-4 h-4 lg:w-5 lg:h-5 mr-3" />
-                        Dashboard
-                      </Link>
-                      <Link
-                        to="/profile"
-                        className="flex items-center px-4 py-2 lg:px-6 lg:py-3 text-sm lg:text-base text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/20"
-                        onClick={() => setProfileDropdownOpen(false)}
-                      >
-                        <UserIcon className="w-4 h-4 lg:w-5 lg:h-5 mr-3" />
-                        Profile Settings
-                      </Link>
-                      {(user.role === 'admin' || user.role === 'moderator') && (
+                      )}
+
+                      <div className="py-1">
                         <Link
-                          to="/admin"
-                          className="flex items-center px-4 py-2 lg:px-6 lg:py-3 text-sm lg:text-base text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/20"
+                          to="/profile"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                           onClick={() => setProfileDropdownOpen(false)}
                         >
-                          <ShieldCheckIcon className="w-4 h-4 lg:w-5 lg:h-5 mr-3" />
-                          Admin Panel
+                          <UserIcon className="w-4 h-4 mr-3 text-gray-400" />
+                          My Profile
                         </Link>
-                      )}
+                        <Link
+                          to="/discussions?filter=my"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          onClick={() => setProfileDropdownOpen(false)}
+                        >
+                          <ChatBubbleLeftRightIcon className="w-4 h-4 mr-3 text-gray-400" />
+                          My Discussions
+                        </Link>
+                        <Link
+                          to="/dashboard"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          onClick={() => setProfileDropdownOpen(false)}
+                        >
+                          <ChartPieIcon className="w-4 h-4 mr-3 text-gray-400" />
+                          Dashboard
+                        </Link>
+                        <Link
+                          to="/profile/settings"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          onClick={() => setProfileDropdownOpen(false)}
+                        >
+                          <Cog6ToothIcon className="w-4 h-4 mr-3 text-gray-400" />
+                          Settings
+                        </Link>
+                        {(user.role === 'admin' || user.role === 'moderator') && (
+                          <Link
+                            to="/admin"
+                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                            onClick={() => setProfileDropdownOpen(false)}
+                          >
+                            <ShieldCheckIcon className="w-4 h-4 mr-3 text-gray-400" />
+                            Admin Panel
+                          </Link>
+                        )}
+                      </div>
+
+                      <div className="border-t border-gray-100 py-1">
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        >
+                          <ArrowRightOnRectangleIcon className="w-4 h-4 mr-3" />
+                          Logout
+                        </button>
+                      </div>
                     </div>
-                    
-                    <div className="border-t border-gray-200/50 dark:border-gray-700/50 py-1">
-                      <button
-                        onClick={handleLogout}
-                        className="flex items-center w-full px-4 py-2 lg:px-6 lg:py-3 text-sm lg:text-base text-red-600 hover:bg-red-50/50 dark:hover:bg-red-900/20"
-                      >
-                        <ArrowRightOnRectangleIcon className="w-4 h-4 lg:w-5 lg:h-5 mr-3" />
-                        Sign Out
-                      </button>
-                    </div>
-                  </div>
+                  </>
                 )}
               </div>
             ) : (
-              <div className="hidden sm:flex items-center space-x-2 lg:space-x-3">
-                <Link
-                  to="/login"
-                  className="px-4 py-2 lg:px-6 lg:py-3 text-sm lg:text-base font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg lg:rounded-xl transition-all duration-200 border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
-                >
-                  Sign In
-                </Link>
+              <div className="hidden sm:flex items-center space-x-2">
                 <Link
                   to="/register"
-                  className="px-4 py-2 lg:px-6 lg:py-3 text-sm lg:text-base font-medium text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 dark:from-blue-500 dark:to-blue-400 dark:hover:from-blue-600 dark:hover:to-blue-500 rounded-lg lg:rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-200"
                 >
-                  Get Started
+                  Sign Up
                 </Link>
               </div>
             )}
@@ -196,7 +235,8 @@ const Navbar = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden p-2 lg:p-3 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg lg:rounded-xl transition-all duration-200 border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+              className="md:hidden p-2 text-gray-700 hover:text-teal-600 hover:bg-gray-100 rounded-md transition-all duration-200"
+              aria-label="Toggle menu"
             >
               {isOpen ? (
                 <XMarkIcon className="w-6 h-6" />
@@ -210,78 +250,109 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden bg-white dark:bg-gray-900 backdrop-blur-md border-t border-gray-200 dark:border-gray-700">
-          {/* Navigation Links */}
-          <div className="px-4 pt-4 pb-2 space-y-1">
-            {navigationLinks.map((link) => {
-              const Icon = link.icon;
-              return (
-                <Link
-                  key={link.name}
-                  to={link.href}
-                  className="flex items-center px-4 py-3 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all duration-200 border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
-                  onClick={() => setIsOpen(false)}
+        <div className="md:hidden bg-white border-t border-gray-200">
+          {/* Mobile Search Bar */}
+          <div className="px-4 pt-4 pb-2">
+            <form onSubmit={handleSearch}>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search for a Lisu or English word..."
+                  className="w-full pl-4 pr-10 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-0 top-0 h-full px-3 text-white bg-teal-600 hover:bg-teal-700 rounded-r-md"
                 >
-                  {Icon && <Icon className="w-5 h-5 mr-3" />}
-                  {link.name}
-                </Link>
-              );
-            })}
-            
-            {/* Dark Mode Toggle */}
-            <button
-              onClick={toggleDarkMode}
-              className="flex items-center w-full px-4 py-3 text-base font-medium text-gray-300 hover:text-blue-400 hover:bg-blue-900/20 rounded-xl transition-all duration-200 border border-transparent hover:border-blue-800"
-            >
-              {darkMode ? (
-                <>
-                  <SunIcon className="w-5 h-5 mr-3" />
-                  Light Mode
-                </>
-              ) : (
-                <>
-                  <MoonIcon className="w-5 h-5 mr-3" />
-                  Dark Mode
-                </>
-              )}
-            </button>
+                  <MagnifyingGlassIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </form>
           </div>
 
-          {/* User Section */}
+          {/* Navigation Links */}
+          <div className="px-4 pt-2 pb-4 space-y-1">
+            {navigationLinks.map((link) => (
+              <Link
+                key={link.name}
+                to={link.href}
+                className={`block px-4 py-3 text-base font-medium rounded-md transition-all duration-200 ${isActive(link.href)
+                  ? 'bg-teal-50 text-teal-700'
+                  : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                onClick={() => setIsOpen(false)}
+              >
+                {link.name}
+              </Link>
+            ))}
+          </div>
+
+          {/* User Section for Mobile */}
           {user ? (
-            <div className="px-4 py-4 border-t border-gray-200 dark:border-gray-700">
-              {/* User Info */}
-              <div className="flex items-center justify-center mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-500 dark:from-blue-500 dark:to-blue-400 rounded-full flex items-center justify-center shadow-lg">
-                  <UserIcon className="w-6 h-6 text-white" />
+            <div className="px-4 py-4 border-t border-gray-200">
+              <div className="flex items-center mb-4 p-3 bg-gray-50 rounded-lg">
+                <div className="w-10 h-10 bg-gradient-to-br from-teal-600 to-teal-500 rounded-full flex items-center justify-center shadow-sm overflow-hidden">
+                  {user.profile_photo_url ? (
+                    <img
+                      src={user.profile_photo_url}
+                      alt={user.full_name || 'User'}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <UserIcon className={`w-5 h-5 text-white ${user.profile_photo_url ? 'hidden' : ''}`} />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">{user.full_name || 'User'}</p>
+                  <p className="text-xs text-gray-500">{user.email}</p>
                 </div>
               </div>
-              
-              {/* User Menu Items */}
+
               <div className="space-y-1">
                 <Link
-                  to="/dashboard"
-                  className="flex items-center px-4 py-3 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all duration-200 border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                  to="/profile"
+                  className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
                   onClick={() => setIsOpen(false)}
                 >
-                  <ChartPieIcon className="w-5 h-5 mr-3" />
+                  <UserIcon className="w-5 h-5 mr-3 text-gray-400" />
+                  My Profile
+                </Link>
+                <Link
+                  to="/discussions?filter=my"
+                  className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <ChatBubbleLeftRightIcon className="w-5 h-5 mr-3 text-gray-400" />
+                  My Discussions
+                </Link>
+                <Link
+                  to="/dashboard"
+                  className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <ChartPieIcon className="w-5 h-5 mr-3 text-gray-400" />
                   Dashboard
                 </Link>
                 <Link
-                  to="/profile"
-                  className="flex items-center px-4 py-3 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all duration-200 border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                  to="/profile/settings"
+                  className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
                   onClick={() => setIsOpen(false)}
                 >
-                  <UserIcon className="w-5 h-5 mr-3" />
-                  Profile Settings
+                  <Cog6ToothIcon className="w-5 h-5 mr-3 text-gray-400" />
+                  Settings
                 </Link>
                 {(user.role === 'admin' || user.role === 'moderator') && (
                   <Link
                     to="/admin"
-                    className="flex items-center px-4 py-3 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all duration-200 border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                    className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
                     onClick={() => setIsOpen(false)}
                   >
-                    <ShieldCheckIcon className="w-5 h-5 mr-3" />
+                    <ShieldCheckIcon className="w-5 h-5 mr-3 text-gray-400" />
                     Admin Panel
                   </Link>
                 )}
@@ -290,42 +361,34 @@ const Navbar = () => {
                     handleLogout();
                     setIsOpen(false);
                   }}
-                  className="flex items-center w-full px-4 py-3 text-base font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all duration-200"
+                  className="flex items-center w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-md"
                 >
                   <ArrowRightOnRectangleIcon className="w-5 h-5 mr-3" />
-                  Sign Out
+                  Logout
                 </button>
               </div>
             </div>
           ) : (
-            <div className="px-4 py-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="space-y-3">
+            <div className="px-4 py-4 border-t border-gray-200">
+              <div className="space-y-2">
                 <Link
                   to="/login"
-                  className="block px-4 py-3 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl text-center transition-all duration-200 border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                  className="block px-4 py-3 text-sm font-medium text-center text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
                   onClick={() => setIsOpen(false)}
                 >
                   Sign In
                 </Link>
                 <Link
                   to="/register"
-                  className="block px-4 py-3 text-base font-medium text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 dark:from-blue-500 dark:to-blue-400 dark:hover:from-blue-600 dark:hover:to-blue-500 rounded-xl text-center shadow-lg transition-all duration-200 transform hover:scale-105"
+                  className="block px-4 py-3 text-sm font-medium text-center text-white bg-teal-600 hover:bg-teal-700 rounded-md"
                   onClick={() => setIsOpen(false)}
                 >
-                  Get Started
+                  Sign Up
                 </Link>
               </div>
             </div>
           )}
         </div>
-      )}
-
-      {/* Click outside to close dropdown */}
-      {profileDropdownOpen && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setProfileDropdownOpen(false)}
-        />
       )}
     </nav>
   );
