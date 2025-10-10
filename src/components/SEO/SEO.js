@@ -116,7 +116,7 @@ export const generateWordSEO = (word) => {
     title: `${word.english_word} in Lisu | ${word.lisu_word} | English-Lisu Dictionary`,
     description: `Learn the Lisu translation of "${word.english_word}" (${word.lisu_word}). ${word.meaning || word.english_definition || ''} Includes etymology, examples, synonyms, and pronunciation.`,
     keywords: `${word.english_word} in Lisu, ${word.lisu_word}, Lisu translation ${word.english_word}, ${word.part_of_speech || ''}`,
-    url: `/word/${word.id}`,
+    url: `/words/${word.id}`,
     structuredData: {
       "@context": "https://schema.org",
       "@type": "DefinedTerm",
@@ -124,7 +124,7 @@ export const generateWordSEO = (word) => {
       "inDefinedTermSet": "Lisu Dictionary",
       "description": word.meaning || word.english_definition,
       "termCode": word.lisu_word,
-      "url": `https://www.lisudictionar.com/word/${word.id}`
+      "url": `https://www.lisudictionar.com/words/${word.id}`
     }
   };
 };

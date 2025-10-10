@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 
@@ -99,15 +100,16 @@ const ConditionalFooter = () => {
 
 function App() {
   return (
-    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID || ''}>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <AuthProvider>
-            <Router>
-              <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-300">
-                <Navbar />
-                <main className="flex-grow">
-                  <Routes>
+    <HelmetProvider>
+      <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID || ''}>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>
+            <AuthProvider>
+              <Router>
+                <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-300">
+                  <Navbar />
+                  <main className="flex-grow">
+                    <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/search" element={<Dictionary />} />
                     <Route path="/dictionary" element={<Dictionary />} />
@@ -181,6 +183,7 @@ function App() {
         </ThemeProvider>
       </QueryClientProvider>
     </GoogleOAuthProvider>
+    </HelmetProvider>
   );
 }
 
