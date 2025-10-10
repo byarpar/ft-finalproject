@@ -1,0 +1,23 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Allow: /dictionary
+Allow: /word/*
+Allow: /discussions
+Allow: /discussion/*
+Allow: /about
+Allow: /contact
+Allow: /members
+
+# Disallow private pages
+Disallow: /login
+Disallow: /register
+Disallow: /profile/edit
+Disallow: /verify-email
+Disallow: /reset-password
+Disallow: /forgot-password
+Disallow: /admin/*
+Disallow: /api/*
+
+# Sitemap
+Sitemap: https://lisu-dictionary.com/sitemap.xml

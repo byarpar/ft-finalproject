@@ -11,6 +11,7 @@ import {
   PencilSquareIcon
 } from '@heroicons/react/24/outline';
 import SearchBar from '../components/Search/SearchBar';
+import SEO, { SEOConfigs } from '../components/SEO/SEO';
 import { wordsAPI, discussionsAPI } from '../services/api';
 
 const Home = () => {
@@ -67,6 +68,9 @@ const Home = () => {
 
   return (
     <div className="min-h-screen">
+      {/* SEO Meta Tags */}
+      <SEO {...SEOConfigs.home} />
+
       {/* Hero Section */}
       <section
         className="relative py-20 lg:py-32 overflow-hidden bg-cover bg-center"
