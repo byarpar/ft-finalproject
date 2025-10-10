@@ -20,4 +20,4 @@ Disallow: /admin/*
 Disallow: /api/*
 
 # Sitemap
-Sitemap: https://lisu-dictionary.com/sitemap.xml
+Sitemap: https://www.lisudictionar.com/sitemap.xml

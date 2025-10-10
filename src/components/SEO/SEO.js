@@ -21,7 +21,7 @@ const SEO = ({
   type = 'website',
   structuredData = null
 }) => {
-  const siteUrl = process.env.REACT_APP_SITE_URL || 'https://lisu-dictionary.com';
+  const siteUrl = process.env.REACT_APP_SITE_URL || 'https://www.lisudictionar.com';
   const fullImageUrl = image.startsWith('http') ? image : `${siteUrl}${image}`;
   const canonicalUrl = url.startsWith('http') ? url : `${siteUrl}${url}`;
 
@@ -124,7 +124,7 @@ export const generateWordSEO = (word) => {
       "inDefinedTermSet": "Lisu Dictionary",
       "description": word.meaning || word.english_definition,
       "termCode": word.lisu_word,
-      "url": `https://lisu-dictionary.com/word/${word.id}`
+      "url": `https://www.lisudictionar.com/word/${word.id}`
     }
   };
 };
@@ -173,7 +173,7 @@ export const generateUserProfileSEO = (profile) => {
       "@type": "Person",
       "name": profile.full_name || profile.username,
       "description": profile.bio,
-      "url": `https://lisu-dictionary.com/profile/${profile.username}`
+      "url": `https://www.lisudictionar.com/profile/${profile.username}`
     }
   };
 };
