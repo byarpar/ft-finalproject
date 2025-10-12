@@ -29,6 +29,8 @@ const Dictionary = () => {
   const [showLisuKeyboard, setShowLisuKeyboard] = useState(false);
   const englishLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
   const [selectedLetter, setSelectedLetter] = useState(null);
+  const [relatedWords, setRelatedWords] = useState({});
+  const [loadingRelated, setLoadingRelated] = useState({});
 
   // Load initial words on mount
   useEffect(() => {
@@ -69,6 +71,10 @@ const Dictionary = () => {
       // Handle response structure: response.success, response.data.results
       if (response.success && response.data?.results) {
         setSearchResults(response.data.results);
+        // Automatically fetch related words for the first result
+        if (response.data.results.length > 0 && response.data.results[0].id) {
+          fetchRelatedWords(response.data.results[0].id);
+        }
       } else {
         setSearchResults([]);
       }
@@ -84,6 +90,26 @@ const Dictionary = () => {
     setSelectedLetter(letter);
     setSearchTerm(letter.toLowerCase());
     handleSearch(letter.toLowerCase());
+  };
+
+  // Fetch related words for a given word
+  const fetchRelatedWords = async (wordId) => {
+    if (!wordId || relatedWords[wordId]) return; // Skip if already loaded
+    
+    setLoadingRelated(prev => ({ ...prev, [wordId]: true }));
+    try {
+      const response = await wordsAPI.getSimilarWords(wordId);
+      if (response.success && response.data?.words) {
+        setRelatedWords(prev => ({
+          ...prev,
+          [wordId]: response.data.words
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch related words:', error);
+    } finally {
+      setLoadingRelated(prev => ({ ...prev, [wordId]: false }));
+    }
   };
 
   const recentSearches = ['mountain', 'water', 'family', 'hello'];
@@ -410,6 +436,75 @@ const Dictionary = () => {
                                   </p>
                                 </div>
                               </div>
+                            </div>
+                          )}
+
+                          {/* Related Words Section */}
+                          {result.id && (
+                            <div className="mt-5 pt-5 border-t border-gray-200 dark:border-gray-700">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wide flex items-center gap-2">
+                                  <svg className="w-5 h-5 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                  </svg>
+                                  Related Words
+                                </h4>
+                                {!relatedWords[result.id] && !loadingRelated[result.id] && (
+                                  <button
+                                    type="button"
+                                    onClick={() => fetchRelatedWords(result.id)}
+                                    className="text-xs font-medium text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors"
+                                  >
+                                    Show related words
+                                  </button>
+                                )}
+                              </div>
+
+                              {loadingRelated[result.id] && (
+                                <div className="flex items-center justify-center py-4">
+                                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-600 dark:border-teal-400"></div>
+                                </div>
+                              )}
+
+                              {relatedWords[result.id] && relatedWords[result.id].length > 0 && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  {relatedWords[result.id].map((relatedWord, idx) => (
+                                    <button
+                                      key={idx}
+                                      type="button"
+                                      onClick={() => {
+                                        setSearchTerm(relatedWord.english_word || relatedWord.lisu_word);
+                                        handleSearch(relatedWord.english_word || relatedWord.lisu_word);
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                      }}
+                                      className="group bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-lg p-3 border border-gray-200 dark:border-gray-600 hover:border-teal-500 dark:hover:border-teal-400 hover:shadow-md transition-all text-left"
+                                    >
+                                      <div className="flex items-center justify-between mb-1">
+                                        <span className="font-semibold text-gray-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                                          {relatedWord.english_word}
+                                        </span>
+                                        <ChevronRightIcon className="w-4 h-4 text-gray-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors" />
+                                      </div>
+                                      {relatedWord.lisu_word && (
+                                        <div className="text-sm text-teal-600 dark:text-teal-400 mb-1" style={{ fontFamily: 'serif' }}>
+                                          {relatedWord.lisu_word}
+                                        </div>
+                                      )}
+                                      {relatedWord.english_definition && (
+                                        <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                                          {relatedWord.english_definition}
+                                        </p>
+                                      )}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+
+                              {relatedWords[result.id] && relatedWords[result.id].length === 0 && (
+                                <p className="text-sm text-gray-500 dark:text-gray-400 italic text-center py-3">
+                                  No related words found.
+                                </p>
+                              )}
                             </div>
                           )}
                         </div>
