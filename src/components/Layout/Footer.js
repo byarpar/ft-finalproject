@@ -32,7 +32,7 @@ const Footer = () => {
 
   const resourceLinks = [
     { name: 'FAQ', href: '/faq' },
-    { name: 'Community Guidelines', href: '/discussions/guidelines' },
+    { name: 'Community Guidelines', href: '/help/article/community-guidelines' },
     { name: 'Privacy Policy', href: '/privacy' },
     { name: 'Terms of Service', href: '/terms' },
     { name: 'Sitemap', href: '/sitemap' },

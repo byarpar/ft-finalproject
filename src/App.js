@@ -38,6 +38,14 @@ import Discussions from './pages/Discussions';
 import DiscussionThread from './pages/DiscussionThread';
 import Members from './pages/Members';
 import UserProfile from './pages/UserProfile';
+import HelpCenter from './pages/HelpCenter';
+import HelpCategory from './pages/HelpCategory';
+import HelpArticle from './pages/HelpArticle';
+import HelpSearch from './pages/HelpSearch';
+import TermsOfService from './pages/TermsOfService';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Contribute from './pages/Contribute';
+import FAQ from './pages/FAQ';
 // import Tags from './pages/Tags';
 // import Chat from './pages/Chat';
 
@@ -116,6 +124,20 @@ function App() {
                       <Route path="/words/:id" element={<WordDetail />} />
                       <Route path="/about" element={<About />} />
                       <Route path="/contact" element={<Contact />} />
+                      <Route path="/contribute" element={<Contribute />} />
+                      <Route path="/faq" element={<FAQ />} />
+
+                      {/* Legal Pages */}
+                      <Route path="/terms" element={<TermsOfService />} />
+                      <Route path="/terms-of-service" element={<TermsOfService />} />
+                      <Route path="/privacy" element={<PrivacyPolicy />} />
+                      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+
+                      {/* Help Center Routes */}
+                      <Route path="/help" element={<HelpCenter />} />
+                      <Route path="/help/category/:categoryId" element={<HelpCategory />} />
+                      <Route path="/help/article/:articleId" element={<HelpArticle />} />
+                      <Route path="/help/search" element={<HelpSearch />} />
 
                       {/* Protected Discussions Routes - Login Required */}
                       <Route path="/discussions" element={

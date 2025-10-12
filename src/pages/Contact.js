@@ -164,7 +164,7 @@ const Contact = () => {
                 Visit our FAQ
               </Link>
               <Link
-                to="/discussions/guidelines"
+                to="/help/article/community-guidelines"
                 className="inline-flex items-center px-4 py-2 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 rounded-md hover:bg-teal-100 dark:hover:bg-teal-900/50 transition-colors duration-200 text-sm font-medium"
               >
                 Community Guidelines
