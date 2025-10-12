@@ -52,7 +52,7 @@ const Discussions = () => {
       setLoading(true);
       const response = await discussionsAPI.getDiscussions({
         page,
-        limit: 10,
+        limit: 20,
         category: selectedCategory !== 'all' ? selectedCategory : undefined,
         search: searchQuery || undefined,
         sortBy
@@ -249,7 +249,7 @@ const Discussions = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Professional Hero Section with Clean Design */}
-      <section className="relative bg-gradient-to-r from-teal-600 to-teal-500 text-white overflow-hidden">
+      <section className="relative bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-700 dark:to-cyan-700 text-white overflow-hidden">
         {/* Subtle background pattern */}
         <div
           className="absolute inset-0 opacity-10"
@@ -281,7 +281,7 @@ const Discussions = () => {
                   }
                   setShowNewTopicModal(true);
                 }}
-                className="inline-flex items-center gap-3 px-10 py-4 bg-white text-teal-700 font-bold text-base md:text-lg rounded-lg hover:bg-gray-50 hover:shadow-xl transition-all duration-200 shadow-lg transform hover:scale-105"
+                className="inline-flex items-center gap-3 px-10 py-4 bg-white dark:bg-gray-800 text-teal-700 dark:text-teal-400 font-bold text-base md:text-lg rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-xl transition-all duration-200 shadow-lg transform hover:scale-105"
               >
                 <PlusIcon className="w-6 h-6" />
                 Start a New Discussion
@@ -815,18 +815,46 @@ const Discussions = () => {
                     className="flex flex-col items-center group cursor-pointer"
                   >
                     <div className="relative mb-2 transform group-hover:scale-110 transition-transform duration-200">
-                      {member.avatar ? (
-                        <img
-                          src={member.avatar}
-                          alt={member.username}
-                          className="w-16 h-16 rounded-full object-cover border-3 border-gray-200 dark:border-gray-600 group-hover:border-teal-400 dark:group-hover:border-teal-500 transition-colors shadow-md group-hover:shadow-lg"
-                        />
-                      ) : (
-                        <div
-                          className={`w-16 h-16 rounded-full bg-gradient-to-br ${index === 0 ? 'from-pink-400 to-rose-500' :
+                      {member.avatar && member.avatar.trim() !== '' ? (
+                        <>
+                          <img
+                            src={member.avatar}
+                            alt={member.username}
+                            crossOrigin="anonymous"
+                            referrerPolicy="no-referrer"
+                            onLoad={(e) => {
+                              console.log('Avatar loaded:', member.username);
+                              e.target.style.display = 'block';
+                              if (e.target.nextElementSibling) {
+                                e.target.nextElementSibling.style.display = 'none';
+                              }
+                            }}
+                            onError={(e) => {
+                              console.error('Avatar failed:', member.username, member.avatar);
+                              e.target.style.display = 'none';
+                              if (e.target.nextElementSibling) {
+                                e.target.nextElementSibling.style.display = 'flex';
+                              }
+                            }}
+                            className="w-16 h-16 rounded-full object-cover border-3 border-gray-200 dark:border-gray-600 group-hover:border-teal-400 dark:group-hover:border-teal-500 transition-colors shadow-md group-hover:shadow-lg"
+                            style={{ display: 'none' }}
+                          />
+                          <div
+                            className={`w-16 h-16 rounded-full bg-gradient-to-br ${index === 0 ? 'from-pink-400 to-rose-500' :
                               index === 1 ? 'from-purple-400 to-indigo-500' :
                                 index === 2 ? 'from-blue-400 to-cyan-500' :
                                   'from-teal-400 to-green-500'
+                              } flex items-center justify-center text-white font-bold text-xl border-3 border-gray-200 dark:border-gray-600 group-hover:border-teal-400 dark:group-hover:border-teal-500 transition-all shadow-md group-hover:shadow-lg`}
+                          >
+                            {member.username.charAt(0).toUpperCase()}
+                          </div>
+                        </>
+                      ) : (
+                        <div
+                          className={`w-16 h-16 rounded-full bg-gradient-to-br ${index === 0 ? 'from-pink-400 to-rose-500' :
+                            index === 1 ? 'from-purple-400 to-indigo-500' :
+                              index === 2 ? 'from-blue-400 to-cyan-500' :
+                                'from-teal-400 to-green-500'
                             } flex items-center justify-center text-white font-bold text-xl border-3 border-gray-200 dark:border-gray-600 group-hover:border-teal-400 dark:group-hover:border-teal-500 transition-all shadow-md group-hover:shadow-lg`}
                         >
                           {member.username.charAt(0).toUpperCase()}

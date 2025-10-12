@@ -112,7 +112,7 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
       {/* Hero Section */}
       <section
         className="relative py-16 lg:py-20 overflow-hidden bg-gradient-to-br from-teal-600 to-teal-700"
@@ -131,14 +131,14 @@ const Contact = () => {
       {/* Success/Error Message */}
       {formStatus.submitted && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-          <div className={`rounded-lg p-4 ${formStatus.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+          <div className={`rounded-lg p-4 ${formStatus.success ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'}`}>
             <div className="flex items-start">
               {formStatus.success ? (
-                <CheckCircleIcon className="h-6 w-6 text-green-600 mr-3 flex-shrink-0 mt-0.5" />
+                <CheckCircleIcon className="h-6 w-6 text-green-600 dark:text-green-400 mr-3 flex-shrink-0 mt-0.5" />
               ) : (
-                <ExclamationCircleIcon className="h-6 w-6 text-red-600 mr-3 flex-shrink-0 mt-0.5" />
+                <ExclamationCircleIcon className="h-6 w-6 text-red-600 dark:text-red-400 mr-3 flex-shrink-0 mt-0.5" />
               )}
-              <p className={`${formStatus.success ? 'text-green-800' : 'text-red-800'}`}>
+              <p className={`${formStatus.success ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}`}>
                 {formStatus.message}
               </p>
             </div>
@@ -147,31 +147,31 @@ const Contact = () => {
       )}
 
       {/* Before You Contact Section */}
-      <section className="py-12 bg-gray-50">
+      <section className="py-12 bg-gray-50 dark:bg-gray-800 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-3">
+          <div className="bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 p-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
               Before You Send Your Message...
             </h2>
-            <p className="text-gray-700 mb-4">
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
               Your question might already be answered! Check out these helpful resources first:
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
                 to="/faq"
-                className="inline-flex items-center px-4 py-2 bg-teal-50 text-teal-700 rounded-md hover:bg-teal-100 transition-colors duration-200 text-sm font-medium"
+                className="inline-flex items-center px-4 py-2 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 rounded-md hover:bg-teal-100 dark:hover:bg-teal-900/50 transition-colors duration-200 text-sm font-medium"
               >
                 Visit our FAQ
               </Link>
               <Link
                 to="/discussions/guidelines"
-                className="inline-flex items-center px-4 py-2 bg-teal-50 text-teal-700 rounded-md hover:bg-teal-100 transition-colors duration-200 text-sm font-medium"
+                className="inline-flex items-center px-4 py-2 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 rounded-md hover:bg-teal-100 dark:hover:bg-teal-900/50 transition-colors duration-200 text-sm font-medium"
               >
                 Community Guidelines
               </Link>
               <Link
                 to="/about"
-                className="inline-flex items-center px-4 py-2 bg-teal-50 text-teal-700 rounded-md hover:bg-teal-100 transition-colors duration-200 text-sm font-medium"
+                className="inline-flex items-center px-4 py-2 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 rounded-md hover:bg-teal-100 dark:hover:bg-teal-900/50 transition-colors duration-200 text-sm font-medium"
               >
                 About Us
               </Link>
@@ -187,16 +187,16 @@ const Contact = () => {
 
             {/* Left Column - Contact Form */}
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-lg shadow-md p-8">
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">
                   Send Us a Message
                 </h2>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Name Field */}
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                      Your Name <span className="text-red-500">*</span>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Your Name <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <input
                       type="text"
@@ -204,18 +204,18 @@ const Contact = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      className={`w-full px-4 py-3 border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors`}
+                      className={`w-full px-4 py-3 border ${errors.name ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500`}
                       placeholder="John Doe"
                     />
                     {errors.name && (
-                      <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name}</p>
                     )}
                   </div>
 
                   {/* Email Field */}
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address <span className="text-red-500">*</span>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Email Address <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <input
                       type="email"
@@ -223,17 +223,17 @@ const Contact = () => {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      className={`w-full px-4 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors`}
+                      className={`w-full px-4 py-3 border ${errors.email ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500`}
                       placeholder="john@example.com"
                     />
                     {errors.email && (
-                      <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
                     )}
                   </div>
 
                   {/* Subject Field */}
                   <div>
-                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Subject
                     </label>
                     <select
@@ -241,7 +241,7 @@ const Contact = () => {
                       name="subject"
                       value={formData.subject}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors bg-white"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     >
                       {subjectOptions.map((option) => (
                         <option key={option} value={option}>
@@ -253,8 +253,8 @@ const Contact = () => {
 
                   {/* Message Field */}
                   <div>
-                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                      Message <span className="text-red-500">*</span>
+                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Message <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <textarea
                       id="message"
@@ -262,13 +262,13 @@ const Contact = () => {
                       value={formData.message}
                       onChange={handleChange}
                       rows="6"
-                      className={`w-full px-4 py-3 border ${errors.message ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors resize-vertical`}
+                      className={`w-full px-4 py-3 border ${errors.message ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent transition-colors resize-vertical bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500`}
                       placeholder="Tell us how we can help you..."
                     />
                     {errors.message && (
-                      <p className="mt-1 text-sm text-red-600">{errors.message}</p>
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.message}</p>
                     )}
-                    <p className="mt-1 text-sm text-gray-500">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                       Minimum 10 characters
                     </p>
                   </div>
@@ -281,9 +281,9 @@ const Contact = () => {
                       name="newsletter"
                       checked={formData.newsletter}
                       onChange={handleChange}
-                      className="h-4 w-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 mt-1"
+                      className="h-4 w-4 text-teal-600 dark:text-teal-500 border-gray-300 dark:border-gray-600 rounded focus:ring-teal-500 dark:focus:ring-teal-400 mt-1 bg-white dark:bg-gray-700"
                     />
-                    <label htmlFor="newsletter" className="ml-3 text-sm text-gray-700">
+                    <label htmlFor="newsletter" className="ml-3 text-sm text-gray-700 dark:text-gray-300">
                       I would like to receive newsletter updates about new features and Lisu language resources
                     </label>
                   </div>
@@ -292,15 +292,15 @@ const Contact = () => {
                   <div>
                     <button
                       type="submit"
-                      className="w-full px-8 py-4 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                      className="w-full px-8 py-4 bg-teal-600 hover:bg-teal-700 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
                     >
                       Send Message
                     </button>
                   </div>
 
-                  <p className="text-xs text-gray-500 text-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
                     By sending a message, you agree to our{' '}
-                    <Link to="/privacy" className="text-teal-600 hover:text-teal-700 underline">
+                    <Link to="/privacy" className="text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 underline">
                       Privacy Policy
                     </Link>
                   </p>
@@ -310,20 +310,20 @@ const Contact = () => {
 
             {/* Right Column - Other Ways to Connect */}
             <div className="lg:col-span-1">
-              <div className="bg-gray-50 rounded-lg p-8 sticky top-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-8 sticky top-8">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
                   Other Ways to Connect
                 </h2>
 
                 {/* Email Addresses */}
                 <div className="space-y-6 mb-8">
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">
                       General Inquiries
                     </h3>
                     <a
                       href="mailto:info@lisudictionary.org"
-                      className="flex items-start text-teal-600 hover:text-teal-700 transition-colors group"
+                      className="flex items-start text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors group"
                     >
                       <EnvelopeIcon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
                       <span className="group-hover:underline">info@lisudictionary.org</span>
@@ -331,12 +331,12 @@ const Contact = () => {
                   </div>
 
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">
                       Technical Support
                     </h3>
                     <a
                       href="mailto:support@lisudictionary.org"
-                      className="flex items-start text-teal-600 hover:text-teal-700 transition-colors group"
+                      className="flex items-start text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors group"
                     >
                       <EnvelopeIcon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
                       <span className="group-hover:underline">support@lisudictionary.org</span>
@@ -344,12 +344,12 @@ const Contact = () => {
                   </div>
 
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">
                       Media & Partnerships
                     </h3>
                     <a
                       href="mailto:partnerships@lisudictionary.org"
-                      className="flex items-start text-teal-600 hover:text-teal-700 transition-colors group"
+                      className="flex items-start text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors group"
                     >
                       <EnvelopeIcon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
                       <span className="group-hover:underline">partnerships@lisudictionary.org</span>
@@ -358,18 +358,18 @@ const Contact = () => {
                 </div>
 
                 {/* Office Hours */}
-                <div className="mb-8 pb-8 border-b border-gray-200">
-                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                <div className="mb-8 pb-8 border-b border-gray-200 dark:border-gray-700">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">
                     Response Time
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     We typically respond within 24-48 hours during business days (Monday-Friday).
                   </p>
                 </div>
 
                 {/* Social Media */}
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-4">
                     Social Media
                   </h3>
                   <div className="flex space-x-4">
@@ -377,7 +377,7 @@ const Contact = () => {
                       href="https://facebook.com/lisudictionary"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-10 h-10 bg-gray-200 hover:bg-teal-600 text-gray-600 hover:text-white rounded-full flex items-center justify-center transition-colors duration-200"
+                      className="w-10 h-10 bg-gray-200 dark:bg-gray-700 hover:bg-teal-600 dark:hover:bg-teal-600 text-gray-600 dark:text-gray-300 hover:text-white dark:hover:text-white rounded-full flex items-center justify-center transition-colors duration-200"
                       aria-label="Facebook"
                     >
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -388,7 +388,7 @@ const Contact = () => {
                       href="https://twitter.com/lisudictionary"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-10 h-10 bg-gray-200 hover:bg-teal-600 text-gray-600 hover:text-white rounded-full flex items-center justify-center transition-colors duration-200"
+                      className="w-10 h-10 bg-gray-200 dark:bg-gray-700 hover:bg-teal-600 dark:hover:bg-teal-600 text-gray-600 dark:text-gray-300 hover:text-white dark:hover:text-white rounded-full flex items-center justify-center transition-colors duration-200"
                       aria-label="Twitter"
                     >
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -399,7 +399,7 @@ const Contact = () => {
                       href="https://instagram.com/lisudictionary"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-10 h-10 bg-gray-200 hover:bg-teal-600 text-gray-600 hover:text-white rounded-full flex items-center justify-center transition-colors duration-200"
+                      className="w-10 h-10 bg-gray-200 dark:bg-gray-700 hover:bg-teal-600 dark:hover:bg-teal-600 text-gray-600 dark:text-gray-300 hover:text-white dark:hover:text-white rounded-full flex items-center justify-center transition-colors duration-200"
                       aria-label="Instagram"
                     >
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">

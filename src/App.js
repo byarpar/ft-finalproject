@@ -110,79 +110,103 @@ function App() {
                   <Navbar />
                   <main className="flex-grow">
                     <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/search" element={<Dictionary />} />
-                    <Route path="/dictionary" element={<Dictionary />} />
-                    <Route path="/words/:id" element={<WordDetail />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/discussions" element={<Discussions />} />
-                    <Route path="/discussions/:id" element={<DiscussionThread />} />
-                    <Route path="/discussions/members" element={<Members />} />
-                    <Route path="/users/:userId" element={<UserProfile />} />
-                    {/* <Route path="/tags" element={<Tags />} /> */}
-                    {/* <Route path="/chat" element={<Chat />} /> */}
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/verify-email" element={<VerifyEmail />} />
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/auth/callback" element={<AuthCallback />} />
+                      <Route path="/" element={<Home />} />
+                      <Route path="/search" element={<Dictionary />} />
+                      <Route path="/dictionary" element={<Dictionary />} />
+                      <Route path="/words/:id" element={<WordDetail />} />
+                      <Route path="/about" element={<About />} />
+                      <Route path="/contact" element={<Contact />} />
 
-                    {/* Protected Routes */}
-                    <Route path="/dashboard" element={
-                      <PrivateRoute>
-                        <Dashboard />
-                      </PrivateRoute>
-                    } />
-                    <Route path="/profile" element={
-                      <PrivateRoute>
-                        <Profile />
-                      </PrivateRoute>
-                    } />
+                      {/* Protected Discussions Routes - Login Required */}
+                      <Route path="/discussions" element={
+                        <PrivateRoute>
+                          <Discussions />
+                        </PrivateRoute>
+                      } />
+                      <Route path="/discussions/:id" element={
+                        <PrivateRoute>
+                          <DiscussionThread />
+                        </PrivateRoute>
+                      } />
+                      <Route path="/discussions/members" element={
+                        <PrivateRoute>
+                          <Members />
+                        </PrivateRoute>
+                      } />
+                      <Route path="/users" element={
+                        <PrivateRoute>
+                          <Members />
+                        </PrivateRoute>
+                      } />
+                      <Route path="/users/:userId" element={
+                        <PrivateRoute>
+                          <UserProfile />
+                        </PrivateRoute>
+                      } />
+                      {/* <Route path="/tags" element={<Tags />} /> */}
+                      {/* <Route path="/chat" element={<Chat />} /> */}
 
-                    {/* Admin Routes */}
-                    <Route path="/admin" element={
-                      <AdminRoute>
-                        <AdminDashboard />
-                      </AdminRoute>
-                    } />
-                    <Route path="/admin/words" element={
-                      <AdminRoute>
-                        <AdminWords />
-                      </AdminRoute>
-                    } />
-                    <Route path="/admin/users" element={
-                      <AdminRoute>
-                        <AdminUsers />
-                      </AdminRoute>
-                    } />
-                    <Route path="/admin/settings" element={
-                      <AdminRoute>
-                        <AdminSettings />
-                      </AdminRoute>
-                    } />
-                    <Route path="/admin/search" element={
-                      <AdminRoute>
-                        <AdminSearch />
-                      </AdminRoute>
-                    } />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/register" element={<Register />} />
+                      <Route path="/verify-email" element={<VerifyEmail />} />
+                      <Route path="/forgot-password" element={<ForgotPassword />} />
+                      <Route path="/reset-password" element={<ResetPassword />} />
+                      <Route path="/auth/callback" element={<AuthCallback />} />
 
-                    {/* Error Pages */}
-                    <Route path="/500" element={<ServerError />} />
+                      {/* Protected Routes */}
+                      <Route path="/dashboard" element={
+                        <PrivateRoute>
+                          <Dashboard />
+                        </PrivateRoute>
+                      } />
+                      <Route path="/profile" element={
+                        <PrivateRoute>
+                          <Profile />
+                        </PrivateRoute>
+                      } />
 
-                    {/* Catch-all route for 404 */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </main>
-                <ConditionalFooter />
-                <ThemedToaster />
-              </div>
-            </Router>
-          </AuthProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </GoogleOAuthProvider>
+                      {/* Admin Routes */}
+                      <Route path="/admin" element={
+                        <AdminRoute>
+                          <AdminDashboard />
+                        </AdminRoute>
+                      } />
+                      <Route path="/admin/words" element={
+                        <AdminRoute>
+                          <AdminWords />
+                        </AdminRoute>
+                      } />
+                      <Route path="/admin/users" element={
+                        <AdminRoute>
+                          <AdminUsers />
+                        </AdminRoute>
+                      } />
+                      <Route path="/admin/settings" element={
+                        <AdminRoute>
+                          <AdminSettings />
+                        </AdminRoute>
+                      } />
+                      <Route path="/admin/search" element={
+                        <AdminRoute>
+                          <AdminSearch />
+                        </AdminRoute>
+                      } />
+
+                      {/* Error Pages */}
+                      <Route path="/500" element={<ServerError />} />
+
+                      {/* Catch-all route for 404 */}
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </main>
+                  <ConditionalFooter />
+                  <ThemedToaster />
+                </div>
+              </Router>
+            </AuthProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </GoogleOAuthProvider>
     </HelmetProvider>
   );
 }

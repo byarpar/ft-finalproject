@@ -529,7 +529,7 @@ const DiscussionThreadEnhanced = () => {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <ChatBubbleLeftIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+          <ChatBubbleLeftIcon className="w-16 h-16 mx-auto mb-4 text-gray-400 dark:text-gray-600" />
           <p className="text-red-600 dark:text-red-400 mb-4 text-lg">{error || 'Discussion not found'}</p>
           <button
             onClick={() => navigate('/discussions')}
@@ -556,11 +556,11 @@ const DiscussionThreadEnhanced = () => {
             >
               Discussions
             </Link>
-            <span className="text-gray-400">/</span>
+            <span className="text-gray-400 dark:text-gray-600">/</span>
             <span className="text-gray-600 dark:text-gray-400">
               {typeof discussion.category === 'object' ? discussion.category.name : discussion.category || 'General'}
             </span>
-            <span className="text-gray-400">/</span>
+            <span className="text-gray-400 dark:text-gray-600">/</span>
             <span className="text-gray-900 dark:text-white font-medium truncate max-w-md">
               {discussion.title}
             </span>

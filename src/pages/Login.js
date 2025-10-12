@@ -17,6 +17,7 @@ const Login = () => {
 
   // Get the page user was trying to access - default to search for dictionary app
   const from = location.state?.from?.pathname || '/search';
+  const redirectMessage = location.state?.message;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -201,45 +202,59 @@ const Login = () => {
       </div>
 
       {/* Right Side - Login Form (40-45%) */}
-      <div className="lg:w-[42%] bg-gray-50 flex items-center justify-center p-6 lg:p-12 min-h-screen lg:min-h-0">
+      <div className="lg:w-[42%] bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-6 lg:p-12 min-h-screen lg:min-h-0 transition-colors duration-200">
         <div className="w-full max-w-md">
           {/* Heading */}
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
               Log In to Your Account
             </h2>
           </div>
 
+          {/* Info Message - Login Required */}
+          {redirectMessage && (
+            <div className="mb-6 border border-teal-300 dark:border-teal-700 rounded-lg p-4 bg-teal-50 dark:bg-teal-900/30">
+              <div className="flex items-start">
+                <svg className="w-5 h-5 text-teal-600 dark:text-teal-400 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                <p className="text-sm text-teal-800 dark:text-teal-200 font-medium">
+                  {redirectMessage}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Error Message */}
           {errors.general && (
             <div className={`mb-6 border rounded-lg p-4 ${errors.accountDeleted || errors.accountNotFound
-              ? 'bg-red-100 border-red-300'
-              : 'bg-red-50 border-red-200'
+              ? 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700'
+              : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
               }`}>
               <div className="flex items-start">
                 {(errors.accountDeleted || errors.accountNotFound) && (
-                  <svg className="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-5 h-5 text-red-600 dark:text-red-400 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
                 )}
                 <div className="flex-1">
                   <p className={`text-sm ${errors.accountDeleted || errors.accountNotFound
-                    ? 'text-red-700 font-semibold'
-                    : 'text-red-600'
+                    ? 'text-red-700 dark:text-red-200 font-semibold'
+                    : 'text-red-600 dark:text-red-300'
                     }`}>
                     {errors.general}
                   </p>
 
                   {/* Show verification help if email not verified */}
                   {errors.general.toLowerCase().includes('verify') && !errors.accountNotFound && formData.email && (
-                    <div className="mt-3 pt-3 border-t border-red-300">
-                      <p className="text-sm text-red-800 font-medium mb-2">
+                    <div className="mt-3 pt-3 border-t border-red-300 dark:border-red-700">
+                      <p className="text-sm text-red-800 dark:text-red-200 font-medium mb-2">
                         Need help with verification?
                       </p>
                       <button
                         type="button"
                         onClick={() => navigate('/verify-email', { state: { email: formData.email } })}
-                        className="text-sm text-teal-600 hover:text-teal-700 font-semibold underline"
+                        className="text-sm text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-semibold underline"
                       >
                         → Go to Verification Page
                       </button>
@@ -254,7 +269,7 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email Address
               </label>
               <input
@@ -264,17 +279,17 @@ const Login = () => {
                 autoComplete="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors bg-white`}
+                className={`w-full px-4 py-3 border ${errors.email ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500`}
                 placeholder="your.email@example.com"
               />
               {errors.email && (
-                <p className="mt-2 text-sm text-red-600">{errors.email}</p>
+                <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
               )}
             </div>
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Password
               </label>
               <input
@@ -284,11 +299,11 @@ const Login = () => {
                 autoComplete="current-password"
                 value={formData.password}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors bg-white`}
+                className={`w-full px-4 py-3 border ${errors.password ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500`}
                 placeholder="Enter your password"
               />
               {errors.password && (
-                <p className="mt-2 text-sm text-red-600">{errors.password}</p>
+                <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.password}</p>
               )}
             </div>
 
@@ -299,9 +314,9 @@ const Login = () => {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+                  className="h-4 w-4 text-teal-600 dark:text-teal-500 border-gray-300 dark:border-gray-600 rounded focus:ring-teal-500 dark:focus:ring-teal-400 bg-white dark:bg-gray-800"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                   Remember me
                 </label>
               </div>
@@ -309,7 +324,7 @@ const Login = () => {
               <div className="text-sm">
                 <Link
                   to="/forgot-password"
-                  className="text-teal-600 hover:text-teal-700 font-medium"
+                  className="text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-medium"
                 >
                   Forgot password?
                 </Link>
@@ -321,7 +336,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full px-6 py-3.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-6 py-3.5 bg-teal-600 hover:bg-teal-700 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
@@ -340,10 +355,10 @@ const Login = () => {
             {/* Divider */}
             <div className="relative pt-2">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
+                <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gray-50 text-gray-500">Or continue with</span>
+                <span className="px-2 bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400">Or continue with</span>
               </div>
             </div>
 
@@ -352,7 +367,7 @@ const Login = () => {
               <button
                 type="button"
                 onClick={handleGoogleLogin}
-                className="w-full flex items-center justify-center px-4 py-3 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm font-medium text-gray-700 shadow-sm"
+                className="w-full flex items-center justify-center px-4 py-3 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm"
               >
                 <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -366,9 +381,9 @@ const Login = () => {
 
             {/* Sign Up Link */}
             <div className="text-center pt-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Don't have an account?{' '}
-                <Link to="/register" className="text-teal-600 hover:text-teal-700 font-semibold">
+                <Link to="/register" className="text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-semibold">
                   Sign Up
                 </Link>
               </p>

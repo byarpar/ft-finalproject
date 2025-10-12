@@ -178,10 +178,10 @@ const About = () => {
         {/* The Lisu Language - Detailed Section */}
         <section className="mb-20">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               About the Lisu Language
             </h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
               A rich linguistic tradition spanning centuries and connecting communities across Asia
             </p>
           </div>
@@ -189,15 +189,15 @@ const About = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
             {/* Origin & Characteristics */}
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Origins & Characteristics</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Origins & Characteristics</h3>
               <div className="prose prose-teal max-w-none">
-                <p className="text-gray-700 leading-relaxed mb-4">
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
                   The Lisu language belongs to the Lolo-Burmese branch of the Tibeto-Burman language family. It is closely related to other languages in the region and has preserved many ancient linguistic features.
                 </p>
-                <p className="text-gray-700 leading-relaxed mb-4">
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
                   <strong>Unique Features:</strong>
                 </p>
-                <ul className="space-y-2 text-gray-700">
+                <ul className="space-y-2 text-gray-700 dark:text-gray-300">
                   <li>• <strong>Tonal System:</strong> 6 distinct tones that change word meanings</li>
                   <li>• <strong>Fraser Script:</strong> Phonetic alphabet created specifically for Lisu</li>
                   <li>• <strong>Rich Oral Tradition:</strong> Epic poems, folk songs, and stories</li>
@@ -208,21 +208,21 @@ const About = () => {
 
             {/* Where It's Spoken */}
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Where Lisu is Spoken</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Where Lisu is Spoken</h3>
               <div className="space-y-4">
                 {lisuRegions.map((region, index) => (
-                  <div key={index} className="bg-gray-50 rounded-lg p-4 border-l-4 border-teal-600">
+                  <div key={index} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border-l-4 border-teal-600 dark:border-teal-500">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-lg font-semibold text-gray-900">{region.country}</h4>
-                      <span className="text-teal-600 font-semibold">{region.speakers}</span>
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{region.country}</h4>
+                      <span className="text-teal-600 dark:text-teal-400 font-semibold">{region.speakers}</span>
                     </div>
-                    <p className="text-sm text-gray-600">{region.regions}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{region.regions}</p>
                   </div>
                 ))}
               </div>
-              <div className="mt-6 bg-teal-50 rounded-lg p-6">
-                <p className="text-sm text-gray-700">
-                  <GlobeAltIcon className="h-5 w-5 text-teal-600 inline mr-2" />
+              <div className="mt-6 bg-teal-50 dark:bg-teal-900/20 rounded-lg p-6">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  <GlobeAltIcon className="h-5 w-5 text-teal-600 dark:text-teal-400 inline mr-2" />
                   The Lisu people have migrated across Southeast Asia over centuries, creating diverse dialects while maintaining linguistic unity.
                 </p>
               </div>
@@ -230,17 +230,17 @@ const About = () => {
           </div>
 
           {/* Why Preservation Matters */}
-          <div className="bg-orange-50 border-l-4 border-orange-500 rounded-lg p-8">
+          <div className="bg-orange-50 dark:bg-orange-900/20 border-l-4 border-orange-500 dark:border-orange-600 rounded-lg p-8">
             <div className="flex items-start">
-              <HeartIcon className="h-8 w-8 text-orange-600 mr-4 flex-shrink-0 mt-1" />
+              <HeartIcon className="h-8 w-8 text-orange-600 dark:text-orange-400 mr-4 flex-shrink-0 mt-1" />
               <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
                   Why Language Preservation Matters
                 </h3>
-                <p className="text-gray-700 leading-relaxed mb-4">
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
                   Every language carries unique ways of understanding the world. When a language disappears, humanity loses irreplaceable knowledge about culture, environment, and human cognition.
                 </p>
-                <p className="text-gray-700 leading-relaxed">
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                   By documenting and promoting Lisu, we help ensure that future generations can access their linguistic heritage, connect with their roots, and contribute to global linguistic diversity.
                 </p>
               </div>
@@ -251,17 +251,17 @@ const About = () => {
         {/* Team Section */}
         <section className="mb-20">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               Meet the Team
             </h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
               Our passionate team of linguists, developers, and community members dedicated to preserving the Lisu language
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {teamMembers.map((member, index) => (
-              <div key={index} className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+              <div key={index} className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden">
                 <div className="p-6">
                   {/* Avatar */}
                   <div className="flex justify-center mb-4">
@@ -279,13 +279,13 @@ const About = () => {
                   </div>
 
                   {/* Info */}
-                  <h3 className="text-lg font-bold text-gray-900 text-center mb-1">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 text-center mb-1">
                     {member.name}
                   </h3>
-                  <p className="text-sm font-medium text-teal-600 text-center mb-4">
+                  <p className="text-sm font-medium text-teal-600 dark:text-teal-400 text-center mb-4">
                     {member.role}
                   </p>
-                  <p className="text-sm text-gray-600 text-center leading-relaxed">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 text-center leading-relaxed">
                     {member.bio}
                   </p>
                 </div>
@@ -294,15 +294,15 @@ const About = () => {
           </div>
 
           {/* Contributors Note */}
-          <div className="mt-12 text-center bg-gray-50 rounded-lg p-8">
-            <UsersIcon className="h-12 w-12 text-teal-600 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-900 mb-3">
+          <div className="mt-12 text-center bg-gray-50 dark:bg-gray-800 rounded-lg p-8">
+            <UsersIcon className="h-12 w-12 text-teal-600 dark:text-teal-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
               Our Valued Contributors
             </h3>
-            <p className="text-gray-700 max-w-2xl mx-auto mb-6">
+            <p className="text-gray-700 dark:text-gray-300 max-w-2xl mx-auto mb-6">
               This dictionary wouldn't be possible without the dedicated contributions of over 100 community members, volunteers, and Lisu language speakers who have shared their knowledge and expertise.
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Thank you to everyone who has contributed translations, recordings, cultural insights, and feedback!
             </p>
           </div>

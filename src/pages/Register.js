@@ -211,45 +211,45 @@ const Register = () => {
       </div>
 
       {/* Right Side - Registration Form (40-45%) */}
-      <div className="lg:w-[42%] bg-gray-50 flex items-center justify-center p-6 lg:p-12 min-h-screen lg:min-h-0">
+      <div className="lg:w-[42%] bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-6 lg:p-12 min-h-screen lg:min-h-0 transition-colors duration-200">
         <div className="w-full max-w-md">
           {/* Heading */}
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
               Create Your Account
             </h2>
           </div>
 
           {/* Error Message */}
           {errors.general && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-sm text-red-600">{errors.general}</p>
+            <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+              <p className="text-sm text-red-600 dark:text-red-300">{errors.general}</p>
 
               {/* Show helpful actions if account already exists */}
               {errors.accountExists && formData.email && (
-                <div className="mt-4 pt-4 border-t border-red-300">
-                  <p className="text-sm text-red-800 font-medium mb-3">
+                <div className="mt-4 pt-4 border-t border-red-300 dark:border-red-700">
+                  <p className="text-sm text-red-800 dark:text-red-200 font-medium mb-3">
                     Already have an account? Choose an option:
                   </p>
                   <div className="space-y-2">
                     <button
                       type="button"
                       onClick={() => navigate('/login', { state: { email: formData.email } })}
-                      className="block w-full text-left px-3 py-2 text-sm bg-white border border-red-300 rounded-lg hover:bg-red-50 text-teal-700 font-semibold transition-colors"
+                      className="block w-full text-left px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-red-300 dark:border-red-700 rounded-lg hover:bg-red-50 dark:hover:bg-gray-700 text-teal-700 dark:text-teal-400 font-semibold transition-colors"
                     >
                       → Try to Log In
                     </button>
                     <button
                       type="button"
                       onClick={() => navigate('/verify-email', { state: { email: formData.email } })}
-                      className="block w-full text-left px-3 py-2 text-sm bg-white border border-red-300 rounded-lg hover:bg-red-50 text-teal-700 font-semibold transition-colors"
+                      className="block w-full text-left px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-red-300 dark:border-red-700 rounded-lg hover:bg-red-50 dark:hover:bg-gray-700 text-teal-700 dark:text-teal-400 font-semibold transition-colors"
                     >
                       → Verify Email (if unverified)
                     </button>
                     <button
                       type="button"
                       onClick={() => navigate('/forgot-password', { state: { email: formData.email } })}
-                      className="block w-full text-left px-3 py-2 text-sm bg-white border border-red-300 rounded-lg hover:bg-red-50 text-teal-700 font-semibold transition-colors"
+                      className="block w-full text-left px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-red-300 dark:border-red-700 rounded-lg hover:bg-red-50 dark:hover:bg-gray-700 text-teal-700 dark:text-teal-400 font-semibold transition-colors"
                     >
                       → Reset Password (if forgotten)
                     </button>
@@ -263,8 +263,8 @@ const Register = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Full Name Field (Optional) */}
             <div>
-              <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name <span className="text-gray-400 text-xs">(Optional)</span>
+              <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Full Name <span className="text-gray-400 dark:text-gray-500 text-xs">(Optional)</span>
               </label>
               <input
                 type="text"
@@ -272,14 +272,14 @@ const Register = () => {
                 name="full_name"
                 value={formData.full_name}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors bg-white"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 placeholder="Enter your full name"
               />
             </div>
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email Address
               </label>
               <input
@@ -288,17 +288,17 @@ const Register = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors bg-white`}
+                className={`w-full px-4 py-3 border ${errors.email ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500`}
                 placeholder="your.email@example.com"
               />
               {errors.email && (
-                <p className="mt-2 text-sm text-red-600">{errors.email}</p>
+                <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
               )}
             </div>
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Password
               </label>
               <input
@@ -307,17 +307,17 @@ const Register = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors bg-white`}
+                className={`w-full px-4 py-3 border ${errors.password ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500`}
                 placeholder="Minimum 8 characters"
               />
               {errors.password && (
-                <p className="mt-2 text-sm text-red-600">{errors.password}</p>
+                <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.password}</p>
               )}
             </div>
 
             {/* Confirm Password Field */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Confirm Password
               </label>
               <input
@@ -326,11 +326,11 @@ const Register = () => {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors bg-white`}
+                className={`w-full px-4 py-3 border ${errors.confirmPassword ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500`}
                 placeholder="Re-enter your password"
               />
               {errors.confirmPassword && (
-                <p className="mt-2 text-sm text-red-600">{errors.confirmPassword}</p>
+                <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.confirmPassword}</p>
               )}
             </div>
 
@@ -343,21 +343,21 @@ const Register = () => {
                   name="agreeTerms"
                   checked={formData.agreeTerms}
                   onChange={handleChange}
-                  className={`h-4 w-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 mt-1 ${errors.agreeTerms ? 'border-red-500' : ''}`}
+                  className={`h-4 w-4 text-teal-600 dark:text-teal-500 border-gray-300 dark:border-gray-600 rounded focus:ring-teal-500 dark:focus:ring-teal-400 mt-1 bg-white dark:bg-gray-800 ${errors.agreeTerms ? 'border-red-500 dark:border-red-600' : ''}`}
                 />
-                <label htmlFor="agreeTerms" className="ml-3 text-sm text-gray-700">
+                <label htmlFor="agreeTerms" className="ml-3 text-sm text-gray-700 dark:text-gray-300">
                   I agree to the{' '}
-                  <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-700 underline">
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 underline">
                     Privacy Policy
                   </a>
                   {' '}and{' '}
-                  <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-700 underline">
+                  <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 underline">
                     Terms of Service
                   </a>
                 </label>
               </div>
               {errors.agreeTerms && (
-                <p className="mt-2 text-sm text-red-600 ml-7">{errors.agreeTerms}</p>
+                <p className="mt-2 text-sm text-red-600 dark:text-red-400 ml-7">{errors.agreeTerms}</p>
               )}
             </div>
 
@@ -366,7 +366,7 @@ const Register = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full px-6 py-3.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-6 py-3.5 bg-teal-600 hover:bg-teal-700 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
@@ -385,10 +385,10 @@ const Register = () => {
             {/* Divider */}
             <div className="relative pt-2">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
+                <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gray-50 text-gray-500">Or continue with</span>
+                <span className="px-2 bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400">Or continue with</span>
               </div>
             </div>
 
@@ -397,7 +397,7 @@ const Register = () => {
               <button
                 type="button"
                 onClick={handleGoogleLogin}
-                className="w-full flex items-center justify-center px-4 py-3 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm font-medium text-gray-700 shadow-sm"
+                className="w-full flex items-center justify-center px-4 py-3 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm"
               >
                 <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -411,9 +411,9 @@ const Register = () => {
 
             {/* Login Link */}
             <div className="text-center pt-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Already have an account?{' '}
-                <Link to="/login" className="text-teal-600 hover:text-teal-700 font-semibold">
+                <Link to="/login" className="text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-semibold">
                   Log In
                 </Link>
               </p>

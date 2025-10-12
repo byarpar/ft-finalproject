@@ -498,7 +498,7 @@ const UserProfileEnhanced = () => {
                 <div className="divide-y divide-gray-200 dark:divide-gray-700">
                   {activityFeed.length === 0 ? (
                     <div className="p-12 text-center">
-                      <FireIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                      <FireIcon className="w-16 h-16 mx-auto mb-4 text-gray-400 dark:text-gray-600" />
                       <p className="text-gray-600 dark:text-gray-400">
                         {isOwnProfile ? 'No recent activity yet. Start by joining a discussion!' : 'No recent activity'}
                       </p>
@@ -658,7 +658,7 @@ const UserProfileEnhanced = () => {
             <div className="p-6">
               {discussions.length === 0 ? (
                 <div className="text-center py-12">
-                  <ChatBubbleLeftRightIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                  <ChatBubbleLeftRightIcon className="w-16 h-16 mx-auto mb-4 text-gray-400 dark:text-gray-600" />
                   <p className="text-gray-600 dark:text-gray-400 mb-4">
                     {isOwnProfile ? 'You haven\'t started any discussions yet' : 'No discussions yet'}
                   </p>
@@ -723,7 +723,7 @@ const UserProfileEnhanced = () => {
             </div>
 
             <div className="p-12 text-center">
-              <BookOpenIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+              <BookOpenIcon className="w-16 h-16 mx-auto mb-4 text-gray-400 dark:text-gray-600" />
               <p className="text-gray-600 dark:text-gray-400 mb-2">
                 Dictionary contributions feature coming soon
               </p>
@@ -745,7 +745,7 @@ const UserProfileEnhanced = () => {
             </div>
 
             <div className="p-12 text-center">
-              <BookmarkIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+              <BookmarkIcon className="w-16 h-16 mx-auto mb-4 text-gray-400 dark:text-gray-600" />
               <p className="text-gray-600 dark:text-gray-400 mb-2">
                 {isOwnProfile ? 'No saved items yet' : 'Saved items are private'}
               </p>

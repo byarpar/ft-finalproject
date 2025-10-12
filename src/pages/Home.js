@@ -67,7 +67,7 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
       {/* SEO Meta Tags */}
       <SEO {...SEOConfigs.home} />
 
@@ -108,10 +108,10 @@ const Home = () => {
           </div>
         </div>
       </section>      {/* Featured Words / Word of the Day Section */}
-      <section className="py-16 lg:py-20 bg-gray-50">
+      <section className="py-16 lg:py-20 bg-gray-50 dark:bg-gray-800 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
               Featured Words
             </h2>
           </div>
@@ -119,11 +119,11 @@ const Home = () => {
           {isLoadingWords ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white rounded-lg p-8 shadow-md animate-pulse">
-                  <div className="h-8 bg-gray-200 rounded mb-4"></div>
-                  <div className="h-6 bg-gray-200 rounded mb-3"></div>
-                  <div className="h-20 bg-gray-200 rounded mb-4"></div>
-                  <div className="h-10 bg-gray-200 rounded"></div>
+                <div key={i} className="bg-white dark:bg-gray-700 rounded-lg p-8 shadow-md animate-pulse">
+                  <div className="h-8 bg-gray-200 dark:bg-gray-600 rounded mb-4"></div>
+                  <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded mb-3"></div>
+                  <div className="h-20 bg-gray-200 dark:bg-gray-600 rounded mb-4"></div>
+                  <div className="h-10 bg-gray-200 dark:bg-gray-600 rounded"></div>
                 </div>
               ))}
             </div>
@@ -132,32 +132,32 @@ const Home = () => {
               {featuredWords.map((word, index) => (
                 <div
                   key={word.id || index}
-                  className="bg-white rounded-lg p-8 shadow-md hover:shadow-xl transition-shadow duration-300 border-t-4 border-teal-500 flex flex-col"
+                  className="bg-white dark:bg-gray-700 rounded-lg p-8 shadow-md hover:shadow-xl transition-shadow duration-300 border-t-4 border-teal-500 dark:border-teal-400 flex flex-col"
                 >
                   <div className="mb-6">
-                    <div className="text-4xl font-bold text-gray-800 mb-2">
+                    <div className="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-2">
                       {word.lisu_word || 'ꓡꓴ'}
                     </div>
                     {word.pronunciation_lisu && (
-                      <div className="text-sm text-gray-400 italic mb-2">
+                      <div className="text-sm text-gray-400 dark:text-gray-500 italic mb-2">
                         /{word.pronunciation_lisu}/
                       </div>
                     )}
                     <div className="flex items-center justify-between">
-                      <div className="text-lg font-semibold text-teal-700">
+                      <div className="text-lg font-semibold text-teal-700 dark:text-teal-400">
                         {word.english_word || 'word'}
                       </div>
-                      <span className="text-xs text-gray-500 uppercase tracking-wide px-2 py-1 bg-gray-100 rounded">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide px-2 py-1 bg-gray-100 dark:bg-gray-600 rounded">
                         {typeof word.part_of_speech === 'object' ? word.part_of_speech?.name : word.part_of_speech || 'noun'}
                       </span>
                     </div>
                   </div>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-6 line-clamp-3 flex-grow">
+                  <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-6 line-clamp-3 flex-grow">
                     {word.english_definition || word.lisu_definition || 'The definition provides meaning and context for this Lisu word.'}
                   </p>
                   <Link
                     to={`/dictionary?q=${word.english_word || word.lisu_word}`}
-                    className="inline-flex items-center justify-center w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-md transition-colors duration-200 mt-auto"
+                    className="inline-flex items-center justify-center w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white font-medium rounded-md transition-colors duration-200 mt-auto"
                   >
                     View Word
                   </Link>
@@ -166,65 +166,65 @@ const Home = () => {
             </div>
           ) : (
             <div className="text-center py-12">
-              <BookOpenIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No featured words available at the moment.</p>
+              <BookOpenIcon className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+              <p className="text-gray-500 dark:text-gray-400">No featured words available at the moment.</p>
             </div>
           )}
         </div>
       </section>
 
       {/* Why Learn Lisu / About the Community Section */}
-      <section className="py-16 lg:py-20 bg-gray-50">
+      <section className="py-16 lg:py-20 bg-gray-50 dark:bg-gray-800 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Text Content */}
             <div className="order-2 lg:order-1">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-6">
                 Why Learn Lisu?
               </h2>
-              <p className="text-lg text-gray-700 mb-6 leading-relaxed">
+              <p className="text-lg text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
                 The Lisu language is spoken by over 1 million people across China, Myanmar,
                 Thailand, and India. Our dictionary helps preserve this rich linguistic
                 tradition while making it accessible to new learners worldwide.
               </p>
               <div className="space-y-4 mb-8">
                 <div className="flex items-start">
-                  <div className="flex-shrink-0 w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mr-4 mt-1">
+                  <div className="flex-shrink-0 w-6 h-6 bg-teal-500 dark:bg-teal-600 rounded-full flex items-center justify-center mr-4 mt-1">
                     <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Cultural Preservation</h3>
-                    <p className="text-gray-600">Help preserve and promote the Lisu language for future generations</p>
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">Cultural Preservation</h3>
+                    <p className="text-gray-600 dark:text-gray-400">Help preserve and promote the Lisu language for future generations</p>
                   </div>
                 </div>
                 <div className="flex items-start">
-                  <div className="flex-shrink-0 w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mr-4 mt-1">
+                  <div className="flex-shrink-0 w-6 h-6 bg-teal-500 dark:bg-teal-600 rounded-full flex items-center justify-center mr-4 mt-1">
                     <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Connect with Communities</h3>
-                    <p className="text-gray-600">Bridge communication gaps and connect with Lisu-speaking communities</p>
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">Connect with Communities</h3>
+                    <p className="text-gray-600 dark:text-gray-400">Bridge communication gaps and connect with Lisu-speaking communities</p>
                   </div>
                 </div>
                 <div className="flex items-start">
-                  <div className="flex-shrink-0 w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mr-4 mt-1">
+                  <div className="flex-shrink-0 w-6 h-6 bg-teal-500 dark:bg-teal-600 rounded-full flex items-center justify-center mr-4 mt-1">
                     <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Rich History & Etymology</h3>
-                    <p className="text-gray-600">Explore the fascinating linguistic development and cultural context</p>
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">Rich History & Etymology</h3>
+                    <p className="text-gray-600 dark:text-gray-400">Explore the fascinating linguistic development and cultural context</p>
                   </div>
                 </div>
               </div>
               <Link
                 to="/about"
-                className="inline-flex items-center px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-md transition-colors duration-200"
+                className="inline-flex items-center px-6 py-3 bg-teal-600 hover:bg-teal-700 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-medium rounded-md transition-colors duration-200"
               >
                 Learn More About Us
                 <ArrowRightIcon className="h-5 w-5 ml-2" />
@@ -252,16 +252,16 @@ const Home = () => {
       </section>
 
       {/* Join the Discussion Teaser Section */}
-      <section className="py-16 lg:py-20 bg-white">
+      <section className="py-16 lg:py-20 bg-white dark:bg-gray-900 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             {/* Left side - Discussion list */}
             <div className="lg:col-span-2">
               <div className="mb-8">
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
                   Join the Discussion
                 </h2>
-                <p className="text-lg text-gray-600">
+                <p className="text-lg text-gray-600 dark:text-gray-400">
                   Connect with fellow learners, ask questions, and share your knowledge
                 </p>
               </div>
@@ -269,10 +269,10 @@ const Home = () => {
               {isLoadingDiscussions ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-gray-100 rounded-lg p-6 animate-pulse">
-                      <div className="h-6 bg-gray-200 rounded mb-3"></div>
-                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                      <div className="h-4 bg-gray-200 rounded"></div>
+                    <div key={i} className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6 animate-pulse">
+                      <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded mb-3"></div>
+                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
                     </div>
                   ))}
                 </div>
@@ -282,23 +282,23 @@ const Home = () => {
                     <Link
                       key={discussion.id}
                       to={`/discussions/${discussion.id}`}
-                      className="block bg-white border border-gray-200 rounded-lg p-6 hover:border-teal-500 hover:shadow-md transition-all duration-300"
+                      className="block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:border-teal-500 dark:hover:border-teal-400 hover:shadow-md transition-all duration-300"
                     >
                       <div className="flex items-start justify-between mb-3">
-                        <span className="inline-block px-3 py-1 bg-teal-100 text-teal-700 rounded text-xs font-medium">
+                        <span className="inline-block px-3 py-1 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 rounded text-xs font-medium">
                           {typeof discussion.category === 'object' ? discussion.category?.name : discussion.category || 'General'}
                         </span>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
                           {discussion.answers_count || 0} replies
                         </span>
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2 hover:text-teal-600 line-clamp-2">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 hover:text-teal-600 dark:hover:text-teal-400 line-clamp-2">
                         {discussion.title}
                       </h3>
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-4">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-4">
                         {discussion.content?.replace(/<[^>]*>/g, '') || 'Join the discussion to learn more...'}
                       </p>
-                      <div className="flex items-center justify-between text-xs text-gray-500">
+                      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                         <span className="flex items-center">
                           <UserGroupIcon className="h-4 w-4 mr-1" />
                           {discussion.username || 'Anonymous'}
@@ -313,15 +313,15 @@ const Home = () => {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <ChatBubbleLeftRightIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">No recent discussions available.</p>
+                  <ChatBubbleLeftRightIcon className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400">No recent discussions available.</p>
                 </div>
               )}
 
               <div className="mt-8">
                 <Link
                   to="/discussions"
-                  className="inline-flex items-center text-teal-600 hover:text-teal-700 font-semibold"
+                  className="inline-flex items-center text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-semibold"
                 >
                   Explore All Discussions
                   <ArrowRightIcon className="h-5 w-5 ml-2" />
@@ -350,44 +350,44 @@ const Home = () => {
       </section>
 
       {/* Contribute / Get Involved Section */}
-      <section className="py-16 lg:py-20 bg-white">
+      <section className="py-16 lg:py-20 bg-white dark:bg-gray-900 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-6">
               Contribute & Get Involved
             </h2>
-            <p className="text-lg text-gray-700 mb-10 leading-relaxed">
+            <p className="text-lg text-gray-700 dark:text-gray-300 mb-10 leading-relaxed">
               Help us build the most comprehensive Lisu dictionary. Your contributions make a difference
               in preserving and promoting the Lisu language for future generations.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
-              <div className="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition-shadow duration-300">
-                <div className="w-14 h-14 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <BookOpenIcon className="h-7 w-7 text-teal-600" />
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 hover:shadow-lg transition-shadow duration-300">
+                <div className="w-14 h-14 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <BookOpenIcon className="h-7 w-7 text-teal-600 dark:text-teal-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Submit Words</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Submit Words</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Add new Lisu words and definitions to expand our dictionary
                 </p>
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition-shadow duration-300">
-                <div className="w-14 h-14 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <AcademicCapIcon className="h-7 w-7 text-teal-600" />
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 hover:shadow-lg transition-shadow duration-300">
+                <div className="w-14 h-14 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AcademicCapIcon className="h-7 w-7 text-teal-600 dark:text-teal-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Share Knowledge</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Share Knowledge</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Help others by answering questions and sharing insights
                 </p>
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition-shadow duration-300">
-                <div className="w-14 h-14 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <PencilSquareIcon className="h-7 w-7 text-teal-600" />
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 hover:shadow-lg transition-shadow duration-300">
+                <div className="w-14 h-14 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <PencilSquareIcon className="h-7 w-7 text-teal-600 dark:text-teal-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Suggest Edits</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Suggest Edits</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Improve existing entries with corrections and additional context
                 </p>
               </div>
@@ -396,14 +396,14 @@ const Home = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/register"
-                className="inline-flex items-center justify-center px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-md transition-colors duration-200"
+                className="inline-flex items-center justify-center px-8 py-3 bg-teal-600 hover:bg-teal-700 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-semibold rounded-md transition-colors duration-200"
               >
                 <UserGroupIcon className="h-5 w-5 mr-2" />
                 Join Community
               </Link>
               <Link
                 to="/discussions"
-                className="inline-flex items-center justify-center px-8 py-3 bg-white hover:bg-gray-50 text-teal-600 font-semibold rounded-md border-2 border-teal-600 transition-colors duration-200"
+                className="inline-flex items-center justify-center px-8 py-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-teal-600 dark:text-teal-400 font-semibold rounded-md border-2 border-teal-600 dark:border-teal-500 transition-colors duration-200"
               >
                 <ChatBubbleLeftRightIcon className="h-5 w-5 mr-2" />
                 Start Contributing
