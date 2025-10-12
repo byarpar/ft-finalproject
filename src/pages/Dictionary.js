@@ -71,10 +71,12 @@ const Dictionary = () => {
       // Handle response structure: response.success, response.data.results
       if (response.success && response.data?.results) {
         setSearchResults(response.data.results);
-        // Automatically fetch related words for the first result
-        if (response.data.results.length > 0 && response.data.results[0].id) {
-          fetchRelatedWords(response.data.results[0].id);
-        }
+        // Automatically fetch related words for all results
+        response.data.results.forEach(result => {
+          if (result.id) {
+            fetchRelatedWords(result.id);
+          }
+        });
       } else {
         setSearchResults([]);
       }
@@ -95,7 +97,7 @@ const Dictionary = () => {
   // Fetch related words for a given word
   const fetchRelatedWords = async (wordId) => {
     if (!wordId || relatedWords[wordId]) return; // Skip if already loaded
-    
+
     setLoadingRelated(prev => ({ ...prev, [wordId]: true }));
     try {
       const response = await wordsAPI.getSimilarWords(wordId);
@@ -442,23 +444,12 @@ const Dictionary = () => {
                           {/* Related Words Section */}
                           {result.id && (
                             <div className="mt-5 pt-5 border-t border-gray-200 dark:border-gray-700">
-                              <div className="flex items-center justify-between mb-3">
-                                <h4 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wide flex items-center gap-2">
-                                  <svg className="w-5 h-5 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                  </svg>
-                                  Related Words
-                                </h4>
-                                {!relatedWords[result.id] && !loadingRelated[result.id] && (
-                                  <button
-                                    type="button"
-                                    onClick={() => fetchRelatedWords(result.id)}
-                                    className="text-xs font-medium text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors"
-                                  >
-                                    Show related words
-                                  </button>
-                                )}
-                              </div>
+                              <h4 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wide flex items-center gap-2 mb-3">
+                                <svg className="w-5 h-5 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                                Related Words
+                              </h4>
 
                               {loadingRelated[result.id] && (
                                 <div className="flex items-center justify-center py-4">
