@@ -35,6 +35,7 @@ import AdminSearch from './components/admin/AdminSearch';
 import NotFound from './pages/NotFound';
 import ServerError from './pages/ServerError';
 import Discussions from './pages/Discussions';
+import NewDiscussion from './pages/NewDiscussion';
 import DiscussionThread from './pages/DiscussionThread';
 import Members from './pages/Members';
 import UserProfile from './pages/UserProfile';
@@ -145,14 +146,19 @@ function App() {
                           <Discussions />
                         </PrivateRoute>
                       } />
-                      <Route path="/discussions/:id" element={
+                      <Route path="/discussions/new" element={
                         <PrivateRoute>
-                          <DiscussionThread />
+                          <NewDiscussion />
                         </PrivateRoute>
                       } />
                       <Route path="/discussions/members" element={
                         <PrivateRoute>
                           <Members />
+                        </PrivateRoute>
+                      } />
+                      <Route path="/discussions/:id" element={
+                        <PrivateRoute>
+                          <DiscussionThread />
                         </PrivateRoute>
                       } />
                       <Route path="/users" element={

@@ -83,8 +83,10 @@ const DiscussionThreadEnhanced = () => {
       setError(null);
     } catch (err) {
       console.error('Error fetching discussion:', err);
-      setError('Failed to load discussion. Please try again.');
-      toast.error('Failed to load discussion');
+      // Extract error message from various error formats
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to load discussion. Please try again.';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -529,8 +531,10 @@ const DiscussionThreadEnhanced = () => {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <ChatBubbleLeftIcon className="w-16 h-16 mx-auto mb-4 text-gray-400 dark:text-gray-600" />
-          <p className="text-red-600 dark:text-red-400 mb-4 text-lg">{error || 'Discussion not found'}</p>
+          <ChatBubbleLeftIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+          <p className="text-red-600 dark:text-red-400 mb-4 text-lg">
+            {typeof error === 'string' ? error : error?.message || 'Discussion not found'}
+          </p>
           <button
             onClick={() => navigate('/discussions')}
             className="px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors"
@@ -556,11 +560,11 @@ const DiscussionThreadEnhanced = () => {
             >
               Discussions
             </Link>
-            <span className="text-gray-400 dark:text-gray-600">/</span>
+            <span className="text-gray-400">/</span>
             <span className="text-gray-600 dark:text-gray-400">
               {typeof discussion.category === 'object' ? discussion.category.name : discussion.category || 'General'}
             </span>
-            <span className="text-gray-400 dark:text-gray-600">/</span>
+            <span className="text-gray-400">/</span>
             <span className="text-gray-900 dark:text-white font-medium truncate max-w-md">
               {discussion.title}
             </span>
@@ -688,7 +692,7 @@ const DiscussionThreadEnhanced = () => {
                     {discussion.images.map((image, idx) => (
                       <img
                         key={idx}
-                        src={image}
+                        src={typeof image === 'string' ? image : image.data}
                         alt={`Attachment ${idx + 1}`}
                         className="rounded-lg w-full h-auto"
                       />
