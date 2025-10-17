@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { discussionsAPI, tagsAPI, usersAPI } from '../services/api';
 import {
@@ -10,20 +10,21 @@ import {
   EyeIcon,
   ClockIcon,
   UserIcon,
-  TagIcon,
-  SparklesIcon,
-  BellIcon,
-  MegaphoneIcon
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 import {
-  BookmarkIcon as BookmarkSolidIcon
+  BookmarkIcon as BookmarkSolidIcon,
+  CheckCircleIcon as CheckCircleSolidIcon,
+  LockClosedIcon,
+  MapPinIcon,
+  CheckBadgeIcon
 } from '@heroicons/react/24/solid';
 import toast from 'react-hot-toast';
-import LoadingSpinner from '../components/UI/LoadingSpinner';
+import DiscussionSkeleton from '../components/UI/DiscussionSkeleton';
+import VoteButtons from '../components/Discussion/VoteButtons';
 
 const Discussions = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   const [discussions, setDiscussions] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -43,16 +44,18 @@ const Discussions = () => {
   const fetchDiscussions = useCallback(async () => {
     try {
       setLoading(true);
+
       const response = await discussionsAPI.getDiscussions({
         page,
         limit: 20,
         category: selectedCategory !== 'all' ? selectedCategory : undefined,
         search: searchQuery || undefined,
-        sortBy
+        sortBy,
+        filter: filterBy !== 'all' ? filterBy : undefined
       });
 
-      setDiscussions(response.discussions || []);
-      setTotalPages(response.totalPages || 1);
+      setDiscussions(response.discussions || response.data?.discussions || []);
+      setTotalPages(response.totalPages || response.data?.pagination?.totalPages || 1);
       setError(null);
     } catch (err) {
       console.error('Error fetching discussions:', err);
@@ -61,7 +64,7 @@ const Discussions = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, selectedCategory, searchQuery, sortBy]);
+  }, [page, selectedCategory, searchQuery, sortBy, filterBy]);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -203,18 +206,33 @@ const Discussions = () => {
                 </p>
               </div>
 
-              <Link
-                to={user ? "/discussions/new" : "/login"}
-                onClick={() => {
-                  if (!user) {
-                    toast.error('Please login to start a discussion');
-                  }
-                }}
-                className="inline-flex items-center gap-2 px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-base rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                <PlusIcon className="w-5 h-5" />
-                Start a New Discussion
-              </Link>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  to={user ? "/discussions/new" : "/login"}
+                  onClick={() => {
+                    if (!user) {
+                      toast.error('Please login to start a discussion');
+                    }
+                  }}
+                  className="inline-flex items-center gap-2 px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-base rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <PlusIcon className="w-5 h-5" />
+                  Start a Discussion
+                </Link>
+
+                <Link
+                  to={user ? "/chat" : "/login"}
+                  onClick={() => {
+                    if (!user) {
+                      toast.error('Please login to access chat');
+                    }
+                  }}
+                  className="inline-flex items-center gap-2 px-8 py-3 bg-white/10 hover:bg-white/20 text-white font-medium text-base rounded-lg transition-all duration-200 border-2 border-white/30"
+                >
+                  <ChatBubbleLeftRightIcon className="w-5 h-5" />
+                  Chat
+                </Link>
+              </div>
             </div>
 
             <div className="relative lg:block hidden" />
@@ -255,62 +273,15 @@ const Discussions = () => {
                       {category.name}
                     </button>
                   ))}
-
-                  <button
-                    onClick={() => navigate('/discussions/members')}
-                    className="ml-auto px-4 py-2 font-semibold text-sm whitespace-nowrap rounded-full bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 transition-all duration-200 flex items-center gap-2"
-                  >
-                    <UserIcon className="w-4 h-4" />
-                    Members
-                  </button>
                 </div>
               </div>
 
               <div className="p-4 bg-gray-50 dark:bg-gray-800/50">
                 <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-                  <div className="w-full sm:w-48">
-                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                      Filter by:
-                    </label>
-                    <select
-                      value={filterBy}
-                      onChange={(e) => {
-                        setFilterBy(e.target.value);
-                        setPage(1);
-                      }}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                    >
-                      <option value="all">All Discussions</option>
-                      <option value="unanswered">Unanswered</option>
-                      <option value="my">My Posts</option>
-                      <option value="solved">Solved</option>
-                    </select>
-                  </div>
-
-                  <div className="w-full sm:w-48">
-                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                      Sort by:
-                    </label>
-                    <select
-                      value={sortBy}
-                      onChange={(e) => {
-                        setSortBy(e.target.value);
-                        setPage(1);
-                      }}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                    >
-                      <option value="latest">Latest Activity</option>
-                      <option value="popular">Most Popular</option>
-                      <option value="newest">Newest</option>
-                    </select>
-                  </div>
-
+                  {/* Consolidated Search with Filters */}
                   <div className="flex-1">
-                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                      Search:
-                    </label>
                     <div className="relative">
-                      <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="text"
                         placeholder="Search discussions..."
@@ -319,23 +290,82 @@ const Discussions = () => {
                           setSearchQuery(e.target.value);
                           setPage(1);
                         }}
-                        className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white placeholder-gray-400"
+                        className="w-full pl-11 pr-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white placeholder-gray-400"
                       />
                     </div>
                   </div>
+
+                  {/* Filter Dropdown */}
+                  <div className="w-full sm:w-40">
+                    <select
+                      value={filterBy}
+                      onChange={(e) => {
+                        setFilterBy(e.target.value);
+                        setPage(1);
+                      }}
+                      className="w-full px-3 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    >
+                      <option value="all">All</option>
+                      <option value="unanswered">Unanswered</option>
+                      <option value="my">My Posts</option>
+                      <option value="solved">Solved</option>
+                    </select>
+                  </div>
+
+                  {/* Sort Dropdown */}
+                  <div className="w-full sm:w-40">
+                    <select
+                      value={sortBy}
+                      onChange={(e) => {
+                        setSortBy(e.target.value);
+                        setPage(1);
+                      }}
+                      className="w-full px-3 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    >
+                      <option value="latest">Latest</option>
+                      <option value="popular">Popular</option>
+                      <option value="newest">Newest</option>
+                    </select>
+                  </div>
                 </div>
 
+                {/* Active Filters Display */}
+                {(filterBy !== 'all' || searchQuery) && (
+                  <div className="mt-3 flex flex-wrap gap-2 items-center">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Active filters:</span>
+                    {filterBy !== 'all' && (
+                      <button
+                        onClick={() => setFilterBy('all')}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded-full text-xs font-medium hover:bg-teal-200 dark:hover:bg-teal-900/50 transition-colors"
+                      >
+                        {filterBy}
+                        <span className="text-teal-600 dark:text-teal-400">×</span>
+                      </button>
+                    )}
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded-full text-xs font-medium hover:bg-teal-200 dark:hover:bg-teal-900/50 transition-colors"
+                      >
+                        "{searchQuery.substring(0, 20)}{searchQuery.length > 20 ? '...' : ''}"
+                        <span className="text-teal-600 dark:text-teal-400">×</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                  {discussions.length} topics • Discussions
+                  {discussions.length} discussion{discussions.length !== 1 ? 's' : ''}
                 </div>
               </div>
             </div>
 
             <div>
               {loading ? (
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-12 text-center">
-                  <LoadingSpinner />
-                  <p className="mt-4 text-gray-600 dark:text-gray-400">Loading discussions...</p>
+                <div className="space-y-4">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <DiscussionSkeleton key={i} />
+                  ))}
                 </div>
               ) : error ? (
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-12 text-center">
@@ -348,29 +378,47 @@ const Discussions = () => {
                   </button>
                 </div>
               ) : discussions.length === 0 ? (
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-12 text-center">
-                  <ChatBubbleLeftRightIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                    No discussions found
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    {searchQuery ? 'Try adjusting your search terms' : 'Be the first to start a discussion!'}
-                  </p>
-                  {user && !searchQuery && (
-                    <Link
-                      to="/discussions/new"
-                      className="px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-lg inline-block"
-                    >
-                      Start New Discussion
-                    </Link>
-                  )}
+                <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-sm p-12 sm:p-16 text-center border-2 border-dashed border-gray-300 dark:border-gray-700">
+                  <div className="max-w-md mx-auto">
+                    <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-900/20 dark:to-cyan-900/20 flex items-center justify-center">
+                      <ChatBubbleLeftRightIcon className="w-10 h-10 text-teal-600 dark:text-teal-400" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                      {searchQuery ? 'No discussions found' : 'Start the Conversation!'}
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400 mb-8 text-base">
+                      {searchQuery
+                        ? 'Try adjusting your search terms or filters to find what you\'re looking for.'
+                        : 'Be the first to share your thoughts, ask questions, or start a discussion with the community.'}
+                    </p>
+                    {user && !searchQuery && (
+                      <Link
+                        to="/discussions/new"
+                        className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5"
+                      >
+                        <PlusIcon className="w-5 h-5" />
+                        Start New Discussion
+                      </Link>
+                    )}
+                    {searchQuery && (
+                      <button
+                        onClick={() => {
+                          setSearchQuery('');
+                          setFilterBy('all');
+                        }}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg font-medium transition-colors"
+                      >
+                        Clear Filters
+                      </button>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {discussions.map((discussion) => (
                     <div
                       key={discussion.id}
-                      className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg hover:border-teal-300 dark:hover:border-teal-600 transition-all duration-300 overflow-hidden"
+                      className="group bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:border-teal-400 dark:hover:border-teal-500 hover:-translate-y-1 transition-all duration-300 overflow-hidden"
                     >
                       <div className="p-6">
                         <div className="flex gap-5">
@@ -395,37 +443,89 @@ const Discussions = () => {
 
                           {/* Thread Content */}
                           <div className="flex-1 min-w-0">
-                            {/* Title */}
-                            <Link
-                              to={`/discussions/${discussion.id}`}
-                              className="block group mb-2"
-                            >
-                              <h3 className="text-xl font-bold text-gray-900 dark:text-white line-clamp-2 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors leading-tight">
-                                {discussion.title}
-                              </h3>
-                            </Link>
+                            {/* Title with Status Badges */}
+                            <div className="mb-2">
+                              <Link
+                                to={`/discussions/${discussion.id}`}
+                                className="block group"
+                              >
+                                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white line-clamp-2 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors leading-snug mb-1">
+                                  {discussion.is_pinned && (
+                                    <MapPinIcon className="inline w-5 h-5 text-blue-600 dark:text-blue-400 mr-2 -mt-1" />
+                                  )}
+                                  {discussion.title}
+                                </h3>
+                              </Link>
 
-                            {/* Snippet */}
+                              {/* Status Badges Row */}
+                              <div className="flex flex-wrap items-center gap-2 mt-2">
+                                {discussion.is_solved && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded text-xs font-medium">
+                                    <CheckCircleSolidIcon className="w-3.5 h-3.5" />
+                                    Solved
+                                  </span>
+                                )}
+                                {discussion.is_pinned && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded text-xs font-medium">
+                                    <MapPinIcon className="w-3.5 h-3.5" />
+                                    Pinned
+                                  </span>
+                                )}
+                                {discussion.is_locked && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded text-xs font-medium">
+                                    <LockClosedIcon className="w-3.5 h-3.5" />
+                                    Locked
+                                  </span>
+                                )}
+                                {/* Trending Badge - if replies > 10 and created in last 24h */}
+                                {discussion.answers_count > 5 && !discussion.is_solved && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded text-xs font-medium">
+                                    🔥 Trending
+                                  </span>
+                                )}
+                                {/* Unanswered Badge */}
+                                {discussion.answers_count === 0 && !discussion.is_solved && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded text-xs font-medium">
+                                    💬 Unanswered
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Content Preview/Snippet */}
                             <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 leading-relaxed">
-                              {discussion.content?.replace(/<[^>]*>/g, '').substring(0, 180) || 'No description available.'}
-                              {discussion.content?.length > 180 && '...'}
+                              {discussion.content?.replace(/<[^>]*>/g, '').substring(0, 200) || 'No description available.'}
+                              {discussion.content?.length > 200 && '...'}
                             </p>
 
-                            {/* Metadata Row */}
-                            <div className="flex flex-wrap items-center gap-3 mb-3">
-                              <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                                Posted by{' '}
+                            {/* Metadata Row with Avatar */}
+                            <div className="flex items-center gap-3 mb-3">
+                              {/* Author Avatar */}
+                              <Link
+                                to={`/users/${discussion.author_id}`}
+                                className="flex-shrink-0"
+                              >
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center text-white font-semibold text-sm shadow-sm hover:shadow-md transition-shadow">
+                                  {(discussion.author_name || 'A').charAt(0).toUpperCase()}
+                                </div>
+                              </Link>
+
+                              {/* Author Info */}
+                              <div className="flex flex-wrap items-center gap-2 text-xs">
                                 <Link
                                   to={`/users/${discussion.author_id}`}
-                                  className="font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors"
+                                  className="flex items-center gap-1 font-semibold text-gray-900 dark:text-white hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
                                 >
-                                  {discussion.author_name || 'Anonymous'}
+                                  <span>{discussion.author_name || 'Anonymous'}</span>
+                                  {discussion.author_role === 'admin' && (
+                                    <CheckBadgeIcon className="w-4 h-4 text-red-500" title="Verified Admin" />
+                                  )}
                                 </Link>
-                              </span>
-                              <span className="text-xs text-gray-400">•</span>
-                              <span className="text-xs text-gray-500 dark:text-gray-400">
-                                Last activity: {formatDate(discussion.updated_at || discussion.created_at)}
-                              </span>
+                                <span className="text-gray-400">•</span>
+                                <span className="text-gray-500 dark:text-gray-400">
+                                  {formatDate(discussion.updated_at || discussion.created_at)}
+                                </span>
+                              </div>
                             </div>
 
                             {/* Tags */}
@@ -450,45 +550,59 @@ const Discussions = () => {
 
                             {/* Engagement Metrics */}
                             <div className="flex items-center gap-5 text-sm">
+                              {/* Vote Buttons */}
+                              <VoteButtons
+                                itemId={discussion.id}
+                                itemType="discussion"
+                                initialVoteCount={discussion.vote_count || 0}
+                                initialUpvotes={discussion.upvotes || 0}
+                                initialDownvotes={discussion.downvotes || 0}
+                                initialUserVote={discussion.user_vote || null}
+                                onVoteChange={(voteData) => {
+                                  setDiscussions(prev => prev.map(d =>
+                                    d.id === discussion.id
+                                      ? { ...d, vote_count: voteData.vote_count, upvotes: voteData.upvotes, downvotes: voteData.downvotes }
+                                      : d
+                                  ));
+                                }}
+                              />
+
+                              {/* Replies Count - Always show */}
                               <Link
                                 to={`/discussions/${discussion.id}`}
                                 className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
                               >
-                                <div className="flex items-center gap-1.5">
-                                  <ChatBubbleLeftRightIcon className="w-4 h-4" />
-                                  <span className="font-semibold">{discussion.answers_count || 0}</span>
-                                  <span className="text-xs">Replies</span>
-                                </div>
+                                <ChatBubbleLeftRightIcon className="w-4 h-4" />
+                                <span className="font-semibold">{discussion.answers_count || 0}</span>
+                                {discussion.answers_count > 0 && (
+                                  <span className="text-xs hidden sm:inline">
+                                    {discussion.answers_count === 1 ? 'Reply' : 'Replies'}
+                                  </span>
+                                )}
                               </Link>
 
-                              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                                <div className="flex items-center gap-1.5">
+                              {/* Views Count - Only show if > 0 */}
+                              {discussion.views_count > 0 && (
+                                <div className="hidden md:flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
                                   <EyeIcon className="w-4 h-4" />
-                                  <span className="font-semibold">{discussion.views_count || 0}</span>
-                                  <span className="text-xs">Views</span>
+                                  <span className="font-semibold">{discussion.views_count}</span>
                                 </div>
-                              </div>
-
-                              {discussion.status && (
-                                <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${discussion.status === 'solved'
-                                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                  : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                                  }`}>
-                                  {discussion.status === 'solved' ? '✓ Solved' : '⏳ Unanswered'}
-                                </span>
                               )}
                             </div>
                           </div>
 
-                          {/* Bookmark Action */}
+                          {/* Bookmark Action - Show on hover or if saved */}
                           <div className="flex-shrink-0">
                             <button
                               onClick={() => handleSaveDiscussion(discussion.id, discussion.is_saved)}
-                              className="p-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group"
+                              className={`p-2.5 rounded-lg transition-all duration-200 ${discussion.is_saved
+                                ? 'opacity-100 bg-teal-50 dark:bg-teal-900/20'
+                                : 'opacity-0 group-hover:opacity-100 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                }`}
                               title={discussion.is_saved ? 'Unsave thread' : 'Save thread'}
                             >
                               {discussion.is_saved ? (
-                                <BookmarkSolidIcon className="w-5 h-5 text-teal-600 dark:text-teal-400 group-hover:scale-110 transition-transform" />
+                                <BookmarkSolidIcon className="w-5 h-5 text-teal-600 dark:text-teal-400 hover:scale-110 transition-transform" />
                               ) : (
                                 <BookmarkIcon className="w-5 h-5 text-gray-400 hover:text-teal-600 dark:hover:text-teal-400" />
                               )}
@@ -536,16 +650,17 @@ const Discussions = () => {
               </p>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5 border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
-                  <SparklesIcon className="w-5 h-5 text-white" />
+            {/* Trending Topics - Only show if tags exist */}
+            {popularTags && popularTags.length > 0 && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5 border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+                    <SparklesIcon className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-base font-bold text-gray-900 dark:text-white">Trending Topics</h3>
                 </div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-white">Trending Topics</h3>
-              </div>
-              <div className="space-y-2">
-                {popularTags.length > 0 ? (
-                  popularTags.map((tag, index) => (
+                <div className="space-y-2">
+                  {popularTags.map((tag, index) => (
                     <button
                       key={index}
                       onClick={() => handleTagClick(tag.name || tag)}
@@ -565,15 +680,10 @@ const Discussions = () => {
                         )}
                       </div>
                     </button>
-                  ))
-                ) : (
-                  <div className="text-center py-8">
-                    <TagIcon className="w-12 h-12 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
-                    <p className="text-sm text-gray-500 dark:text-gray-400">No trending tags yet</p>
-                  </div>
-                )}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5 border border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-2 mb-4">
@@ -622,20 +732,11 @@ const Discussions = () => {
             </div>
 
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5 border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                    <UserIcon className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-base font-bold text-gray-900 dark:text-white">Active Members</h3>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                  <UserIcon className="w-5 h-5 text-white" />
                 </div>
-                <Link
-                  to="/discussions/members"
-                  className="text-xs text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-semibold flex items-center gap-1 hover:gap-2 transition-all"
-                >
-                  View All Members
-                  <span>→</span>
-                </Link>
+                <h3 className="text-base font-bold text-gray-900 dark:text-white">Active Members</h3>
               </div>
 
               <div className="grid grid-cols-4 gap-3 mb-4">
@@ -677,32 +778,26 @@ const Discussions = () => {
               </Link>
             </div>
 
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-lg shadow-sm p-5 border border-amber-200 dark:border-amber-800">
+            <div className="bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 rounded-lg shadow-sm p-5 border border-teal-200 dark:border-teal-800">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center relative">
-                  <MegaphoneIcon className="w-5 h-5 text-white" />
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-gray-800" />
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+                  <ChatBubbleLeftRightIcon className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-white">Relevant Announcements</h3>
+                <h3 className="text-base font-bold text-gray-900 dark:text-white">Community Chat</h3>
               </div>
-              <div className="space-y-3">
-                <div className="bg-white dark:bg-amber-900/10 rounded-lg p-3 border border-amber-200 dark:border-amber-700">
-                  <div className="flex items-start gap-2">
-                    <BellIcon className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
-                        Welcome to the Community!
-                      </p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                        Start engaging with fellow Lisu language learners and share your knowledge.
-                      </p>
-                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 font-medium">
-                        Just now
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Join real-time conversations with fellow Lisu language learners and practice together.
+              </p>
+              <Link
+                to="/chat"
+                className="block w-full text-center px-4 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 group"
+              >
+                <span className="inline-flex items-center gap-2">
+                  <ChatBubbleLeftRightIcon className="w-5 h-5" />
+                  Open Chat Page
+                  <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                </span>
+              </Link>
             </div>
           </div>
         </div>

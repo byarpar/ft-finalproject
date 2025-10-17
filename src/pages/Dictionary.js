@@ -1,23 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { searchAPI, wordsAPI } from '../services/api';
 import { useSearchParams, Link } from 'react-router-dom';
 import {
   MagnifyingGlassIcon,
   BookOpenIcon,
-  SparklesIcon,
-  HeartIcon,
-  ClockIcon,
   AdjustmentsHorizontalIcon,
   LanguageIcon,
   PlusIcon,
-  FireIcon,
   ChevronRightIcon
 } from '@heroicons/react/24/outline';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 
 const Dictionary = () => {
-  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -125,14 +119,6 @@ const Dictionary = () => {
     }
   };
 
-  const recentSearches = ['mountain', 'water', 'family', 'hello'];
-  const popularSearches = [
-    { term: 'ꓡꓲꓻ (mountain)', count: '1.2k', english: 'mountain' },
-    { term: 'ꓐꓬ (water)', count: '980', english: 'water' },
-    { term: 'ꓟꓬꓻ (family)', count: '856', english: 'family' },
-    { term: 'ꓡꓬ (hello)', count: '745', english: 'hello' }
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-700 dark:to-cyan-700 py-12">
@@ -141,9 +127,8 @@ const Dictionary = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
               <BookOpenIcon className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">LISU DICTIONARY</h1>
-            <p className="text-lg text-teal-50 mb-1">Your Gateway to the Lisu Language</p>
-            <p className="text-teal-100 text-sm">Learn, Connect, and Translate</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Lisu-English Dictionary</h1>
+            <p className="text-lg text-teal-50">Search and explore Lisu language words</p>
           </div>
           <div className="max-w-4xl mx-auto">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6">
@@ -218,47 +203,6 @@ const Dictionary = () => {
                       <button key={letter} type="button" onClick={() => handleLetterClick(letter)} className={`w-10 h-10 flex items-center justify-center rounded-lg font-semibold transition-all ${selectedLetter === letter ? 'bg-teal-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-gray-600 hover:text-teal-600'}`}>{letter}</button>
                     ))}
                   </div>
-                </div>
-              </div>
-            )}
-            {!hasSearched && user && recentSearches.length > 0 && (
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <ClockIcon className="w-6 h-6 text-teal-600 dark:text-teal-400" />
-                    Recent Searches
-                  </h2>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 divide-y divide-gray-200 dark:divide-gray-700">
-                  {recentSearches.map((term, index) => (
-                    <button key={index} type="button" onClick={() => handleSearch(term)} className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between group">
-                      <span className="text-gray-900 dark:text-white">{term}</span>
-                      <ChevronRightIcon className="w-5 h-5 text-gray-400 group-hover:text-teal-600 dark:group-hover:text-teal-400" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            {!hasSearched && (
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <FireIcon className="w-6 h-6 text-orange-500" />
-                    Popular Searches
-                  </h2>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {popularSearches.map((item, index) => (
-                    <button key={index} type="button" onClick={() => handleSearch(item.english)} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-left hover:border-teal-500 dark:hover:border-teal-400 hover:shadow-md transition-all group">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400">{item.term}</div>
-                          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">{item.count} searches</div>
-                        </div>
-                        <SparklesIcon className="w-5 h-5 text-orange-400" />
-                      </div>
-                    </button>
-                  ))}
                 </div>
               </div>
             )}
@@ -513,10 +457,10 @@ const Dictionary = () => {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="px-6 pb-6 flex items-center gap-3 flex-wrap">
+                        <div className="px-6 pb-6">
                           <Link
                             to={`/words/${result.id}`}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 font-medium text-sm transition-colors"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium text-sm transition-colors"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -524,26 +468,6 @@ const Dictionary = () => {
                             </svg>
                             View Full Details
                           </Link>
-
-                          <Link
-                            to={`/discussions?word=${result.id}`}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium text-sm transition-colors"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                            Discuss this Word
-                          </Link>
-
-                          {user && (
-                            <button
-                              type="button"
-                              className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-red-50 dark:hover:bg-gray-600 hover:text-red-600 dark:hover:text-red-400 hover:border-red-300 font-medium text-sm transition-colors"
-                            >
-                              <HeartIcon className="w-4 h-4" />
-                              Save
-                            </button>
-                          )}
                         </div>
                       </div>
                     ))}
@@ -583,120 +507,12 @@ const Dictionary = () => {
               </div>
             )}
 
-            {/* Word of the Day */}
-            <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-xl border border-orange-200 dark:border-orange-800 overflow-hidden">
-              <div className="p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <SparklesIcon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                  <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide">Word of the Day</h3>
-                </div>
-                <div className="mb-3">
-                  <h4 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Glaatba</h4>
-                  <p className="text-lg text-orange-600 dark:text-orange-400 mb-2" style={{ fontFamily: 'serif' }}>ꓖꓳꓰꓽ ꓐꓬ</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 italic">Thank you / Gratitude</p>
-                </div>
-                <Link
-                  to="/words/word-of-day"
-                  className="inline-flex items-center text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300"
-                >
-                  Learn more →
-                </Link>
-              </div>
-            </div>
-
-            {/* Recently Viewed Words */}
-            {user && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <ClockIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                  <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide">Recently Viewed</h3>
-                </div>
-                <div className="space-y-3">
-                  {['mountain', 'water', 'friend'].map((word, idx) => (
-                    <Link
-                      key={idx}
-                      to={`/words/${idx + 1}`}
-                      className="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-medium text-gray-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 capitalize">
-                            {word}
-                          </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">2 hours ago</div>
-                        </div>
-                        <ChevronRightIcon className="w-4 h-4 text-gray-400 group-hover:text-teal-600 dark:group-hover:text-teal-400" />
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Cultural & Grammar Context */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <svg className="w-5 h-5 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide">Learning Resources</h3>
-              </div>
-              <ul className="space-y-3">
-                <li>
-                  <Link to="/discussions?tag=grammar" className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors group">
-                    <ChevronRightIcon className="w-4 h-4 mt-0.5 text-gray-400 group-hover:text-teal-600 dark:group-hover:text-teal-400" />
-                    <div>
-                      <div className="font-medium">Basic Grammar Rules</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Learn sentence structure</div>
-                    </div>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/discussions?tag=pronunciation" className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors group">
-                    <ChevronRightIcon className="w-4 h-4 mt-0.5 text-gray-400 group-hover:text-teal-600 dark:group-hover:text-teal-400" />
-                    <div>
-                      <div className="font-medium">Pronunciation Guide</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Master Lisu sounds</div>
-                    </div>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/discussions?tag=tones" className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors group">
-                    <ChevronRightIcon className="w-4 h-4 mt-0.5 text-gray-400 group-hover:text-teal-600 dark:group-hover:text-teal-400" />
-                    <div>
-                      <div className="font-medium">Tones & Accents</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Understanding tone marks</div>
-                    </div>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/discussions?tag=culture" className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors group">
-                    <ChevronRightIcon className="w-4 h-4 mt-0.5 text-gray-400 group-hover:text-teal-600 dark:group-hover:text-teal-400" />
-                    <div>
-                      <div className="font-medium">Cultural Context</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Lisu traditions & customs</div>
-                    </div>
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
             <div className="bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 rounded-xl border border-teal-200 dark:border-teal-800 p-5">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Suggest a Word</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Help us expand the dictionary by suggesting new words or translations.</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Help expand the dictionary by suggesting new words or translations.</p>
               <Link to="/contribute" className="inline-flex items-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors w-full justify-center shadow-sm hover:shadow-md">
                 <PlusIcon className="w-5 h-5" />
                 Contribute
-              </Link>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
-              <h3 className="text-base font-bold text-gray-900 dark:text-white mb-2">Community Contributors</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                Over <strong className="text-teal-600 dark:text-teal-400">100+</strong> community members have contributed to this dictionary.
-              </p>
-              <Link to="/about" className="inline-flex items-center text-sm font-medium text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300">
-                Learn more →
               </Link>
             </div>
           </div>

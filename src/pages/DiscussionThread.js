@@ -4,34 +4,29 @@ import { useAuth } from '../contexts/AuthContext';
 import { discussionsAPI, answersAPI } from '../services/api';
 import {
   ChatBubbleLeftRightIcon,
-  HeartIcon,
+  ArrowUpIcon,
   BookmarkIcon,
-  ShareIcon,
-  EyeIcon,
   ClockIcon,
   TagIcon,
   TrashIcon,
   PencilIcon,
   FlagIcon,
-  BellIcon,
   ChevronDownIcon,
   ChevronUpIcon,
-  PhotoIcon,
-  MicrophoneIcon,
   CodeBracketIcon,
   ListBulletIcon,
   LinkIcon as LinkOutlineIcon,
-  ChatBubbleLeftIcon,
-  SparklesIcon,
-  FireIcon
+  ChatBubbleLeftIcon
 } from '@heroicons/react/24/outline';
 import {
-  HeartIcon as HeartSolidIcon,
+  ArrowUpIcon as ArrowUpSolidIcon,
   BookmarkIcon as BookmarkSolidIcon,
-  BellIcon as BellSolidIcon
+  CheckBadgeIcon
 } from '@heroicons/react/24/solid';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
+import DiscussionActions from '../components/Discussion/DiscussionActions';
+import BestAnswerBadge from '../components/Discussion/BestAnswerBadge';
 
 const DiscussionThreadEnhanced = () => {
   const { id } = useParams();
@@ -54,11 +49,9 @@ const DiscussionThreadEnhanced = () => {
   const [showReplyBox, setShowReplyBox] = useState(false);
 
   // Reply sorting
-  const [sortBy, setSortBy] = useState('newest'); // newest, oldest, most_liked
+  const [sortBy, setSortBy] = useState('newest'); // newest, oldest, most_voted
 
   // Thread actions state
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [showShareMenu, setShowShareMenu] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
   // Edit state
@@ -79,7 +72,6 @@ const DiscussionThreadEnhanced = () => {
       const discussionData = response.discussion || response.data?.discussion || response;
 
       setDiscussion(discussionData);
-      setIsFollowing(discussionData.is_following || false);
       setError(null);
     } catch (err) {
       console.error('Error fetching discussion:', err);
@@ -162,7 +154,7 @@ const DiscussionThreadEnhanced = () => {
     switch (sortBy) {
       case 'oldest':
         return sorted.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-      case 'most_liked':
+      case 'most_voted':
         return sorted.sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
       case 'newest':
       default:
@@ -193,10 +185,10 @@ const DiscussionThreadEnhanced = () => {
     }
   };
 
-  // Handle like discussion
-  const handleLikeDiscussion = async () => {
+  // Handle vote discussion
+  const handleVoteDiscussion = async () => {
     if (!user) {
-      toast.error('Please login to like discussions');
+      toast.error('Please login to vote');
       navigate('/login');
       return;
     }
@@ -213,59 +205,8 @@ const DiscussionThreadEnhanced = () => {
         likes_count: prev.is_liked ? prev.likes_count - 1 : prev.likes_count + 1
       }));
     } catch (err) {
-      console.error('Error liking discussion:', err);
-      toast.error('Failed to like discussion');
-    }
-  };
-
-  // Handle follow thread
-  const handleFollowThread = async () => {
-    if (!user) {
-      toast.error('Please login to follow threads');
-      navigate('/login');
-      return;
-    }
-
-    try {
-      setIsFollowing(!isFollowing);
-      toast.success(isFollowing ? 'Thread unfollowed' : 'You\'ll receive notifications for new replies!');
-      // TODO: Implement API call when backend is ready
-      // await discussionsAPI.followThread(id);
-    } catch (err) {
-      console.error('Error following thread:', err);
-      setIsFollowing(!isFollowing);
-      toast.error('Failed to follow thread');
-    }
-  };
-
-  // Handle share
-  const handleShare = (platform) => {
-    const url = window.location.href;
-    const title = discussion.title;
-
-    let shareUrl = '';
-    switch (platform) {
-      case 'twitter':
-        shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`;
-        break;
-      case 'facebook':
-        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-        break;
-      case 'linkedin':
-        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
-        break;
-      case 'copy':
-        navigator.clipboard.writeText(url);
-        toast.success('Link copied to clipboard!');
-        setShowShareMenu(false);
-        return;
-      default:
-        return;
-    }
-
-    if (shareUrl) {
-      window.open(shareUrl, '_blank', 'width=600,height=400');
-      setShowShareMenu(false);
+      console.error('Error voting on discussion:', err);
+      toast.error('Failed to vote on discussion');
     }
   };
 
@@ -287,6 +228,93 @@ const DiscussionThreadEnhanced = () => {
     }
   };
 
+  // Handle mark as solved
+  const handleToggleSolved = async () => {
+    if (!user) {
+      toast.error('Please login to mark as solved');
+      navigate('/login');
+      return;
+    }
+
+    try {
+      if (discussion.is_solved) {
+        await discussionsAPI.unmarkAsSolved(id);
+        toast.success('Discussion unmarked as solved');
+        setDiscussion(prev => ({ ...prev, is_solved: false, accepted_answer_id: null }));
+      } else {
+        // If there are answers, let them choose which one is best
+        toast.info('Mark an answer as best to solve this discussion');
+      }
+    } catch (err) {
+      console.error('Error toggling solved status:', err);
+      toast.error('Failed to update solved status');
+    }
+  };
+
+  // Handle mark answer as best
+  const handleMarkAsBest = async (answerId) => {
+    if (!user) {
+      toast.error('Please login to mark best answer');
+      navigate('/login');
+      return;
+    }
+
+    try {
+      await discussionsAPI.markAsSolved(id, answerId);
+      toast.success('Answer marked as best!');
+      setDiscussion(prev => ({ ...prev, is_solved: true, accepted_answer_id: answerId }));
+    } catch (err) {
+      console.error('Error marking as best:', err);
+      toast.error('Failed to mark as best answer');
+    }
+  };
+
+  // Handle pin/unpin (admin only)
+  const handleTogglePinned = async () => {
+    if (!user || user.role !== 'admin') {
+      toast.error('Only admins can pin discussions');
+      return;
+    }
+
+    try {
+      if (discussion.is_pinned) {
+        await discussionsAPI.unpinDiscussion(id);
+        toast.success('Discussion unpinned');
+        setDiscussion(prev => ({ ...prev, is_pinned: false }));
+      } else {
+        await discussionsAPI.pinDiscussion(id);
+        toast.success('Discussion pinned to top');
+        setDiscussion(prev => ({ ...prev, is_pinned: true }));
+      }
+    } catch (err) {
+      console.error('Error toggling pinned status:', err);
+      toast.error('Failed to update pinned status');
+    }
+  };
+
+  // Handle lock/unlock (admin only)
+  const handleToggleLocked = async () => {
+    if (!user || user.role !== 'admin') {
+      toast.error('Only admins can lock discussions');
+      return;
+    }
+
+    try {
+      if (discussion.is_locked) {
+        await discussionsAPI.unlockDiscussion(id);
+        toast.success('Discussion unlocked');
+        setDiscussion(prev => ({ ...prev, is_locked: false }));
+      } else {
+        await discussionsAPI.lockDiscussion(id);
+        toast.success('Discussion locked - no new replies allowed');
+        setDiscussion(prev => ({ ...prev, is_locked: true }));
+      }
+    } catch (err) {
+      console.error('Error toggling locked status:', err);
+      toast.error('Failed to update locked status');
+    }
+  };
+
   // Handle submit reply
   const handleSubmitReply = async (e) => {
     e.preventDefault();
@@ -294,6 +322,12 @@ const DiscussionThreadEnhanced = () => {
     if (!user) {
       toast.error('Please login to reply');
       navigate('/login');
+      return;
+    }
+
+    // Check if discussion is locked
+    if (discussion.is_locked) {
+      toast.error('This discussion is locked and no longer accepting replies');
       return;
     }
 
@@ -506,16 +540,6 @@ const DiscussionThreadEnhanced = () => {
     return colors[categoryKey] || colors.general;
   };
 
-  // Get user role badge
-  const getUserRoleBadge = (role) => {
-    const badges = {
-      'admin': { label: 'Admin', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
-      'linguist': { label: 'Linguist', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' },
-      'moderator': { label: 'Moderator', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-    };
-    return badges[role] || null;
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -594,25 +618,6 @@ const DiscussionThreadEnhanced = () => {
 
                   {/* Thread Actions (Top Right) */}
                   <div className="flex items-center gap-2">
-                    {/* Follow Button */}
-                    <button
-                      onClick={handleFollowThread}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${isFollowing
-                        ? 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300'
-                        : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-900/20'
-                        }`}
-                      title={isFollowing ? 'Following thread' : 'Follow thread for notifications'}
-                    >
-                      {isFollowing ? (
-                        <BellSolidIcon className="w-4 h-4" />
-                      ) : (
-                        <BellIcon className="w-4 h-4" />
-                      )}
-                      <span className="hidden sm:inline">
-                        {isFollowing ? 'Following' : 'Follow'}
-                      </span>
-                    </button>
-
                     {/* Report Button */}
                     <button
                       onClick={() => setShowReportModal(true)}
@@ -628,6 +633,18 @@ const DiscussionThreadEnhanced = () => {
                 <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">
                   {discussion.title}
                 </h1>
+
+                {/* Discussion Status Actions */}
+                <div className="mb-4">
+                  <DiscussionActions
+                    discussion={discussion}
+                    isAuthor={user && user.id === discussion.author_id}
+                    isAdmin={user && user.role === 'admin'}
+                    onToggleSolved={handleToggleSolved}
+                    onTogglePinned={handleTogglePinned}
+                    onToggleLocked={handleToggleLocked}
+                  />
+                </div>
 
                 {/* Tags */}
                 {discussion.tags && discussion.tags.length > 0 && (
@@ -655,25 +672,17 @@ const DiscussionThreadEnhanced = () => {
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
                         {(discussion.author_name || 'A')[0].toUpperCase()}
                       </div>
-                      <span className="font-medium">{discussion.author_name || 'Anonymous'}</span>
+                      <div className="flex items-center gap-1">
+                        <span className="font-medium">{discussion.author_name || 'Anonymous'}</span>
+                        {discussion.author_role === 'admin' && (
+                          <CheckBadgeIcon className="w-4 h-4 text-red-500" title="Verified Admin" />
+                        )}
+                      </div>
                     </Link>
-                    {getUserRoleBadge(discussion.author_role) && (
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${getUserRoleBadge(discussion.author_role).color}`}>
-                        {getUserRoleBadge(discussion.author_role).label}
-                      </span>
-                    )}
                   </div>
                   <div className="flex items-center gap-1">
                     <ClockIcon className="w-4 h-4" />
                     <span>Posted {formatDate(discussion.created_at)}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <EyeIcon className="w-4 h-4" />
-                    <span>{discussion.views_count || 0} views</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <ChatBubbleLeftRightIcon className="w-4 h-4" />
-                    <span>{discussion.answers_count || 0} replies</span>
                   </div>
                 </div>
               </div>
@@ -704,18 +713,18 @@ const DiscussionThreadEnhanced = () => {
               {/* Post Actions */}
               <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex flex-wrap items-center gap-3">
-                  {/* Like Button */}
+                  {/* Vote Button */}
                   <button
-                    onClick={handleLikeDiscussion}
+                    onClick={handleVoteDiscussion}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${discussion.is_liked
-                      ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
-                      : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 border border-gray-200 dark:border-gray-600'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                      : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 border border-gray-200 dark:border-gray-600'
                       }`}
                   >
                     {discussion.is_liked ? (
-                      <HeartSolidIcon className="w-5 h-5" />
+                      <ArrowUpSolidIcon className="w-5 h-5" />
                     ) : (
-                      <HeartIcon className="w-5 h-5" />
+                      <ArrowUpIcon className="w-5 h-5" />
                     )}
                     <span>{discussion.likes_count || 0}</span>
                   </button>
@@ -735,47 +744,6 @@ const DiscussionThreadEnhanced = () => {
                     )}
                     <span>{discussion.is_saved ? 'Saved' : 'Save'}</span>
                   </button>
-
-                  {/* Share Button */}
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowShareMenu(!showShareMenu)}
-                      className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 rounded-lg font-medium transition-colors"
-                    >
-                      <ShareIcon className="w-5 h-5" />
-                      <span>Share</span>
-                    </button>
-
-                    {/* Share Menu */}
-                    {showShareMenu && (
-                      <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-10">
-                        <button
-                          onClick={() => handleShare('twitter')}
-                          className="w-full px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          Share on Twitter
-                        </button>
-                        <button
-                          onClick={() => handleShare('facebook')}
-                          className="w-full px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          Share on Facebook
-                        </button>
-                        <button
-                          onClick={() => handleShare('linkedin')}
-                          className="w-full px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          Share on LinkedIn
-                        </button>
-                        <button
-                          onClick={() => handleShare('copy')}
-                          className="w-full px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-t border-gray-200 dark:border-gray-700"
-                        >
-                          Copy Link
-                        </button>
-                      </div>
-                    )}
-                  </div>
 
                   {/* Reply Button */}
                   <button
@@ -808,7 +776,7 @@ const DiscussionThreadEnhanced = () => {
                     >
                       <option value="newest">Newest</option>
                       <option value="oldest">Oldest</option>
-                      <option value="most_liked">Most Liked</option>
+                      <option value="most_voted">Most Voted</option>
                     </select>
                   </div>
                 )}
@@ -888,22 +856,6 @@ const DiscussionThreadEnhanced = () => {
                         >
                           Lisu 【ꓡꓲꓢꓴ】
                         </button>
-                        <button
-                          type="button"
-                          className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors opacity-50 cursor-not-allowed"
-                          title="Image Upload (Coming Soon)"
-                          disabled
-                        >
-                          <PhotoIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                        </button>
-                        <button
-                          type="button"
-                          className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors opacity-50 cursor-not-allowed"
-                          title="Audio Upload (Coming Soon)"
-                          disabled
-                        >
-                          <MicrophoneIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                        </button>
                       </div>
 
                       <textarea
@@ -973,6 +925,13 @@ const DiscussionThreadEnhanced = () => {
                   sortedAnswers.map((answer) => (
                     <div key={answer.id} className="border-l-4 border-teal-500 dark:border-teal-600">
                       <div className="pl-4 py-2">
+                        {/* Best Answer Badge */}
+                        {discussion.accepted_answer_id === answer.id && (
+                          <div className="mb-3">
+                            <BestAnswerBadge isBestAnswer={true} />
+                          </div>
+                        )}
+
                         {/* Answer Header */}
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
@@ -985,14 +944,14 @@ const DiscussionThreadEnhanced = () => {
                               </div>
                               <div>
                                 <div className="flex items-center gap-2">
-                                  <span className="font-medium text-gray-900 dark:text-white">
-                                    {answer.author_name || 'Anonymous'}
-                                  </span>
-                                  {getUserRoleBadge(answer.author_role) && (
-                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${getUserRoleBadge(answer.author_role).color}`}>
-                                      {getUserRoleBadge(answer.author_role).label}
+                                  <div className="flex items-center gap-1">
+                                    <span className="font-medium text-gray-900 dark:text-white">
+                                      {answer.author_name || 'Anonymous'}
                                     </span>
-                                  )}
+                                    {answer.author_role === 'admin' && (
+                                      <CheckBadgeIcon className="w-4 h-4 text-red-500" title="Verified Admin" />
+                                    )}
+                                  </div>
                                 </div>
                                 <span className="text-sm text-gray-500 dark:text-gray-400">
                                   {formatDate(answer.created_at)}
@@ -1002,24 +961,36 @@ const DiscussionThreadEnhanced = () => {
                           </div>
 
                           {/* Answer Actions (Edit/Delete for author) */}
-                          {user && answer.author_id === user.id && (
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handleEditAnswer(answer)}
-                                className="p-1.5 text-gray-500 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-400 transition-colors"
-                                title="Edit reply"
-                              >
-                                <PencilIcon className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteAnswer(answer.id)}
-                                className="p-1.5 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
-                                title="Delete reply"
-                              >
-                                <TrashIcon className="w-4 h-4" />
-                              </button>
-                            </div>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {/* Mark as Best Answer (only discussion author, not already solved) */}
+                            {user && user.id === discussion.author_id && !discussion.is_solved && discussion.accepted_answer_id !== answer.id && (
+                              <BestAnswerBadge
+                                isBestAnswer={false}
+                                canMarkAsBest={true}
+                                onMarkAsBest={handleMarkAsBest}
+                                answerId={answer.id}
+                              />
+                            )}
+
+                            {user && answer.author_id === user.id && (
+                              <>
+                                <button
+                                  onClick={() => handleEditAnswer(answer)}
+                                  className="p-1.5 text-gray-500 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-400 transition-colors"
+                                  title="Edit reply"
+                                >
+                                  <PencilIcon className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteAnswer(answer.id)}
+                                  className="p-1.5 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
+                                  title="Delete reply"
+                                >
+                                  <TrashIcon className="w-4 h-4" />
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </div>
 
                         {/* Answer Content */}
@@ -1103,10 +1074,15 @@ const DiscussionThreadEnhanced = () => {
                                       {(nestedReply.author_name || 'A')[0].toUpperCase()}
                                     </div>
                                     <div>
-                                      <span className="font-medium text-gray-900 dark:text-white text-sm">
-                                        {nestedReply.author_name || 'Anonymous'}
-                                      </span>
-                                      <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                                      <div className="flex items-center gap-1">
+                                        <span className="font-medium text-gray-900 dark:text-white text-sm">
+                                          {nestedReply.author_name || 'Anonymous'}
+                                        </span>
+                                        {nestedReply.author_role === 'admin' && (
+                                          <CheckBadgeIcon className="w-3.5 h-3.5 text-red-500" title="Verified Admin" />
+                                        )}
+                                      </div>
+                                      <span className="text-xs text-gray-500 dark:text-gray-400">
                                         {formatDate(nestedReply.created_at)}
                                       </span>
                                     </div>
@@ -1143,12 +1119,9 @@ const DiscussionThreadEnhanced = () => {
             <div className="sticky top-8 space-y-6">
               {/* Related Discussions */}
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <SparklesIcon className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                  <h3 className="font-bold text-gray-900 dark:text-white">
-                    Related Discussions
-                  </h3>
-                </div>
+                <h3 className="font-bold text-gray-900 dark:text-white mb-4">
+                  Related Discussions
+                </h3>
 
                 {relatedDiscussions.length === 0 ? (
                   <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -1168,52 +1141,13 @@ const DiscussionThreadEnhanced = () => {
                         <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
                           <span className="flex items-center gap-1">
                             <ChatBubbleLeftRightIcon className="w-3 h-3" />
-                            {related.answers_count || 0}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <EyeIcon className="w-3 h-3" />
-                            {related.views_count || 0}
+                            {related.answers_count || 0} replies
                           </span>
                         </div>
                       </Link>
                     ))}
                   </div>
                 )}
-              </div>
-
-              {/* Quick Stats */}
-              <div className="bg-gradient-to-br from-teal-500 to-blue-500 rounded-lg shadow-sm p-6 text-white">
-                <div className="flex items-center gap-2 mb-4">
-                  <FireIcon className="w-5 h-5" />
-                  <h3 className="font-bold">Thread Stats</h3>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-teal-100">Total Replies</span>
-                    <span className="font-bold text-lg">{discussion.answers_count || 0}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-teal-100">Views</span>
-                    <span className="font-bold text-lg">{discussion.views_count || 0}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-teal-100">Likes</span>
-                    <span className="font-bold text-lg">{discussion.likes_count || 0}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Discussion Guidelines */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2 text-sm">
-                  💡 Discussion Guidelines
-                </h4>
-                <ul className="space-y-1 text-xs text-blue-800 dark:text-blue-400">
-                  <li>• Be respectful and constructive</li>
-                  <li>• Stay on topic</li>
-                  <li>• Provide sources when possible</li>
-                  <li>• Use Lisu script when relevant</li>
-                </ul>
               </div>
             </div>
           </div>

@@ -108,20 +108,6 @@ const Navbar = () => {
 
           {/* User Account & Authentication - Right Side */}
           <div className="flex items-center space-x-3">
-            {/* Dark Mode Toggle */}
-            <button
-              onClick={toggleDarkMode}
-              className="p-2 text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-all duration-200"
-              aria-label="Toggle dark mode"
-              title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {darkMode ? (
-                <SunIcon className="w-5 h-5" />
-              ) : (
-                <MoonIcon className="w-5 h-5" />
-              )}
-            </button>
-
             {user ? (
               <div className="relative">
                 <button
@@ -160,20 +146,9 @@ const Navbar = () => {
                       onClick={() => setProfileDropdownOpen(false)}
                     />
                     <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-2 z-50">
-                      {user.full_name && (
-                        <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                            {user.full_name}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                            {user.email}
-                          </p>
-                        </div>
-                      )}
-
                       <div className="py-1">
                         <Link
-                          to="/profile"
+                          to={`/users/${user.id}`}
                           className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                           onClick={() => setProfileDropdownOpen(false)}
                         >
@@ -197,7 +172,7 @@ const Navbar = () => {
                           Dashboard
                         </Link>
                         <Link
-                          to="/profile/settings"
+                          to="/settings"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                           onClick={() => setProfileDropdownOpen(false)}
                         >
@@ -214,6 +189,28 @@ const Navbar = () => {
                             Admin Panel
                           </Link>
                         )}
+                      </div>
+
+                      <div className="border-t border-gray-100 dark:border-gray-700 py-1">
+                        <button
+                          onClick={() => {
+                            toggleDarkMode();
+                            setProfileDropdownOpen(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                          {darkMode ? (
+                            <>
+                              <SunIcon className="w-4 h-4 mr-3 text-gray-400" />
+                              Light Mode
+                            </>
+                          ) : (
+                            <>
+                              <MoonIcon className="w-4 h-4 mr-3 text-gray-400" />
+                              Dark Mode
+                            </>
+                          )}
+                        </button>
                       </div>
 
                       <div className="border-t border-gray-100 dark:border-gray-700 py-1">
@@ -303,15 +300,11 @@ const Navbar = () => {
                   ) : null}
                   <UserIcon className={`w-5 h-5 text-white ${user.profile_photo_url ? 'hidden' : ''}`} />
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{user.full_name || 'User'}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
-                </div>
               </div>
 
               <div className="space-y-1">
                 <Link
-                  to="/profile"
+                  to={`/users/${user.id}`}
                   className="flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md"
                   onClick={() => setIsOpen(false)}
                 >
@@ -335,7 +328,7 @@ const Navbar = () => {
                   Dashboard
                 </Link>
                 <Link
-                  to="/profile/settings"
+                  to="/settings"
                   className="flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md"
                   onClick={() => setIsOpen(false)}
                 >

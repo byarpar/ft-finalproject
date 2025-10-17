@@ -53,6 +53,7 @@ export const authAPI = {
   updatePreferences: (data) => api.put('/auth/preferences', data),
   updateDarkModePreference: (dark_mode_preference) =>
     api.put('/auth/dark-mode', { dark_mode_preference }).then(res => res.data),
+  deleteAccount: (confirmation) => api.delete('/auth/account', { data: { confirmation } }).then(res => res.data),
 };
 
 // Words API
@@ -100,17 +101,28 @@ export const discussionsAPI = {
   // Save/Bookmark functionality
   saveDiscussion: (id) => api.post(`/discussions/${id}/save`).then(res => res.data),
   unsaveDiscussion: (id) => api.delete(`/discussions/${id}/save`).then(res => res.data),
-
-  // Share functionality
-  shareDiscussion: (id, shareData) => api.post(`/discussions/${id}/share`, shareData).then(res => res.data),
+  getSavedDiscussions: (params = {}) => api.get('/discussions/user/saved', { params }).then(res => res.data),
 
   // Like functionality
   likeDiscussion: (id) => api.post(`/discussions/${id}/like`).then(res => res.data),
   unlikeDiscussion: (id) => api.delete(`/discussions/${id}/like`).then(res => res.data),
-  getLikedDiscussions: (params = {}) => api.get('/discussions/user/liked', { params }).then(res => res.data),
 
   // Report functionality
   reportDiscussion: (id, reportData) => api.post(`/discussions/${id}/report`, reportData).then(res => res.data),
+
+  // Voting functionality
+  voteDiscussion: (id, voteType) => api.post(`/discussions/${id}/vote`, { vote_type: voteType }).then(res => res.data),
+  voteAnswer: (id, voteType) => api.post(`/answers/${id}/vote`, { vote_type: voteType }).then(res => res.data),
+
+  // Solved status
+  markAsSolved: (id, answerId) => api.put(`/discussions/${id}/solve`, { answerId }).then(res => res.data),
+  unmarkAsSolved: (id) => api.delete(`/discussions/${id}/solve`).then(res => res.data),
+
+  // Pin/Lock (admin only)
+  pinDiscussion: (id) => api.put(`/discussions/${id}/pin`).then(res => res.data),
+  unpinDiscussion: (id) => api.delete(`/discussions/${id}/pin`).then(res => res.data),
+  lockDiscussion: (id) => api.put(`/discussions/${id}/lock`).then(res => res.data),
+  unlockDiscussion: (id) => api.delete(`/discussions/${id}/lock`).then(res => res.data),
 };
 
 // Tags API
@@ -187,6 +199,8 @@ export const adminAPI = {
   updateUserStatus: (userId, isActive) => api.put(`/admin/users/${userId}/status`, { is_active: isActive }).then(res => res.data),
   deleteUser: (userId) => api.delete(`/admin/users/${userId}`).then(res => res.data),
   getWords: (params = {}) => api.get('/admin/words', { params }).then(res => res.data),
+  createWord: (data) => api.post('/admin/words', data).then(res => res.data),
+  updateWord: (id, data) => api.put(`/admin/words/${id}`, data).then(res => res.data),
   getAuditLogs: (params = {}) => api.get('/admin/audit-logs', { params }).then(res => res.data),
   adminSearch: (query, type = 'all', filters = {}) => api.post('/admin/search', { query, type, filters }).then(res => res.data),
   exportData: (type) => api.get(`/admin/export/${type}`).then(res => res.data),
@@ -201,8 +215,19 @@ export const adminAPI = {
   deleteEtymology: (id) => api.delete(`/etymology/${id}`).then(res => res.data),
 
   // Import/Export endpoints
-  importWords: (data) => api.post('/admin/words/import', data).then(res => res.data),
-  exportWords: (params = {}) => api.get('/admin/words/export', { params }).then(res => res.data),
+  importWords: (formData) => api.post('/admin/words/import', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }).then(res => res.data),
+  validateImport: (formData) => api.post('/admin/words/import', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }).then(res => res.data),
+  exportWords: (params = {}) => api.post('/admin/words/export', params, {
+    responseType: 'blob'
+  }),
+  downloadImportTemplate: () => api.get('/admin/words/template', {
+    responseType: 'blob'
+  }),
+  getImportExportHistory: () => api.get('/admin/import-export/history').then(res => res.data),
 };
 
 // Users API (Public)

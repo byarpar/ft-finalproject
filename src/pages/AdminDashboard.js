@@ -1,323 +1,224 @@
-import React from 'react';
-import { useQuery } from 'react-query';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import {
-  CogIcon,
+  HomeIcon,
   UsersIcon,
-  ArrowTrendingUpIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
   BookOpenIcon,
-  EyeIcon,
-  ClockIcon,
-  MagnifyingGlassIcon
+  ChatBubbleLeftRightIcon,
+  TagIcon,
+  ChartBarIcon,
+  Cog6ToothIcon,
+  UserCircleIcon,
+  BellIcon,
+  MagnifyingGlassIcon,
+  Bars3Icon,
+  XMarkIcon,
+  ArrowRightOnRectangleIcon,
+  GlobeAltIcon,
+  QuestionMarkCircleIcon,
 } from '@heroicons/react/24/outline';
-import { adminAPI } from '../services/api';
-import LoadingSpinner from '../components/UI/LoadingSpinner';
+
+// Import admin modules
+import DashboardOverview from '../components/admin/DashboardOverview';
+import UsersManagement from '../components/admin/UsersManagement';
+import WordsManagement from '../components/admin/WordsManagement';
+import DiscussionsManagement from '../components/admin/DiscussionsManagement';
+import CategoriesAndTags from '../components/admin/CategoriesAndTags';
+import ReportsAnalytics from '../components/admin/ReportsAnalytics';
+import AdminSettings from '../components/admin/AdminSettings';
 
 const AdminDashboard = () => {
-  // Fetch admin dashboard data
-  const { data: dashboardData, isLoading, error } = useQuery(
-    ['adminDashboard'],
-    () => adminAPI.getDashboardStats()
-  );
+  const { user, logout } = useAuth();
+  const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  // eslint-disable-next-line no-unused-vars
+  const [notifications, setNotifications] = useState([]);
 
-  const stats = dashboardData?.data?.dashboard?.overview || {};
-
-  const StatCard = ({ icon: Icon, title, value, change, changeType = 'positive' }) => (
-    <div className="card p-6 hover:shadow-lg transition-all duration-300">
-      <div className="flex items-center">
-        <div className="p-3 bg-dictionary-blue rounded-xl">
-          <Icon className="w-7 h-7 text-dictionary-white" />
-        </div>
-        <div className="ml-4 flex-1">
-          <p className="text-sm font-semibold text-dictionary-secondary uppercase tracking-wide">{title}</p>
-          <p className="text-3xl font-bold text-dictionary-primary mt-1">{value}</p>
-          {change && (
-            <p className={`text-sm font-medium mt-1 ${changeType === 'positive' ? 'text-dictionary-green' : 'text-dictionary-orange'}`}>
-              {changeType === 'positive' ? '+' : ''}{change}% from last month
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'word_added',
-      description: 'New word "mountain" added by John Doe',
-      time: '2 minutes ago',
-      icon: BookOpenIcon
-    },
-    {
-      id: 2,
-      type: 'user_registered',
-      description: 'New user Sarah Chen registered',
-      time: '15 minutes ago',
-      icon: UsersIcon
-    },
-    {
-      id: 3,
-      type: 'word_edited',
-      description: 'Word "river" edited by Admin',
-      time: '1 hour ago',
-      icon: BookOpenIcon
-    },
-    {
-      id: 4,
-      type: 'settings_changed',
-      description: 'System settings updated',
-      time: '2 hours ago',
-      icon: CogIcon
+  // Check if user is admin
+  useEffect(() => {
+    if (!user || user.role !== 'admin') {
+      // User is not admin, will be redirected
     }
+  }, [user]);
+
+  if (!user || user.role !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
+
+  const navigation = [
+    { name: 'Dashboard', icon: HomeIcon, path: '/admin', exact: true },
+    { name: 'Users', icon: UsersIcon, path: '/admin/users' },
+    { name: 'Words & Definitions', icon: BookOpenIcon, path: '/admin/words' },
+    { name: 'Discussions', icon: ChatBubbleLeftRightIcon, path: '/admin/discussions' },
+    { name: 'Categories & Tags', icon: TagIcon, path: '/admin/categories' },
+    { name: 'Reports & Analytics', icon: ChartBarIcon, path: '/admin/reports' },
+    { name: 'Settings', icon: Cog6ToothIcon, path: '/admin/settings' },
   ];
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
+  const isActiveLink = (path, exact = false) => {
+    if (exact) {
+      return location.pathname === path;
+    }
+    return location.pathname.startsWith(path);
+  };
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-dictionary-bg-secondary flex items-center justify-center px-4">
-        <div className="card p-8 text-center max-w-md w-full">
-          <ExclamationTriangleIcon className="w-16 h-16 text-dictionary-orange mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-dictionary-primary mb-2">Error Loading Dashboard</h2>
-          <p className="text-dictionary-secondary">Failed to load dashboard data. Please try again later.</p>
-        </div>
-      </div>
-    );
-  }
+  const handleLogout = () => {
+    logout();
+  };
 
   return (
-    <div className="min-h-screen bg-dictionary-bg-secondary py-12 px-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-12 text-center">
-          <div className="inline-flex items-center justify-center p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg mb-6">
-            <CogIcon className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">Admin Dashboard</h1>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">Monitor and manage your dictionary system with comprehensive insights and controls</p>
-        </div>
-
-        {/* Stats Grid - All 4 stats in one row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <StatCard
-            icon={BookOpenIcon}
-            title="Total Words"
-            value={stats.total_words || 0}
-            change={stats.words_growth || 0}
-          />
-          <StatCard
-            icon={EyeIcon}
-            title="Daily Views"
-            value={stats.daily_views || 0}
-            change={stats.views_growth || 0}
-          />
-          <StatCard
-            icon={ArrowTrendingUpIcon}
-            title="Monthly Searches"
-            value={stats.monthly_searches || 0}
-            change={stats.searches_growth || 0}
-          />
-          <StatCard
-            icon={BookOpenIcon}
-            title="Words w/o Etymology"
-            value={stats.words_without_etymology || 0}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Quick Actions */}
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200/50 p-6 hover:shadow-2xl transition-all duration-300">
-            <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
-              <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg mr-3">
-                <CogIcon className="w-5 h-5 text-white" />
-              </div>
-              Quick Actions
-            </h3>
-            <div className="space-y-3">
-              <Link
-                to="/admin/words"
-                className="flex items-center p-4 border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 hover:shadow-md transition-all duration-200 group"
-              >
-                <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg mr-3 group-hover:shadow-lg transition-shadow">
-                  <BookOpenIcon className="w-5 h-5 text-white" />
-                </div>
-                <span className="font-semibold text-slate-900">Manage Words</span>
-              </Link>
-              <Link
-                to="/admin/users"
-                className="flex items-center p-4 border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 hover:shadow-md transition-all duration-200 group"
-              >
-                <div className="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg mr-3 group-hover:shadow-lg transition-shadow">
-                  <UsersIcon className="w-5 h-5 text-white" />
-                </div>
-                <span className="font-semibold text-slate-900">Manage Users</span>
-              </Link>
-              <Link
-                to="/admin/etymology"
-                className="flex items-center p-4 border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 hover:shadow-md transition-all duration-200 group"
-              >
-                <div className="p-2 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg mr-3 group-hover:shadow-lg transition-shadow">
-                  <BookOpenIcon className="w-5 h-5 text-white" />
-                </div>
-                <span className="font-semibold text-slate-900">Manage Etymology</span>
-              </Link>
-              <Link
-                to="/admin/settings"
-                className="flex items-center p-4 border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 hover:shadow-md transition-all duration-200 group"
-              >
-                <div className="p-2 bg-gradient-to-br from-slate-500 to-slate-600 rounded-lg mr-3 group-hover:shadow-lg transition-shadow">
-                  <CogIcon className="w-5 h-5 text-white" />
-                </div>
-                <span className="font-semibold text-slate-900">System Settings</span>
-              </Link>
-              <Link
-                to="/admin/search"
-                className="flex items-center p-4 border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 hover:shadow-md transition-all duration-200 group"
-              >
-                <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg mr-3 group-hover:shadow-lg transition-shadow">
-                  <MagnifyingGlassIcon className="w-5 h-5 text-white" />
-                </div>
-                <span className="font-semibold text-slate-900">Advanced Search</span>
-              </Link>
-            </div>
-          </div>
-
-          {/* System Health */}
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200/50 p-6 hover:shadow-2xl transition-all duration-300">
-            <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
-              <div className="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg mr-3">
-                <CheckCircleIcon className="w-5 h-5 text-white" />
-              </div>
-              System Health
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-                <span className="text-sm font-semibold text-slate-700">Database</span>
-                <div className="flex items-center">
-                  <CheckCircleIcon className="w-5 h-5 text-emerald-500 mr-2" />
-                  <span className="text-sm font-medium text-emerald-600">Healthy</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-                <span className="text-sm font-semibold text-slate-700">Server</span>
-                <div className="flex items-center">
-                  <CheckCircleIcon className="w-5 h-5 text-emerald-500 mr-2" />
-                  <span className="text-sm font-medium text-emerald-600">Online</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-                <span className="text-sm font-semibold text-slate-700">API</span>
-                <div className="flex items-center">
-                  <CheckCircleIcon className="w-5 h-5 text-emerald-500 mr-2" />
-                  <span className="text-sm font-medium text-emerald-600">Responsive</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-                <span className="text-sm font-semibold text-slate-700">Backup</span>
-                <div className="flex items-center">
-                  <ExclamationTriangleIcon className="w-5 h-5 text-amber-500 mr-2" />
-                  <span className="text-sm font-medium text-amber-600">2 days ago</span>
-                </div>
+    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
+      {/* Sidebar */}
+      <aside
+        className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          } fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-teal-700 to-teal-900 text-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
+      >
+        <div className="flex flex-col h-full">
+          {/* Logo */}
+          <div className="flex items-center justify-between h-16 px-6 border-b border-teal-600">
+            <div className="flex items-center space-x-2">
+              <BookOpenIcon className="w-8 h-8" />
+              <div>
+                <h1 className="text-lg font-bold">Lisu Dictionary</h1>
+                <p className="text-xs text-teal-200">Admin Panel</p>
               </div>
             </div>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden"
+            >
+              <XMarkIcon className="w-6 h-6" />
+            </button>
           </div>
 
-          {/* Recent Activity */}
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200/50 p-6 hover:shadow-2xl transition-all duration-300">
-            <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
-              <div className="p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg mr-3">
-                <ClockIcon className="w-5 h-5 text-white" />
+          {/* Navigation */}
+          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            {navigation.map((item) => {
+              const Icon = item.icon;
+              const active = isActiveLink(item.path, item.exact);
+
+              return (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  className={`flex items-center px-4 py-3 rounded-lg transition-colors ${active
+                    ? 'bg-teal-600 text-white shadow-lg'
+                    : 'text-teal-100 hover:bg-teal-600/50 hover:text-white'
+                    }`}
+                  onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)}
+                >
+                  <Icon className="w-5 h-5 mr-3" />
+                  <span className="font-medium">{item.name}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* User Info at Bottom */}
+          <div className="p-4 border-t border-teal-600">
+            <div className="flex items-center space-x-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center">
+                <UserCircleIcon className="w-6 h-6" />
               </div>
-              Recent Activity
-            </h3>
-            <div className="space-y-4">
-              {recentActivities.map((activity) => {
-                const Icon = activity.icon;
-                return (
-                  <div key={activity.id} className="flex items-start space-x-3 p-3 hover:bg-slate-50 rounded-xl transition-colors">
-                    <div className="p-2 bg-gradient-to-br from-slate-100 to-slate-200 rounded-full">
-                      <Icon className="w-4 h-4 text-slate-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-900">{activity.description}</p>
-                      <p className="text-xs text-slate-500 flex items-center mt-1">
-                        <ClockIcon className="w-3 h-3 mr-1" />
-                        {activity.time}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{user?.username || user?.email}</p>
+                <p className="text-xs text-teal-200 capitalize">{user?.role}</p>
+              </div>
             </div>
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center px-4 py-2 bg-teal-600 hover:bg-teal-500 rounded-lg transition-colors"
+            >
+              <ArrowRightOnRectangleIcon className="w-4 h-4 mr-2" />
+              <span className="text-sm">Logout</span>
+            </button>
           </div>
         </div>
+      </aside>
 
-        {/* Additional Stats */}
-        <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Popular Words */}
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200/50 p-6 hover:shadow-2xl transition-all duration-300">
-            <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg mr-3">
-                <ArrowTrendingUpIcon className="w-5 h-5 text-white" />
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header Bar */}
+        <header className="bg-white dark:bg-gray-800 shadow-sm z-10">
+          <div className="flex items-center justify-between h-16 px-6">
+            {/* Left: Menu button and search */}
+            <div className="flex items-center space-x-4 flex-1">
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="lg:hidden p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <Bars3Icon className="w-6 h-6" />
+              </button>
+
+              {/* Global Search */}
+              <div className="relative max-w-md w-full">
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search users, words, discussions..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                />
               </div>
-              Popular Words This Week
-            </h3>
-            <div className="space-y-4">
-              {['mountain', 'river', 'forest', 'bird', 'flower'].map((word, index) => (
-                <div key={word} className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-xl transition-colors">
-                  <span className="text-sm font-semibold text-slate-900 capitalize">{word}</span>
-                  <div className="flex items-center">
-                    <div className="w-24 bg-slate-200 rounded-full h-2 mr-3">
-                      <div
-                        className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full"
-                        style={{ width: `${100 - index * 15}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-xs font-medium text-slate-600 min-w-[60px]">{150 - index * 20} views</span>
-                  </div>
-                </div>
-              ))}
+            </div>
+
+            {/* Right: Quick links and notifications */}
+            <div className="flex items-center space-x-4">
+              <a
+                href="/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-1 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+              >
+                <GlobeAltIcon className="w-5 h-5" />
+                <span>View Site</span>
+              </a>
+
+              <a
+                href="/admin/help"
+                className="flex items-center space-x-1 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+              >
+                <QuestionMarkCircleIcon className="w-5 h-5" />
+                <span>Help</span>
+              </a>
+
+              {/* Notifications */}
+              <button className="relative p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                <BellIcon className="w-6 h-6" />
+                {notifications.length > 0 && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                )}
+              </button>
             </div>
           </div>
+        </header>
 
-          {/* Recent Registrations */}
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200/50 p-6 hover:shadow-2xl transition-all duration-300">
-            <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
-              <div className="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg mr-3">
-                <UsersIcon className="w-5 h-5 text-white" />
-              </div>
-              Recent User Registrations
-            </h3>
-            <div className="space-y-4">
-              {[
-                { name: 'Sarah Chen', email: 'sarah@example.com', time: '2 hours ago' },
-                { name: 'John Doe', email: 'john@example.com', time: '5 hours ago' },
-                { name: 'Maria Garcia', email: 'maria@example.com', time: '1 day ago' },
-                { name: 'David Kim', email: 'david@example.com', time: '2 days ago' }
-              ].map((user, index) => (
-                <div key={index} className="flex items-center space-x-3 p-3 hover:bg-slate-50 rounded-xl transition-colors">
-                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-full flex items-center justify-center">
-                    <UsersIcon className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-900">{user.full_name || user.name}</p>
-                    <p className="text-xs text-slate-500">{user.email} • {user.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+          <div className="container mx-auto px-6 py-8">
+            <Routes>
+              <Route path="/" element={<DashboardOverview />} />
+              <Route path="/users/*" element={<UsersManagement />} />
+              <Route path="/words/*" element={<WordsManagement />} />
+              <Route path="/discussions/*" element={<DiscussionsManagement />} />
+              <Route path="/categories/*" element={<CategoriesAndTags />} />
+              <Route path="/reports/*" element={<ReportsAnalytics />} />
+              <Route path="/settings/*" element={<AdminSettings />} />
+            </Routes>
           </div>
-        </div>
+        </main>
       </div>
+
+      {/* Sidebar overlay for mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 };

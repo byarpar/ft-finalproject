@@ -26,12 +26,7 @@ import AuthCallback from './pages/AuthCallback';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
-import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
-import AdminWords from './pages/AdminWords';
-import AdminUsers from './pages/AdminUsers';
-import AdminSettings from './pages/AdminSettings';
-import AdminSearch from './components/admin/AdminSearch';
 import NotFound from './pages/NotFound';
 import ServerError from './pages/ServerError';
 import Discussions from './pages/Discussions';
@@ -47,8 +42,9 @@ import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Contribute from './pages/Contribute';
 import FAQ from './pages/FAQ';
+import Settings from './pages/Settings';
 // import Tags from './pages/Tags';
-// import Chat from './pages/Chat';
+import Chat from './pages/Chat';
 
 // Toaster component that responds to theme
 const ThemedToaster = () => {
@@ -92,15 +88,29 @@ const queryClient = new QueryClient({
   },
 });
 
+// Create a component to handle conditional navbar rendering
+const ConditionalNavbar = () => {
+  const location = useLocation();
+  const isAdminPage = location.pathname.startsWith('/admin');
+
+  // Don't render navbar on admin pages
+  if (isAdminPage) {
+    return null;
+  }
+
+  return <Navbar />;
+};
+
 // Create a component to handle conditional footer rendering
 const ConditionalFooter = () => {
   const location = useLocation();
   const isDiscussionsPage = location.pathname.startsWith('/discussions');
   const isTagsPage = location.pathname.startsWith('/tags');
   const isChatPage = location.pathname.startsWith('/chat');
+  const isAdminPage = location.pathname.startsWith('/admin');
 
-  // Don't render footer on discussions, tags, or chat pages
-  if (isDiscussionsPage || isTagsPage || isChatPage) {
+  // Don't render footer on discussions, tags, chat, or admin pages
+  if (isDiscussionsPage || isTagsPage || isChatPage || isAdminPage) {
     return null;
   }
 
@@ -116,7 +126,7 @@ function App() {
             <AuthProvider>
               <Router>
                 <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-300">
-                  <Navbar />
+                  <ConditionalNavbar />
                   <main className="flex-grow">
                     <Routes>
                       <Route path="/" element={<Home />} />
@@ -172,7 +182,11 @@ function App() {
                         </PrivateRoute>
                       } />
                       {/* <Route path="/tags" element={<Tags />} /> */}
-                      {/* <Route path="/chat" element={<Chat />} /> */}
+                      <Route path="/chat" element={
+                        <PrivateRoute>
+                          <Chat />
+                        </PrivateRoute>
+                      } />
 
                       <Route path="/login" element={<Login />} />
                       <Route path="/register" element={<Register />} />
@@ -187,36 +201,16 @@ function App() {
                           <Dashboard />
                         </PrivateRoute>
                       } />
-                      <Route path="/profile" element={
+                      <Route path="/settings" element={
                         <PrivateRoute>
-                          <Profile />
+                          <Settings />
                         </PrivateRoute>
                       } />
 
-                      {/* Admin Routes */}
-                      <Route path="/admin" element={
+                      {/* Admin Routes - All nested routes handled within AdminDashboard */}
+                      <Route path="/admin/*" element={
                         <AdminRoute>
                           <AdminDashboard />
-                        </AdminRoute>
-                      } />
-                      <Route path="/admin/words" element={
-                        <AdminRoute>
-                          <AdminWords />
-                        </AdminRoute>
-                      } />
-                      <Route path="/admin/users" element={
-                        <AdminRoute>
-                          <AdminUsers />
-                        </AdminRoute>
-                      } />
-                      <Route path="/admin/settings" element={
-                        <AdminRoute>
-                          <AdminSettings />
-                        </AdminRoute>
-                      } />
-                      <Route path="/admin/search" element={
-                        <AdminRoute>
-                          <AdminSearch />
                         </AdminRoute>
                       } />
 

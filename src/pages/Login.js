@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { BookOpenIcon, GlobeAltIcon, LightBulbIcon, UserGroupIcon } from '@heroicons/react/24/outline';
@@ -18,6 +18,42 @@ const Login = () => {
   // Get the page user was trying to access - default to search for dictionary app
   const from = location.state?.from?.pathname || '/search';
   const redirectMessage = location.state?.message;
+
+  // Handle OAuth error messages from URL parameters
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const error = params.get('error');
+    const message = params.get('message');
+
+    if (error) {
+      let errorMessage = message || 'Authentication failed';
+
+      // Map error codes to user-friendly messages
+      switch (error) {
+        case 'account_deleted':
+          errorMessage = 'This account has been deleted. Please contact support if you believe this is an error.';
+          setErrors({ general: errorMessage, accountDeleted: true });
+          break;
+        case 'account_inactive':
+          errorMessage = 'Your account has been deactivated. Please contact support for assistance.';
+          setErrors({ general: errorMessage });
+          break;
+        case 'authentication_failed':
+          errorMessage = 'Authentication failed. Please try again.';
+          setErrors({ general: errorMessage });
+          break;
+        case 'oauth_failed':
+          errorMessage = 'Google login failed. Please try again or use email/password.';
+          setErrors({ general: errorMessage });
+          break;
+        default:
+          setErrors({ general: errorMessage });
+      }
+
+      // Clean up URL parameters
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.search, location.pathname, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
