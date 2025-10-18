@@ -17,7 +17,8 @@ import {
   ChatBubbleLeftRightIcon,
   ChartPieIcon,
   Cog6ToothIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  QuestionMarkCircleIcon
 } from '@heroicons/react/24/outline';
 import SEO, { SEOConfigs } from '../components/SEO/SEO';
 import { useAuth } from '../contexts/AuthContext';
@@ -265,6 +266,18 @@ const About = () => {
 
             {/* Top Right Icons */}
             <div className="flex items-center gap-3">
+              {/* Help Icon - Only visible when not logged in */}
+              {!user && (
+                <Link
+                  to="/help"
+                  className="p-3 rounded-lg bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-200 border border-white/20"
+                  aria-label="Help Center"
+                  title="Help Center"
+                >
+                  <QuestionMarkCircleIcon className="w-6 h-6 text-white" />
+                </Link>
+              )}
+
               {!user ? (
                 <>
                   {/* Desktop: Show profile dropdown */}
