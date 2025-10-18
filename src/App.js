@@ -16,7 +16,6 @@ import AdminRoute from './components/Auth/AdminRoute';
 // Pages
 import Home from './pages/Home';
 import Dictionary from './pages/Dictionary';
-import WordDetail from './pages/WordDetail';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
@@ -43,8 +42,10 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import Contribute from './pages/Contribute';
 import FAQ from './pages/FAQ';
 import Settings from './pages/Settings';
+import Notifications from './pages/Notifications';
 // import Tags from './pages/Tags';
 import Chat from './pages/Chat';
+import WordDetail from './pages/WordDetail';
 
 // Toaster component that responds to theme
 const ThemedToaster = () => {
@@ -92,9 +93,20 @@ const queryClient = new QueryClient({
 const ConditionalNavbar = () => {
   const location = useLocation();
   const isAdminPage = location.pathname.startsWith('/admin');
+  const isHomePage = location.pathname === '/';
+  const isLoginPage = location.pathname === '/login';
+  const isRegisterPage = location.pathname === '/register';
+  const isHelpPage = location.pathname.startsWith('/help');
+  const isDictionaryPage = location.pathname === '/dictionary' || location.pathname === '/search';
+  const isDiscussionsPage = location.pathname.startsWith('/discussions');
+  const isAboutPage = location.pathname === '/about';
+  const isUserProfilePage = location.pathname.startsWith('/users/');
+  const isSettingsPage = location.pathname === '/settings';
+  const isChatPage = location.pathname.startsWith('/chat');
+  const isWordDetailPage = location.pathname.startsWith('/word/') || location.pathname.startsWith('/words/');
 
-  // Don't render navbar on admin pages
-  if (isAdminPage) {
+  // Don't render navbar on admin pages, home page, login page, register page, help pages, dictionary page, discussions pages, about page, user profile pages, settings page, word detail pages, or chat page
+  if (isAdminPage || isHomePage || isLoginPage || isRegisterPage || isHelpPage || isDictionaryPage || isDiscussionsPage || isAboutPage || isUserProfilePage || isSettingsPage || isWordDetailPage || isChatPage) {
     return null;
   }
 
@@ -130,8 +142,9 @@ function App() {
                   <main className="flex-grow">
                     <Routes>
                       <Route path="/" element={<Home />} />
-                      <Route path="/search" element={<Dictionary />} />
                       <Route path="/dictionary" element={<Dictionary />} />
+                      <Route path="/search" element={<Dictionary />} />
+                      <Route path="/word/:id" element={<WordDetail />} />
                       <Route path="/words/:id" element={<WordDetail />} />
                       <Route path="/about" element={<About />} />
                       <Route path="/contact" element={<Contact />} />
@@ -204,6 +217,11 @@ function App() {
                       <Route path="/settings" element={
                         <PrivateRoute>
                           <Settings />
+                        </PrivateRoute>
+                      } />
+                      <Route path="/notifications" element={
+                        <PrivateRoute>
+                          <Notifications />
                         </PrivateRoute>
                       } />
 

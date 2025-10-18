@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import {
@@ -12,23 +12,49 @@ import {
   ChevronRightIcon,
   PlusIcon,
   UserIcon,
-  ClockIcon
+  ClockIcon,
+  UserCircleIcon,
+  ArrowRightCircleIcon,
+  UserPlusIcon,
+  BellIcon,
+  Bars3Icon,
+  XMarkIcon,
+  ArrowRightOnRectangleIcon,
+  ChartPieIcon,
+  Cog6ToothIcon,
+  ShieldCheckIcon,
+  HomeIcon
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
+import { notificationsAPI } from '../services/notificationsAPI';
+import socketClient from '../services/socketClient';
+import toast from 'react-hot-toast';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
 const WordDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const location = useLocation();
+  const { user, logout } = useAuth();
+
+  // Word detail state
   const [word, setWord] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const [relatedWords, setRelatedWords] = useState([]);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
+
+  // Header navigation state
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [userProfileDropdownOpen, setUserProfileDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const dropdownRef = useRef(null);
+  const userDropdownRef = useRef(null);
 
   useEffect(() => {
     loadWordDetail();
@@ -134,6 +160,83 @@ const WordDetail = () => {
         timestamp: '2 hours ago'
       }
     ]);
+  };
+
+  // Helper function to check if a route is active
+  const isActive = (path) => {
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setProfileDropdownOpen(false);
+      }
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
+        setUserProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Fetch unread notification count
+  const fetchUnreadCount = async () => {
+    try {
+      const response = await notificationsAPI.getUnreadCount();
+      setUnreadCount(response.count);
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+    }
+  };
+
+  // Fetch notifications when user is logged in
+  useEffect(() => {
+    if (user) {
+      fetchUnreadCount();
+    }
+  }, [user]);
+
+  // Socket.IO notification listener
+  useEffect(() => {
+    if (user) {
+      socketClient.onNewNotification((notification) => {
+        fetchUnreadCount();
+        toast.success(notification.message || 'You have a new notification');
+      });
+    }
+
+    return () => {
+      if (user) {
+        socketClient.socket?.off('newNotification');
+      }
+    };
+  }, [user]);
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setUserProfileDropdownOpen(false);
+      setMobileMenuOpen(false);
+      navigate('/');
+      toast.success('Logged out successfully');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Failed to logout');
+    }
   };
 
   const toggleFavorite = async () => {
@@ -251,6 +354,289 @@ const WordDetail = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Oxford-Style Header Navigation */}
+      <section className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 dark:from-teal-700 dark:via-teal-800 dark:to-teal-900">
+        {/* Top Navigation Bar */}
+        <div className="relative z-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+            {/* Logo/Brand */}
+            <Link to="/" className="group flex items-center gap-3">
+              <div className="relative w-12 h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-white/25 transition-all border border-white/20">
+                <BookOpenIcon className="w-8 h-8 text-white/40" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-white font-bold text-[9px] tracking-tight drop-shadow-lg">LED</span>
+                </div>
+              </div>
+              <div className="text-white font-light text-xl tracking-[0.3em] uppercase">
+                LISU DICT
+              </div>
+            </Link>
+
+            {/* Center Navigation Links - Desktop only, show when logged in */}
+            {user && !isMobile && (
+              <div className="hidden md:flex items-center gap-4">
+                <Link
+                  to="/"
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/')
+                    ? 'bg-white/10 text-white border-b-2 border-white'
+                    : 'text-white hover:text-teal-100 hover:bg-white/5'
+                    }`}
+                >
+                  Home
+                </Link>
+                <Link
+                  to="/discussions"
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/discussions')
+                    ? 'bg-white/10 text-white border-b-2 border-white'
+                    : 'text-white hover:text-teal-100 hover:bg-white/5'
+                    }`}
+                >
+                  Discussions
+                </Link>
+                <Link
+                  to="/about"
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/about')
+                    ? 'bg-white/10 text-white border-b-2 border-white'
+                    : 'text-white hover:text-teal-100 hover:bg-white/5'
+                    }`}
+                >
+                  About Us
+                </Link>
+              </div>
+            )}
+
+            {/* Top Right Icons */}
+            <div className="flex items-center gap-2">
+              {!user ? (
+                <>
+                  {/* Desktop: Show profile dropdown */}
+                  <div className="hidden md:block relative" ref={dropdownRef}>
+                    <button
+                      onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                      className="p-2 rounded-lg bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-200 border border-white/20"
+                      aria-label="Profile menu"
+                    >
+                      <UserCircleIcon className="w-5 h-5 text-white" />
+                    </button>
+
+                    {profileDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-50">
+                        <Link
+                          to="/login"
+                          className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-teal-50 dark:hover:bg-gray-700 transition-colors"
+                          onClick={() => setProfileDropdownOpen(false)}
+                        >
+                          <ArrowRightCircleIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                          Log In
+                        </Link>
+                        <Link
+                          to="/register"
+                          className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-teal-50 dark:hover:bg-gray-700 transition-colors"
+                          onClick={() => setProfileDropdownOpen(false)}
+                        >
+                          <UserPlusIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                          Sign Up
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Mobile: Show login/register buttons */}
+                  <div className="md:hidden flex items-center gap-1">
+                    <Link
+                      to="/login"
+                      className="px-2 py-1 text-white text-xs font-medium hover:opacity-80 transition-opacity"
+                    >
+                      Log In
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="px-2 py-1 bg-white/20 text-white text-xs font-medium rounded-lg hover:bg-white/30 transition-colors"
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Notification Icon with Badge */}
+                  <Link
+                    to="/notifications"
+                    className="relative hover:opacity-80 transition-opacity"
+                    aria-label="Notifications"
+                    title="Notifications"
+                  >
+                    <BellIcon className="w-5 h-5 text-white" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </Link>
+
+                  {/* Desktop: Profile Button with Dropdown */}
+                  <div className="hidden md:block relative" ref={userDropdownRef}>
+                    <button
+                      onClick={() => setUserProfileDropdownOpen(!userProfileDropdownOpen)}
+                      className="flex items-center gap-2 px-2 py-1 bg-white/5 hover:bg-white/10 backdrop-blur-sm text-white font-medium rounded-lg transition-all duration-200 border border-white/10"
+                    >
+                      <div className="w-7 h-7 bg-gradient-to-br from-teal-600 to-teal-500 rounded-full flex items-center justify-center shadow-sm overflow-hidden">
+                        {user.profile_photo_url ? (
+                          <img
+                            src={user.profile_photo_url}
+                            alt={user.full_name || user.username || 'User'}
+                            className="w-full h-full object-cover"
+                            crossOrigin="anonymous"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                            }}
+                          />
+                        ) : null}
+                        <UserIcon className={`w-4 h-4 text-white ${user.profile_photo_url ? 'hidden' : ''}`} />
+                      </div>
+                    </button>
+
+                    {/* User Profile Dropdown Menu */}
+                    {userProfileDropdownOpen && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={() => setUserProfileDropdownOpen(false)}
+                        />
+                        <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-2 z-50">
+                          <div className="py-1">
+                            <Link
+                              to={`/users/${user.id}`}
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                              onClick={() => setUserProfileDropdownOpen(false)}
+                            >
+                              <UserIcon className="w-4 h-4 mr-3 text-gray-400" />
+                              My Profile
+                            </Link>
+                            <Link
+                              to="/discussions"
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                              onClick={() => setUserProfileDropdownOpen(false)}
+                            >
+                              <ChatBubbleLeftRightIcon className="w-4 h-4 mr-3 text-gray-400" />
+                              My Discussions
+                            </Link>
+                            <Link
+                              to="/dashboard"
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                              onClick={() => setUserProfileDropdownOpen(false)}
+                            >
+                              <ChartPieIcon className="w-4 h-4 mr-3 text-gray-400" />
+                              Dashboard
+                            </Link>
+                            <Link
+                              to="/settings"
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                              onClick={() => setUserProfileDropdownOpen(false)}
+                            >
+                              <Cog6ToothIcon className="w-4 h-4 mr-3 text-gray-400" />
+                              Settings
+                            </Link>
+                            {user.role === 'admin' && (
+                              <Link
+                                to="/admin"
+                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                onClick={() => setUserProfileDropdownOpen(false)}
+                              >
+                                <ShieldCheckIcon className="w-4 h-4 mr-3 text-gray-400" />
+                                Admin Panel
+                              </Link>
+                            )}
+                            <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                            <button
+                              onClick={handleLogout}
+                              className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            >
+                              <ArrowRightOnRectangleIcon className="w-4 h-4 mr-3" />
+                              Logout
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Mobile: Hamburger Menu */}
+                  <button
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    className="md:hidden p-1.5 rounded-lg bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-200"
+                    aria-label="Toggle mobile menu"
+                  >
+                    {mobileMenuOpen ? (
+                      <XMarkIcon className="w-5 h-5 text-white" />
+                    ) : (
+                      <Bars3Icon className="w-5 h-5 text-white" />
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Mobile Menu Dropdown */}
+          {mobileMenuOpen && user && (
+            <div className="md:hidden absolute top-full left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-white/20 shadow-lg z-50">
+              <div className="max-w-7xl mx-auto px-4 py-3 space-y-1">
+                <Link
+                  to="/"
+                  className="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-gray-100 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <HomeIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                  <span className="text-sm font-medium">Home</span>
+                </Link>
+                <Link
+                  to="/dashboard"
+                  className="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-gray-100 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <ChartPieIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                  <span className="text-sm font-medium">Dashboard</span>
+                </Link>
+                <Link
+                  to="/discussions"
+                  className="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-gray-100 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <ChatBubbleLeftRightIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                  <span className="text-sm font-medium">Discussions</span>
+                </Link>
+                <Link
+                  to="/about"
+                  className="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-gray-100 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <BookOpenIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                  <span className="text-sm font-medium">About Us</span>
+                </Link>
+                <Link
+                  to="/settings"
+                  className="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-gray-100 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Cog6ToothIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                  <span className="text-sm font-medium">Settings</span>
+                </Link>
+                <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 w-full px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                >
+                  <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                  <span className="text-sm font-medium">Logout</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Breadcrumbs */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">

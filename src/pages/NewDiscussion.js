@@ -15,18 +15,34 @@ import {
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 
+const TAG_SUGGESTIONS = {
+  grammar: ['#tenses', '#verbs', '#syntax', '#structure'],
+  pronunciation: ['#tones', '#phonetics', '#accent', '#listening'],
+  vocabulary: ['#words', '#phrases', '#translation', '#meaning'],
+  cultural: ['#traditions', '#customs', '#history', '#culture'],
+  technical: ['#bug', '#feature', '#help', '#support'],
+  general: ['#question', '#discussion', '#community', '#feedback']
+};
+
+const MAX_TAGS = 5;
+const MAX_IMAGES = 5;
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const MIN_TITLE_LENGTH = 10;
+const MIN_CONTENT_LENGTH = 20;
+const MAX_TITLE_LENGTH = 200;
+const MAX_CONTENT_LENGTH = 5000;
+
 const NewDiscussion = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const contentRef = useRef(null);
 
-  // Form state
   const [formData, setFormData] = useState({
     title: '',
     content: '',
     category: '',
     tags: [],
-    images: [] // Add images array to store base64 images
+    images: []
   });
 
   const [tagInput, setTagInput] = useState('');
@@ -34,11 +50,8 @@ const NewDiscussion = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [subscribeToUpdates, setSubscribeToUpdates] = useState(true);
-
-  // Suggested tags based on category
   const [suggestedTags, setSuggestedTags] = useState([]);
 
-  // Load categories on mount
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -55,18 +68,8 @@ const NewDiscussion = () => {
     fetchCategories();
   }, []);
 
-  // Update suggested tags based on selected category
   useEffect(() => {
-    const tagSuggestions = {
-      'grammar': ['#tenses', '#verbs', '#syntax', '#structure'],
-      'pronunciation': ['#tones', '#phonetics', '#accent', '#listening'],
-      'vocabulary': ['#words', '#phrases', '#translation', '#meaning'],
-      'cultural': ['#traditions', '#customs', '#history', '#culture'],
-      'technical': ['#bug', '#feature', '#help', '#support'],
-      'general': ['#question', '#discussion', '#community', '#feedback']
-    };
-
-    setSuggestedTags(tagSuggestions[formData.category] || []);
+    setSuggestedTags(TAG_SUGGESTIONS[formData.category] || []);
   }, [formData.category]);
 
   const handleChange = (e) => {
@@ -79,11 +82,8 @@ const NewDiscussion = () => {
 
   const handleAddTag = (tag = tagInput) => {
     const normalizedTag = tag.trim().toLowerCase().replace(/^#/, '');
-    if (normalizedTag && !formData.tags.includes(normalizedTag) && formData.tags.length < 5) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, normalizedTag]
-      }));
+    if (normalizedTag && !formData.tags.includes(normalizedTag) && formData.tags.length < MAX_TAGS) {
+      setFormData(prev => ({ ...prev, tags: [...prev.tags, normalizedTag] }));
       setTagInput('');
     }
   };
@@ -102,7 +102,6 @@ const NewDiscussion = () => {
     }
   };
 
-  // Rich text formatting helpers (basic implementation)
   const insertFormatting = (format) => {
     const textarea = contentRef.current;
     if (!textarea) return;
@@ -110,90 +109,68 @@ const NewDiscussion = () => {
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const selectedText = formData.content.substring(start, end);
-    let replacement = '';
 
-    switch (format) {
-      case 'bold':
-        replacement = `**${selectedText || 'bold text'}**`;
-        break;
-      case 'italic':
-        replacement = `*${selectedText || 'italic text'}*`;
-        break;
-      case 'link':
-        replacement = `[${selectedText || 'link text'}](url)`;
-        break;
-      case 'list':
-        replacement = `\n- ${selectedText || 'list item'}`;
-        break;
-      default:
-        return;
-    }
+    const formats = {
+      bold: `**${selectedText || 'bold text'}**`,
+      italic: `*${selectedText || 'italic text'}*`,
+      link: `[${selectedText || 'link text'}](url)`,
+      list: `\n- ${selectedText || 'list item'}`
+    };
+
+    const replacement = formats[format];
+    if (!replacement) return;
 
     const newContent =
-      formData.content.substring(0, start) +
-      replacement +
-      formData.content.substring(end);
+      formData.content.substring(0, start) + replacement + formData.content.substring(end);
 
     setFormData(prev => ({ ...prev, content: newContent }));
 
-    // Restore focus
     setTimeout(() => {
       textarea.focus();
       textarea.setSelectionRange(start + replacement.length, start + replacement.length);
     }, 0);
   };
 
-  // Handle image upload and convert to base64
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files || []);
-
     if (files.length === 0) return;
 
-    // Limit to 5 images
-    if (formData.images.length + files.length > 5) {
-      toast.error('Maximum 5 images allowed');
+    if (formData.images.length + files.length > MAX_IMAGES) {
+      toast.error(`Maximum ${MAX_IMAGES} images allowed`);
       return;
     }
 
     files.forEach(file => {
-      // Check file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
+      if (file.size > MAX_IMAGE_SIZE) {
         toast.error(`${file.name} is too large. Maximum size is 5MB`);
         return;
       }
 
-      // Check file type
       if (!file.type.startsWith('image/')) {
         toast.error(`${file.name} is not an image file`);
         return;
       }
 
-      // Convert to base64
       const reader = new FileReader();
       reader.onloadend = () => {
-        const base64String = reader.result;
         setFormData(prev => ({
           ...prev,
           images: [...prev.images, {
             name: file.name,
-            data: base64String,
+            data: reader.result,
             size: file.size,
             type: file.type
           }]
         }));
         toast.success(`${file.name} uploaded successfully`);
       };
-      reader.onerror = () => {
-        toast.error(`Failed to upload ${file.name}`);
-      };
+      reader.onerror = () => toast.error(`Failed to upload ${file.name}`);
       reader.readAsDataURL(file);
     });
 
-    // Reset file input
     e.target.value = '';
   };
 
-  // Remove image from upload list
   const handleRemoveImage = (index) => {
     setFormData(prev => ({
       ...prev,
@@ -205,21 +182,20 @@ const NewDiscussion = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
     if (!formData.title.trim()) {
       toast.error('Please enter a title');
       return;
     }
-    if (formData.title.trim().length < 10) {
-      toast.error('Title must be at least 10 characters');
+    if (formData.title.trim().length < MIN_TITLE_LENGTH) {
+      toast.error(`Title must be at least ${MIN_TITLE_LENGTH} characters`);
       return;
     }
     if (!formData.content.trim()) {
       toast.error('Please enter some content');
       return;
     }
-    if (formData.content.trim().length < 20) {
-      toast.error('Content must be at least 20 characters');
+    if (formData.content.trim().length < MIN_CONTENT_LENGTH) {
+      toast.error(`Content must be at least ${MIN_CONTENT_LENGTH} characters`);
       return;
     }
     if (!formData.category) {
@@ -230,19 +206,28 @@ const NewDiscussion = () => {
     try {
       setIsSubmitting(true);
 
-      // Create discussion with images
+      // Extract only the base64 data from images
+      const imageData = formData.images.map(img => img.data || img);
+
+      // Check total payload size (rough estimate)
+      const totalSize = formData.images.reduce((sum, img) => sum + (img.size || 0), 0);
+      if (totalSize > 8 * 1024 * 1024) { // 8MB limit (leaving buffer for other data)
+        toast.error('Total image size too large. Please reduce image sizes or quantity.');
+        setIsSubmitting(false);
+        return;
+      }
+
       const response = await discussionsAPI.createDiscussion({
         title: formData.title.trim(),
         content: formData.content.trim(),
         category: formData.category,
         tags: formData.tags,
-        images: formData.images, // Include base64 images
+        images: imageData,
         subscribe: subscribeToUpdates
       });
 
       toast.success('Discussion created successfully!');
 
-      // Navigate to the new discussion
       if (response?.data?.id) {
         navigate(`/discussions/${response.data.id}`);
       } else {
@@ -251,7 +236,13 @@ const NewDiscussion = () => {
 
     } catch (error) {
       console.error('Error creating discussion:', error);
-      toast.error(error.response?.data?.error || 'Failed to create discussion');
+
+      // Handle specific error cases
+      if (error.response?.status === 413 || error.message?.includes('too large')) {
+        toast.error('Images are too large. Please use smaller images (max 5MB each, 8MB total).');
+      } else {
+        toast.error(error.response?.data?.error || 'Failed to create discussion');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -317,16 +308,16 @@ const NewDiscussion = () => {
                     required
                   />
                   <div className="mt-2 flex items-center justify-between text-xs">
-                    <span className={`${formData.title.length < 10 ? 'text-red-500' :
+                    <span className={`${formData.title.length < MIN_TITLE_LENGTH ? 'text-red-500' :
                       formData.title.length < 50 ? 'text-yellow-500' :
                         'text-green-500'
                       }`}>
-                      {formData.title.length < 10 && 'Minimum 10 characters'}
-                      {formData.title.length >= 10 && formData.title.length < 50 && 'Good length'}
+                      {formData.title.length < MIN_TITLE_LENGTH && `Minimum ${MIN_TITLE_LENGTH} characters`}
+                      {formData.title.length >= MIN_TITLE_LENGTH && formData.title.length < 50 && 'Good length'}
                       {formData.title.length >= 50 && 'Excellent!'}
                     </span>
                     <span className="text-gray-500 dark:text-gray-400">
-                      {formData.title.length}/200 characters
+                      {formData.title.length}/{MAX_TITLE_LENGTH}
                     </span>
                   </div>
                 </div>
@@ -368,21 +359,20 @@ const NewDiscussion = () => {
                       onKeyPress={handleKeyPress}
                       placeholder="Add keywords like #tones, #verbs, #greetings"
                       maxLength={30}
-                      disabled={isSubmitting || formData.tags.length >= 5}
+                      disabled={isSubmitting || formData.tags.length >= MAX_TAGS}
                       className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white placeholder-gray-400 disabled:opacity-50"
                     />
                     <button
                       type="button"
                       onClick={() => handleAddTag()}
-                      disabled={isSubmitting || !tagInput.trim() || formData.tags.length >= 5}
+                      disabled={isSubmitting || !tagInput.trim() || formData.tags.length >= MAX_TAGS}
                       className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <PlusIcon className="w-5 h-5" />
                     </button>
                   </div>
 
-                  {/* Suggested Tags */}
-                  {suggestedTags.length > 0 && formData.tags.length < 5 && (
+                  {suggestedTags.length > 0 && formData.tags.length < MAX_TAGS && (
                     <div className="mb-2">
                       <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Suggested tags:</p>
                       <div className="flex flex-wrap gap-2">
@@ -402,7 +392,6 @@ const NewDiscussion = () => {
                     </div>
                   )}
 
-                  {/* Display added tags */}
                   {formData.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-3">
                       {formData.tags.map((tag, index) => (
@@ -425,17 +414,15 @@ const NewDiscussion = () => {
                     </div>
                   )}
                   <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                    Add up to 5 tags to help others find your discussion
+                    Add up to {MAX_TAGS} tags to help others find your discussion
                   </p>
                 </div>
 
-                {/* Main Content Editor */}
                 <div>
                   <label htmlFor="content" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Type your post here... Explain your question or detail. <span className="text-red-500">*</span>
+                    Content <span className="text-red-500">*</span>
                   </label>
 
-                  {/* Formatting Toolbar */}
                   <div className="flex flex-wrap gap-2 mb-2 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
                     <button
                       type="button"
@@ -487,7 +474,7 @@ const NewDiscussion = () => {
                     </label>
                     <div className="flex-1"></div>
                     <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                      Markdown supported • {formData.images.length}/5 images
+                      Markdown supported • {formData.images.length}/{MAX_IMAGES} images
                     </span>
                   </div>
 
@@ -497,42 +484,32 @@ const NewDiscussion = () => {
                     name="content"
                     value={formData.content}
                     onChange={handleChange}
-                    placeholder="Clearly describe your question or topic. Provide examples if possible.
-
-You can use Markdown for formatting:
-- **bold** for bold text
-- *italic* for italic text
-- [links](url) for links
-- Use bullet points and numbered lists for clarity
-
-For pronunciation questions, consider uploading audio.
-For grammar examples, provide context and specific sentences."
+                    placeholder="Describe your question or topic clearly. Provide examples and context to help others understand and provide better responses."
                     rows={12}
-                    maxLength={5000}
+                    maxLength={MAX_CONTENT_LENGTH}
                     disabled={isSubmitting}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white placeholder-gray-400 resize-none disabled:opacity-50 font-mono text-sm"
                     required
                   />
                   <div className="mt-2 flex items-center justify-between text-xs">
-                    <span className={`${formData.content.length < 20 ? 'text-red-500' :
+                    <span className={`${formData.content.length < MIN_CONTENT_LENGTH ? 'text-red-500' :
                       formData.content.length < 100 ? 'text-yellow-500' :
                         'text-green-500'
                       }`}>
-                      {formData.content.length < 20 && 'Minimum 20 characters'}
-                      {formData.content.length >= 20 && formData.content.length < 100 && 'Add more details'}
+                      {formData.content.length < MIN_CONTENT_LENGTH && `Minimum ${MIN_CONTENT_LENGTH} characters`}
+                      {formData.content.length >= MIN_CONTENT_LENGTH && formData.content.length < 100 && 'Add more details'}
                       {formData.content.length >= 100 && 'Good detail level'}
                     </span>
                     <span className="text-gray-500 dark:text-gray-400">
-                      {formData.content.length}/5000 characters
+                      {formData.content.length}/{MAX_CONTENT_LENGTH}
                     </span>
                   </div>
                 </div>
 
-                {/* Uploaded Images Preview */}
                 {formData.images.length > 0 && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                      Uploaded Images ({formData.images.length}/5)
+                      Uploaded Images ({formData.images.length}/{MAX_IMAGES})
                     </label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                       {formData.images.map((image, index) => (
@@ -559,7 +536,6 @@ For grammar examples, provide context and specific sentences."
                   </div>
                 )}
 
-                {/* Subscribe to updates checkbox */}
                 <div className="flex items-center">
                   <input
                     type="checkbox"
@@ -574,7 +550,6 @@ For grammar examples, provide context and specific sentences."
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-600 rounded-b-lg">
                 <div className="flex flex-col sm:flex-row gap-3 justify-between items-center">
                   <button
@@ -608,7 +583,6 @@ For grammar examples, provide context and specific sentences."
             </form>
           </div>
 
-          {/* Right Column - Guidelines (30%) */}
           <div className="lg:col-span-1">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 sticky top-6">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">

@@ -225,6 +225,19 @@ class SocketClient {
   }
 
   /**
+   * Listen for new notifications
+   */
+  onNewNotification(callback) {
+    if (this.socket) {
+      this.socket.on('notification:new', (data) => {
+        console.log('🔔 Received new notification:', data);
+        callback(data);
+      });
+      this.listeners.set('notification:new', callback);
+    }
+  }
+
+  /**
    * Remove event listener
    */
   off(event) {

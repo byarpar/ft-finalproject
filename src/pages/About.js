@@ -1,16 +1,121 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import {
   BookOpenIcon,
   GlobeAltIcon,
   ArrowUpIcon,
-  UsersIcon
+  UsersIcon,
+  BellIcon,
+  UserCircleIcon,
+  Bars3Icon,
+  XMarkIcon,
+  ArrowRightOnRectangleIcon,
+  ArrowRightCircleIcon,
+  UserPlusIcon,
+  UserIcon,
+  ChatBubbleLeftRightIcon,
+  ChartPieIcon,
+  Cog6ToothIcon,
+  ShieldCheckIcon
 } from '@heroicons/react/24/outline';
 import SEO, { SEOConfigs } from '../components/SEO/SEO';
+import { useAuth } from '../contexts/AuthContext';
+import { notificationsAPI } from '../services/notificationsAPI';
+import socketClient from '../services/socketClient';
+import toast from 'react-hot-toast';
 
 const About = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [activeSection, setActiveSection] = useState('mission');
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [userProfileDropdownOpen, setUserProfileDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const dropdownRef = useRef(null);
+  const userDropdownRef = useRef(null);
+
+  // Check if a link is active
+  const isActive = (path) => {
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setProfileDropdownOpen(false);
+      }
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
+        setUserProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Fetch unread notification count
+  const fetchUnreadCount = async () => {
+    try {
+      const response = await notificationsAPI.getUnreadCount();
+      setUnreadCount(response.count);
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+    }
+  };
+
+  // Fetch notifications when user is logged in
+  useEffect(() => {
+    if (user) {
+      fetchUnreadCount();
+    }
+  }, [user]);
+
+  // Listen for real-time notifications via Socket.IO
+  useEffect(() => {
+    if (user && socketClient.isConnected()) {
+      socketClient.onNewNotification((notificationData) => {
+        setUnreadCount(prev => prev + 1);
+        toast.success(`${notificationData.actorName} ${notificationData.message}`, {
+          duration: 4000,
+          position: 'top-right',
+          icon: '🔔'
+        });
+      });
+
+      return () => {
+        socketClient.off('notification:new');
+      };
+    }
+  }, [user]);
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setMobileMenuOpen(false);
+      navigate('/');
+      toast.success('Logged out successfully');
+    } catch (error) {
+      toast.error('Error logging out');
+    }
+  };
 
   // Handle scroll to show/hide scroll-to-top button
   useEffect(() => {
@@ -97,30 +202,317 @@ const About = () => {
         />
       </Helmet>
 
-      {/* Hero Section - Cultural & Mission Statement */}
-      <section className="relative bg-gradient-to-br from-teal-700 via-teal-600 to-cyan-700 text-white overflow-hidden">
-        {/* Background Image with Overlay */}
+      {/* Header Section - Oxford Dictionary Style */}
+      <section className="relative overflow-hidden">
+        {/* Background Pattern */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: 'url("/images/hero/about.png")',
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-teal-900/90 via-teal-800/80 to-teal-700/70" />
+        {/* Enhanced overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-teal-900/90 via-teal-800/75 to-teal-700/60 sm:bg-gradient-to-r sm:from-teal-800/85 sm:via-teal-700/60 sm:to-teal-600/40" />
 
-        {/* Content */}
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
-          <div className="max-w-4xl">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-              Lisu-English Dictionary
-            </h1>
-            <p className="text-2xl md:text-3xl text-teal-50 mb-6 font-light">
-              Preserving a Language, Connecting Communities
-            </p>
-            <p className="text-lg md:text-xl text-teal-100 mb-8 max-w-3xl">
-              A comprehensive digital resource for the Lisu language spoken by over one million people across Asia.
-            </p>
+        {/* Top Navigation Bar */}
+        <div className="relative z-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
+            {/* Logo/Brand */}
+            <Link to="/" className="group flex items-center gap-3">
+              <div className="relative w-14 h-14 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-white/25 transition-all border border-white/20">
+                <BookOpenIcon className="w-10 h-10 text-white/40" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-white font-bold text-[10px] tracking-tight drop-shadow-lg">LED</span>
+                </div>
+              </div>
+              <div className="text-white font-light text-2xl tracking-[0.3em] uppercase">
+                LISU DICT
+              </div>
+            </Link>
+
+            {/* Center Navigation Links - Desktop only, show when logged in */}
+            {user && !isMobile && (
+              <div className="hidden md:flex items-center gap-6">
+                <Link
+                  to="/"
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/')
+                    ? 'bg-white/10 text-white border-b-2 border-white'
+                    : 'text-white hover:text-teal-100 hover:bg-white/5'
+                    }`}
+                >
+                  Home
+                </Link>
+                <Link
+                  to="/discussions"
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/discussions')
+                    ? 'bg-white/10 text-white border-b-2 border-white'
+                    : 'text-white hover:text-teal-100 hover:bg-white/5'
+                    }`}
+                >
+                  Discussions
+                </Link>
+                <Link
+                  to="/about"
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/about')
+                    ? 'bg-white/10 text-white border-b-2 border-white'
+                    : 'text-white hover:text-teal-100 hover:bg-white/5'
+                    }`}
+                >
+                  About Us
+                </Link>
+              </div>
+            )}
+
+            {/* Top Right Icons */}
+            <div className="flex items-center gap-3">
+              {!user ? (
+                <>
+                  {/* Desktop: Show profile dropdown */}
+                  <div className="hidden md:block relative" ref={dropdownRef}>
+                    <button
+                      onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                      className="p-3 rounded-lg bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-200 border border-white/20"
+                      aria-label="Profile menu"
+                    >
+                      <UserCircleIcon className="w-6 h-6 text-white" />
+                    </button>
+
+                    {profileDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-50">
+                        <Link
+                          to="/login"
+                          className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-teal-50 dark:hover:bg-gray-700 transition-colors"
+                          onClick={() => setProfileDropdownOpen(false)}
+                        >
+                          <ArrowRightCircleIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                          Log In
+                        </Link>
+                        <Link
+                          to="/register"
+                          className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-teal-50 dark:hover:bg-gray-700 transition-colors"
+                          onClick={() => setProfileDropdownOpen(false)}
+                        >
+                          <UserPlusIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                          Sign Up
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Mobile: Show login/register buttons */}
+                  <div className="md:hidden flex items-center gap-2">
+                    <Link
+                      to="/login"
+                      className="px-3 py-1.5 text-white text-sm font-medium hover:opacity-80 transition-opacity"
+                    >
+                      Log In
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="px-3 py-1.5 bg-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/30 transition-colors"
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Notification Icon with Badge */}
+                  <Link
+                    to="/notifications"
+                    className="relative hover:opacity-80 transition-opacity"
+                    aria-label="Notifications"
+                    title="Notifications"
+                  >
+                    <BellIcon className="w-6 h-6 text-white" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </Link>
+
+                  {/* Desktop: Profile Button with Dropdown */}
+                  <div className="hidden md:block relative" ref={userDropdownRef}>
+                    <button
+                      onClick={() => setUserProfileDropdownOpen(!userProfileDropdownOpen)}
+                      className="flex items-center gap-2 px-2 py-1.5 bg-white/5 hover:bg-white/10 backdrop-blur-sm text-white font-medium rounded-lg transition-all duration-200 border border-white/10"
+                    >
+                      <div className="w-8 h-8 bg-gradient-to-br from-teal-600 to-teal-500 rounded-full flex items-center justify-center shadow-sm overflow-hidden">
+                        {user.profile_photo_url ? (
+                          <img
+                            src={user.profile_photo_url}
+                            alt={user.full_name || user.username || 'User'}
+                            className="w-full h-full object-cover"
+                            crossOrigin="anonymous"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                            }}
+                          />
+                        ) : null}
+                        <UserIcon className={`w-5 h-5 text-white ${user.profile_photo_url ? 'hidden' : ''}`} />
+                      </div>
+                    </button>
+
+                    {/* User Profile Dropdown Menu */}
+                    {userProfileDropdownOpen && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={() => setUserProfileDropdownOpen(false)}
+                        />
+                        <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-2 z-50">
+                          <div className="py-1">
+                            <Link
+                              to={`/users/${user.id}`}
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                              onClick={() => setUserProfileDropdownOpen(false)}
+                            >
+                              <UserIcon className="w-4 h-4 mr-3 text-gray-400" />
+                              My Profile
+                            </Link>
+                            <Link
+                              to="/discussions?filter=my"
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                              onClick={() => setUserProfileDropdownOpen(false)}
+                            >
+                              <ChatBubbleLeftRightIcon className="w-4 h-4 mr-3 text-gray-400" />
+                              My Discussions
+                            </Link>
+                            <Link
+                              to="/dashboard"
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                              onClick={() => setUserProfileDropdownOpen(false)}
+                            >
+                              <ChartPieIcon className="w-4 h-4 mr-3 text-gray-400" />
+                              Dashboard
+                            </Link>
+                            <Link
+                              to="/settings"
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                              onClick={() => setUserProfileDropdownOpen(false)}
+                            >
+                              <Cog6ToothIcon className="w-4 h-4 mr-3 text-gray-400" />
+                              Settings
+                            </Link>
+                            {(user.role === 'admin' || user.role === 'moderator') && (
+                              <Link
+                                to="/admin"
+                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                onClick={() => setUserProfileDropdownOpen(false)}
+                              >
+                                <ShieldCheckIcon className="w-4 h-4 mr-3 text-gray-400" />
+                                Admin Panel
+                              </Link>
+                            )}
+                          </div>
+
+                          <div className="border-t border-gray-100 dark:border-gray-700 py-1">
+                            <button
+                              onClick={handleLogout}
+                              className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            >
+                              <ArrowRightOnRectangleIcon className="w-4 h-4 mr-3" />
+                              Logout
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Mobile: Hamburger Menu */}
+                  <button
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    className="md:hidden p-2 hover:opacity-80 transition-opacity"
+                    aria-label="Toggle menu"
+                  >
+                    {mobileMenuOpen ? (
+                      <XMarkIcon className="w-6 h-6 text-white" />
+                    ) : (
+                      <Bars3Icon className="w-6 h-6 text-white" />
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
+
+          {/* Mobile Menu - Show when logged in */}
+          {user && mobileMenuOpen && (
+            <div className="md:hidden bg-white/10 backdrop-blur-lg border-t border-white/20">
+              <div className="max-w-7xl mx-auto px-4 py-4 space-y-2">
+                <Link
+                  to="/"
+                  className="block px-4 py-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Home
+                </Link>
+                <Link
+                  to="/dashboard"
+                  className="block px-4 py-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/discussions"
+                  className="block px-4 py-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Discussions
+                </Link>
+                <Link
+                  to="/about"
+                  className="block px-4 py-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  About Us
+                </Link>
+                <Link
+                  to="/settings"
+                  className="block px-4 py-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Settings
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 text-white hover:bg-white/10 rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                  Logout
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Main Hero Content */}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center min-h-[280px] sm:min-h-[320px]">
+            <div className="space-y-6 relative z-10 text-center sm:text-left">
+              <div>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight text-white drop-shadow-lg">
+                  About Lisu Dictionary
+                </h1>
+                <p className="text-base sm:text-lg md:text-xl text-white/90 leading-relaxed max-w-lg mx-auto sm:mx-0 drop-shadow-md">
+                  Preserving language, connecting communities across Asia
+                </p>
+              </div>
+            </div>
+
+            <div className="relative lg:block hidden" />
+          </div>
+        </div>
+
+        {/* Bottom Wave */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg className="w-full h-12 md:h-16" viewBox="0 0 1440 80" fill="none" preserveAspectRatio="none">
+            <path d="M0,32 Q360,64 720,32 T1440,32 L1440,80 L0,80 Z" className="fill-gray-50 dark:fill-gray-900" />
+          </svg>
         </div>
       </section>
 

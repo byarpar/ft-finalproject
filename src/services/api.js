@@ -103,13 +103,6 @@ export const discussionsAPI = {
   unsaveDiscussion: (id) => api.delete(`/discussions/${id}/save`).then(res => res.data),
   getSavedDiscussions: (params = {}) => api.get('/discussions/user/saved', { params }).then(res => res.data),
 
-  // Like functionality
-  likeDiscussion: (id) => api.post(`/discussions/${id}/like`).then(res => res.data),
-  unlikeDiscussion: (id) => api.delete(`/discussions/${id}/like`).then(res => res.data),
-
-  // Report functionality
-  reportDiscussion: (id, reportData) => api.post(`/discussions/${id}/report`, reportData).then(res => res.data),
-
   // Voting functionality
   voteDiscussion: (id, voteType) => api.post(`/discussions/${id}/vote`, { vote_type: voteType }).then(res => res.data),
   voteAnswer: (id, voteType) => api.post(`/answers/${id}/vote`, { vote_type: voteType }).then(res => res.data),
@@ -123,6 +116,9 @@ export const discussionsAPI = {
   unpinDiscussion: (id) => api.delete(`/discussions/${id}/pin`).then(res => res.data),
   lockDiscussion: (id) => api.put(`/discussions/${id}/lock`).then(res => res.data),
   unlockDiscussion: (id) => api.delete(`/discussions/${id}/lock`).then(res => res.data),
+
+  // Report functionality
+  reportDiscussion: (id, data) => api.post(`/discussions/${id}/report`, data).then(res => res.data),
 };
 
 // Tags API
