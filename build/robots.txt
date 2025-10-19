@@ -8,16 +8,33 @@ Allow: /discussion/*
 Allow: /about
 Allow: /contact
 Allow: /members
+Allow: /profile/*
 
-# Disallow private pages
+# Disallow authentication pages
 Disallow: /login
 Disallow: /register
-Disallow: /profile/edit
 Disallow: /verify-email
 Disallow: /reset-password
 Disallow: /forgot-password
+
+# Disallow administrative areas
 Disallow: /admin/*
 Disallow: /api/*
+
+# Disallow user settings
+Disallow: /settings
+
+# Allow crawling of static assets
+Allow: /*.css
+Allow: /*.js
+Allow: /*.jpg
+Allow: /*.jpeg
+Allow: /*.png
+Allow: /*.svg
+Allow: /*.webp
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
 
 # Sitemap
 Sitemap: https://www.lisudictionar.com/sitemap.xml

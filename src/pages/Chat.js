@@ -1,38 +1,13 @@
-/**
- * Chat Page Component
- * 
- * Real-time messaging interface with three-column layout:
- * - Left: Conversation list
- * - Middle: Chat window with messages
- * - Right: Conversation details (collapsible)
- */
-
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useSearchParams, Link, useLocation } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
-import { notificationsAPI } from '../services/notificationsAPI';
 import toast from 'react-hot-toast';
 import chatService from '../services/chatService';
 import socketClient from '../services/socketClient';
-import {
-  BookOpenIcon,
-  BellIcon,
-  UserCircleIcon,
-  InformationCircleIcon,
-  ArrowRightCircleIcon,
-  UserPlusIcon,
-  Bars3Icon,
-  XMarkIcon,
-  ArrowRightOnRectangleIcon,
-  UserIcon,
-  ChartPieIcon,
-  Cog6ToothIcon,
-  ShieldCheckIcon,
-  HomeIcon,
-  ChatBubbleLeftRightIcon
-} from '@heroicons/react/24/outline';
+import PageLayout from '../components/Layout/PageLayout';
+
+// Import layout components
+import HeroNavbar from '../components/Layout/HeroNavbar';
 
 // Import chat components
 import ConversationList from '../components/Chat/ConversationList';
@@ -40,40 +15,45 @@ import ChatWindow from '../components/Chat/ChatWindow';
 import ConversationDetails from '../components/Chat/ConversationDetails';
 import NewChatModal from '../components/Chat/NewChatModal';
 
+// Constants
+const PUBLIC_CHANNEL_ID = '00000000-0000-0000-0000-000000000001';
+const TOAST_DURATION = 3000;
+
+/**
+ * Chat Component
+ * 
+ * Professional real-time messaging interface with optimized performance:
+ * - Implements proper React patterns (memoization, useCallback)
+ * - Optimized state management
+ * - Clean separation of concerns
+ * - Error handling with user feedback
+ * - Responsive three-column layout
+ * 
+ * @component
+ */
 const Chat = () => {
-  const { user, token, logout } = useAuth();
-  const { darkMode } = useTheme();
+  // Hooks
+  const { user, token } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Header navigation state
-  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const [userProfileDropdownOpen, setUserProfileDropdownOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  const dropdownRef = useRef(null);
-  const userDropdownRef = useRef(null);
-
-  // Helper function to check if a route is active
-  const isActive = (path) => {
-    return location.pathname === path || location.pathname.startsWith(path + '/');
-  };
-
-  // State
+  // State Management - Grouped by concern
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // UI State
   const [showDetails, setShowDetails] = useState(false);
   const [showNewChatModal, setShowNewChatModal] = useState(false);
+
+  // Real-time State
   const [typingUsers, setTypingUsers] = useState(new Set());
   const [onlineUsers, setOnlineUsers] = useState(new Set());
 
-  // Public All Chat Channel (using fixed UUID from database)
-  const allChatChannel = {
-    id: '00000000-0000-0000-0000-000000000001',
+  // Memoized public channel configuration
+  const allChatChannel = useMemo(() => ({
+    id: PUBLIC_CHANNEL_ID,
     name: 'All Chat Channel',
     type: 'public',
     description: 'Public channel for all users',
@@ -81,706 +61,401 @@ const Chat = () => {
     participants: [],
     unread_count: 0,
     avatar_url: null
-  };
+  }), []);
 
-  // Get conversation ID from URL
+  // URL Parameters
   const conversationIdFromUrl = searchParams.get('conversation');
 
+  // ============================================================================
+  // Socket.IO Connection Management
+  // ============================================================================
+
   /**
-   * Initialize Socket.IO connection
+   * Initialize and manage Socket.IO connection
+   * Connects on mount with auth token, disconnects on unmount
    */
   useEffect(() => {
-    if (token) {
-      socketClient.connect(token);
+    if (!token) return;
 
-      return () => {
-        socketClient.disconnect();
-      };
-    }
+    socketClient.connect(token);
+
+    return () => {
+      socketClient.disconnect();
+    };
   }, [token]);
 
   /**
-   * Set up Socket.IO event listeners
+   * Set up Socket.IO event listeners for real-time updates
+   * Optimized with proper dependency management
    */
   useEffect(() => {
-    // Listen for new messages
-    socketClient.onNewMessage((data) => {
+    // Handler: New Message
+    const handleNewMessage = (data) => {
       const { conversationId, message } = data;
 
-      // If the message is for the selected conversation, add it
-      if (selectedConversation && conversationId === selectedConversation.id) {
+      // Update messages if viewing this conversation
+      if (selectedConversation?.id === conversationId) {
         setMessages(prev => [...prev, message]);
-
-        // Mark as read if user is viewing the conversation
         socketClient.markAsRead(conversationId);
       }
 
-      // Update conversation list (move to top, update last message)
+      // Update conversation list with new message and sort
       setConversations(prev => {
         const updated = prev.map(conv => {
-          if (conv.id === conversationId) {
-            return {
-              ...conv,
-              last_message: message,
-              last_message_at: message.created_at,
-              unread_count: selectedConversation?.id === conversationId
-                ? 0
-                : (conv.unread_count || 0) + 1
-            };
-          }
-          return conv;
+          if (conv.id !== conversationId) return conv;
+
+          return {
+            ...conv,
+            last_message: message,
+            last_message_at: message.created_at,
+            unread_count: selectedConversation?.id === conversationId
+              ? 0
+              : (conv.unread_count || 0) + 1
+          };
         });
 
-        // Sort by last message time
+        // Sort by most recent message
         return updated.sort((a, b) =>
           new Date(b.last_message_at) - new Date(a.last_message_at)
         );
       });
-    });
+    };
 
-    // Listen for typing indicators
-    socketClient.onUserTyping((data) => {
-      if (selectedConversation && data.conversationId === selectedConversation.id) {
-        setTypingUsers(prev => new Set(prev).add(data.username));
+    // Handler: Typing Indicators
+    const handleUserTyping = (data) => {
+      if (selectedConversation?.id === data.conversationId) {
+        setTypingUsers(prev => new Set([...prev, data.username]));
       }
-    });
+    };
 
-    socketClient.onUserStopTyping((data) => {
-      if (selectedConversation && data.conversationId === selectedConversation.id) {
+    const handleUserStopTyping = (data) => {
+      if (selectedConversation?.id === data.conversationId) {
         setTypingUsers(prev => {
           const updated = new Set(prev);
           updated.delete(data.username);
           return updated;
         });
       }
-    });
+    };
 
-    // Listen for user status changes
-    socketClient.onUserStatus((data) => {
-      const { userId, isOnline } = data;
+    // Handler: User Online Status
+    const handleUserStatus = ({ userId, isOnline }) => {
       setOnlineUsers(prev => {
         const updated = new Set(prev);
-        if (isOnline) {
-          updated.add(userId);
-        } else {
-          updated.delete(userId);
-        }
+        isOnline ? updated.add(userId) : updated.delete(userId);
         return updated;
       });
-    });
+    };
 
-    // Listen for reactions
-    socketClient.onReactionAdded((data) => {
-      if (selectedConversation && data.conversationId === selectedConversation.id) {
-        setMessages(prev => prev.map(msg => {
-          if (msg.id === data.messageId) {
-            const reactions = msg.reactions || [];
-            return {
-              ...msg,
-              reactions: [...reactions, data.reaction]
-            };
+    // Handler: Message Reactions
+    const handleReactionAdded = (data) => {
+      if (selectedConversation?.id !== data.conversationId) return;
+
+      setMessages(prev => prev.map(msg =>
+        msg.id === data.messageId
+          ? { ...msg, reactions: [...(msg.reactions || []), data.reaction] }
+          : msg
+      ));
+    };
+
+    const handleReactionRemoved = (data) => {
+      if (selectedConversation?.id !== data.conversationId) return;
+
+      setMessages(prev => prev.map(msg =>
+        msg.id === data.messageId
+          ? {
+            ...msg,
+            reactions: (msg.reactions || []).filter(
+              r => !(r.user_id === data.userId && r.emoji === data.emoji)
+            )
           }
-          return msg;
-        }));
-      }
-    });
+          : msg
+      ));
+    };
 
-    socketClient.onReactionRemoved((data) => {
-      if (selectedConversation && data.conversationId === selectedConversation.id) {
-        setMessages(prev => prev.map(msg => {
-          if (msg.id === data.messageId) {
-            return {
-              ...msg,
-              reactions: (msg.reactions || []).filter(
-                r => !(r.user_id === data.userId && r.emoji === data.emoji)
-              )
-            };
-          }
-          return msg;
-        }));
-      }
-    });
+    // Register all event listeners
+    socketClient.onNewMessage(handleNewMessage);
+    socketClient.onUserTyping(handleUserTyping);
+    socketClient.onUserStopTyping(handleUserStopTyping);
+    socketClient.onUserStatus(handleUserStatus);
+    socketClient.onReactionAdded(handleReactionAdded);
+    socketClient.onReactionRemoved(handleReactionRemoved);
 
+    // Cleanup on unmount
     return () => {
       socketClient.offAll();
     };
-  }, [selectedConversation, user]);
+  }, [selectedConversation]);
+
+  // ============================================================================
+  // Data Loading Effects
+  // ============================================================================
 
   /**
-   * Load conversations on mount
+   * Load conversations on component mount
    */
   useEffect(() => {
     loadConversations();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   /**
-   * Handle URL conversation selection
+   * Handle conversation selection from URL parameter
+   * Auto-selects conversation when navigating via URL
    */
   useEffect(() => {
-    if (conversationIdFromUrl && conversations.length > 0 && !selectedConversation) {
-      const conv = conversations.find(c => c.id === conversationIdFromUrl);
-      if (conv && conv.id !== selectedConversation?.id) {
-        handleSelectConversation(conv);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversationIdFromUrl, conversations.length]);
-
-  // Detect mobile viewport
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setProfileDropdownOpen(false);
-      }
-      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
-        setUserProfileDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Fetch unread notification count
-  const fetchUnreadCount = async () => {
-    try {
-      const response = await notificationsAPI.getUnreadCount();
-      setUnreadCount(response.count);
-    } catch (error) {
-      console.error('Error fetching unread count:', error);
-    }
-  };
-
-  // Fetch notifications when user is logged in
-  useEffect(() => {
-    if (user) {
-      fetchUnreadCount();
-    }
-  }, [user]);
-
-  // Socket.IO notification listener (separate from chat notifications)
-  useEffect(() => {
-    if (user) {
-      socketClient.onNewNotification((notification) => {
-        fetchUnreadCount();
-        toast.success(notification.message || 'You have a new notification');
-      });
+    if (!conversationIdFromUrl || conversations.length === 0 || selectedConversation) {
+      return;
     }
 
-    return () => {
-      if (user) {
-        socketClient.socket?.off('newNotification');
-      }
-    };
-  }, [user]);
-
-  // Handle logout
-  const handleLogout = async () => {
-    try {
-      await logout();
-      setUserProfileDropdownOpen(false);
-      setMobileMenuOpen(false);
-      navigate('/');
-      toast.success('Logged out successfully');
-    } catch (error) {
-      console.error('Logout error:', error);
-      toast.error('Failed to logout');
+    const targetConversation = conversations.find(c => c.id === conversationIdFromUrl);
+    if (targetConversation) {
+      handleSelectConversation(targetConversation);
     }
-  };
+  }, [conversationIdFromUrl, conversations]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ============================================================================
+  // API Functions
+  // ============================================================================
 
   /**
-   * Load all conversations
+   * Load all conversations from API
+   * Filters to include only conversations where user is a participant
+   * Public channels are always included
    */
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     try {
       setLoading(true);
       const response = await chatService.getConversations();
-      const conversations = response.data || [];
+      const allConversations = response.data || [];
 
-      console.log('📋 Loaded conversations:', conversations.map(c => ({
-        id: c.id,
-        name: c.name,
-        type: c.type,
-        participantCount: c.participants?.length || 0,
-        otherParticipantCount: c.other_participants?.length || 0,
-        participants: c.participants,
-        other_participants: c.other_participants
-      })));
-
-      // Filter out conversations where user is not actually a participant
-      const validConversations = conversations.filter(conv => {
+      // Filter: Only include accessible conversations
+      const validConversations = allConversations.filter(conv => {
         // Public channels are always accessible
-        if (conv.type === 'public' || conv.id === 'all-chat-public') {
+        if (conv.type === 'public' || conv.id === PUBLIC_CHANNEL_ID) {
           return true;
         }
 
-        // Check if user is in participants list
-        const userInParticipants = conv.participants?.some(p => p.id === user.id) ||
-          conv.other_participants?.some(p => p.id === user.id);
-
-        if (!userInParticipants) {
-          console.warn('⚠️  User not in participants for conversation:', {
-            id: conv.id,
-            name: conv.name,
-            type: conv.type,
-            participantCount: conv.participants?.length || 0
-          });
-        }
-
-        return userInParticipants;
+        // Check participant membership
+        return (
+          conv.participants?.some(p => p.id === user.id) ||
+          conv.other_participants?.some(p => p.id === user.id)
+        );
       });
 
-      if (validConversations.length < conversations.length) {
-        const filtered = conversations.length - validConversations.length;
-        console.info(`🧹 Filtered ${filtered} invalid conversation(s)`);
-        toast.info(`Removed ${filtered} inaccessible conversation(s)`, { duration: 2000 });
+      // Notify user if conversations were filtered
+      const filteredCount = allConversations.length - validConversations.length;
+      if (filteredCount > 0) {
+        toast.info(
+          `Removed ${filteredCount} inaccessible conversation${filteredCount > 1 ? 's' : ''}`,
+          { duration: TOAST_DURATION }
+        );
       }
 
       setConversations(validConversations);
     } catch (error) {
-      console.error('❌ Error loading conversations:', error);
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
-
-      const errorMessage = error.response?.data?.error?.message ||
+      const errorMessage =
+        error.response?.data?.error?.message ||
         error.response?.data?.message ||
         'Failed to load conversations';
-      toast.error(errorMessage);
+      toast.error(errorMessage, { duration: TOAST_DURATION });
     } finally {
       setLoading(false);
     }
-  };
+  }, [user.id]);
 
   /**
    * Handle conversation selection
+   * Loads messages, joins socket room, and updates read status
+   * 
+   * @param {Object} conversation - The conversation to select
    */
-  const handleSelectConversation = async (conversation) => {
+  const handleSelectConversation = useCallback(async (conversation) => {
+    if (!conversation) return;
+
     try {
+      // Set up UI state
       setSelectedConversation(conversation);
       setLoading(true);
       setMessages([]);
-
-      // Update URL
       setSearchParams({ conversation: conversation.id });
 
-      // Join conversation room via socket (works for all conversation types including public)
+      // Join socket room for real-time updates
       socketClient.joinConversation(conversation.id);
 
-      // Load messages for regular conversations
+      // Load conversation messages
       const response = await chatService.getMessages(conversation.id);
-      console.log('📨 Messages response:', response);
       setMessages(response.data || []);
 
-      // Mark as read
+      // Mark messages as read
       await chatService.markAsRead(conversation.id);
       socketClient.markAsRead(conversation.id);
 
-      // Update unread count in conversations list
-      setConversations(prev => prev.map(conv =>
-        conv.id === conversation.id
-          ? { ...conv, unread_count: 0 }
-          : conv
-      ));
+      // Update unread count in conversation list
+      setConversations(prev =>
+        prev.map(conv =>
+          conv.id === conversation.id
+            ? { ...conv, unread_count: 0 }
+            : conv
+        )
+      );
     } catch (error) {
-      console.error('❌ Error loading conversation:', error);
-      console.error('Error details:', {
-        conversationId: conversation?.id,
-        conversationName: conversation?.name,
-        conversationType: conversation?.type,
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
-
-      // Show more specific error message
-      const errorMessage = error.response?.data?.error?.message ||
+      const errorMessage =
+        error.response?.data?.error?.message ||
         error.response?.data?.message ||
         'Failed to load messages';
 
-      // Handle "not a participant" error specifically
-      // But don't remove public channels - they're always accessible
-      if (errorMessage.includes('not a participant') &&
-        conversation.type !== 'public' &&
-        conversation.id !== 'all-chat-public') {
-        toast.error(`Cannot access "${conversation.name || 'this conversation'}". Removing from list...`, { duration: 3000 });
+      // Handle access denied errors
+      const isAccessDenied = errorMessage.includes('not a participant');
+      const isPublicChannel = conversation.type === 'public' || conversation.id === PUBLIC_CHANNEL_ID;
 
-        // Remove the problematic conversation from the list
+      if (isAccessDenied && !isPublicChannel) {
+        // Remove inaccessible private conversation
+        toast.error(
+          `Cannot access "${conversation.name || 'this conversation'}". Removing from list...`,
+          { duration: TOAST_DURATION }
+        );
+
         setConversations(prev => prev.filter(c => c.id !== conversation.id));
         setSelectedConversation(null);
         setMessages([]);
-
-        // Clear URL parameter
         setSearchParams({});
       } else {
-        toast.error(errorMessage);
+        toast.error(errorMessage, { duration: TOAST_DURATION });
       }
     } finally {
       setLoading(false);
     }
-  };
+  }, [setSearchParams]);
 
   /**
-   * Handle sending a message
+   * Handle sending a message via Socket.IO
+   * 
+   * @param {string} content - Message content
+   * @param {string} messageType - Type of message (text, image, etc.)
+   * @param {string|null} replyToMessageId - ID of message being replied to
    */
-  const handleSendMessage = useCallback(async (content, messageType = 'text', replyToMessageId = null) => {
-    if (!selectedConversation || !content.trim()) return;
+  const handleSendMessage = useCallback(
+    async (content, messageType = 'text', replyToMessageId = null) => {
+      if (!selectedConversation || !content?.trim()) return;
 
-    try {
-      // Send via Socket.IO for real-time delivery (works for all conversation types)
-      socketClient.sendMessage(
-        selectedConversation.id,
-        content.trim(),
-        messageType,
-        replyToMessageId
-      );
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error('Failed to send message');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedConversation]);
+      try {
+        socketClient.sendMessage(
+          selectedConversation.id,
+          content.trim(),
+          messageType,
+          replyToMessageId
+        );
+      } catch (error) {
+        toast.error('Failed to send message', { duration: TOAST_DURATION });
+      }
+    },
+    [selectedConversation]
+  );
 
   /**
-   * Handle starting a new group chat
+   * Handle creating a new conversation/group
+   * 
+   * @param {string} type - Conversation type
+   * @param {Object} data - Conversation data (name, participants, etc.)
    */
-  const handleNewChat = async (type, data) => {
+  const handleNewChat = useCallback(async (type, data) => {
     try {
-      const response = await chatService.createConversation({
-        ...data
-      });
-
+      const response = await chatService.createConversation(data);
       const newConversation = response.data;
+
+      // Add to conversation list and select it
       setConversations(prev => [newConversation, ...prev]);
       handleSelectConversation(newConversation);
       setShowNewChatModal(false);
-      toast.success('Group created');
-    } catch (error) {
-      console.error('Error creating conversation:', error);
-      toast.error('Failed to create conversation');
-    }
-  };
 
-  if (!user) {
-    navigate('/login');
-    return null;
-  }
+      toast.success('Conversation created successfully', { duration: TOAST_DURATION });
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.error?.message ||
+        error.response?.data?.message ||
+        'Failed to create conversation';
+      toast.error(errorMessage, { duration: TOAST_DURATION });
+    }
+  }, [handleSelectConversation]);
+
+  // ============================================================================
+  // UI Event Handlers
+  // ============================================================================
+
+  /**
+   * Toggle conversation details panel
+   */
+  const handleToggleDetails = useCallback(() => {
+    setShowDetails(prev => !prev);
+  }, []);
+
+  /**
+   * Handle back button (mobile) - deselect conversation
+   */
+  const handleBack = useCallback(() => {
+    setSelectedConversation(null);
+    setSearchParams({});
+  }, [setSearchParams]);
+
+  /**
+   * Handle conversation updates (name, description, etc.)
+   */
+  const handleUpdateConversation = useCallback((updates) => {
+    setSelectedConversation(prev => ({ ...prev, ...updates }));
+    setConversations(prev =>
+      prev.map(conv =>
+        conv.id === selectedConversation?.id
+          ? { ...conv, ...updates }
+          : conv
+      )
+    );
+  }, [selectedConversation]);
+
+  // ============================================================================
+  // Authentication Guard
+  // ============================================================================
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!user) {
+      navigate('/login', { replace: true });
+    }
+  }, [user, navigate]);
+
+  // Don't render if user is not authenticated
+  if (!user) return null;
+
+  // ============================================================================
+  // Render
+  // ============================================================================
 
   return (
-    <>
-      <Helmet>
-        <title>Chat - Lisu Dictionary</title>
-        <meta name="description" content="Real-time messaging and communication" />
-      </Helmet>
-
-      <div className={`h-screen flex flex-col ${darkMode ? 'dark' : ''}`}>
-        {/* Oxford-Style Header Navigation */}
-        <section className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 dark:from-teal-700 dark:via-teal-800 dark:to-teal-900">
-          {/* Top Navigation Bar */}
-          <div className="relative z-20">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-              {/* Logo/Brand */}
-              <Link to="/" className="group flex items-center gap-3">
-                <div className="relative w-12 h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-white/25 transition-all border border-white/20">
-                  <BookOpenIcon className="w-8 h-8 text-white/40" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-white font-bold text-[9px] tracking-tight drop-shadow-lg">LED</span>
-                  </div>
-                </div>
-                <div className="text-white font-light text-xl tracking-[0.3em] uppercase">
-                  LISU DICT
-                </div>
-              </Link>
-
-              {/* Center Navigation Links - Desktop only, show when logged in */}
-              {user && !isMobile && (
-                <div className="hidden md:flex items-center gap-4">
-                  <Link
-                    to="/"
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/')
-                      ? 'bg-white/10 text-white border-b-2 border-white'
-                      : 'text-white hover:text-teal-100 hover:bg-white/5'
-                      }`}
-                  >
-                    Home
-                  </Link>
-                  <Link
-                    to="/discussions"
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/discussions')
-                      ? 'bg-white/10 text-white border-b-2 border-white'
-                      : 'text-white hover:text-teal-100 hover:bg-white/5'
-                      }`}
-                  >
-                    Discussions
-                  </Link>
-                  <Link
-                    to="/about"
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/about')
-                      ? 'bg-white/10 text-white border-b-2 border-white'
-                      : 'text-white hover:text-teal-100 hover:bg-white/5'
-                      }`}
-                  >
-                    About Us
-                  </Link>
-                </div>
-              )}
-
-              {/* Top Right Icons */}
-              <div className="flex items-center gap-2">
-                {!user ? (
-                  <>
-                    {/* Desktop: Show profile dropdown */}
-                    <div className="hidden md:block relative" ref={dropdownRef}>
-                      <button
-                        onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                        className="p-2 rounded-lg bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-200 border border-white/20"
-                        aria-label="Profile menu"
-                      >
-                        <UserCircleIcon className="w-5 h-5 text-white" />
-                      </button>
-
-                      {profileDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-50">
-                          <Link
-                            to="/login"
-                            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-teal-50 dark:hover:bg-gray-700 transition-colors"
-                            onClick={() => setProfileDropdownOpen(false)}
-                          >
-                            <ArrowRightCircleIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                            Log In
-                          </Link>
-                          <Link
-                            to="/register"
-                            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-teal-50 dark:hover:bg-gray-700 transition-colors"
-                            onClick={() => setProfileDropdownOpen(false)}
-                          >
-                            <UserPlusIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                            Sign Up
-                          </Link>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Mobile: Show login/register buttons */}
-                    <div className="md:hidden flex items-center gap-1">
-                      <Link
-                        to="/login"
-                        className="px-2 py-1 text-white text-xs font-medium hover:opacity-80 transition-opacity"
-                      >
-                        Log In
-                      </Link>
-                      <Link
-                        to="/register"
-                        className="px-2 py-1 bg-white/20 text-white text-xs font-medium rounded-lg hover:bg-white/30 transition-colors"
-                      >
-                        Sign Up
-                      </Link>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    {/* Notification Icon with Badge */}
-                    <Link
-                      to="/notifications"
-                      className="relative hover:opacity-80 transition-opacity"
-                      aria-label="Notifications"
-                      title="Notifications"
-                    >
-                      <BellIcon className="w-5 h-5 text-white" />
-                      {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">
-                          {unreadCount > 9 ? '9+' : unreadCount}
-                        </span>
-                      )}
-                    </Link>
-
-                    {/* Desktop: Profile Button with Dropdown */}
-                    <div className="hidden md:block relative" ref={userDropdownRef}>
-                      <button
-                        onClick={() => setUserProfileDropdownOpen(!userProfileDropdownOpen)}
-                        className="flex items-center gap-2 px-2 py-1 bg-white/5 hover:bg-white/10 backdrop-blur-sm text-white font-medium rounded-lg transition-all duration-200 border border-white/10"
-                      >
-                        <div className="w-7 h-7 bg-gradient-to-br from-teal-600 to-teal-500 rounded-full flex items-center justify-center shadow-sm overflow-hidden">
-                          {user.profile_photo_url ? (
-                            <img
-                              src={user.profile_photo_url}
-                              alt={user.full_name || user.username || 'User'}
-                              className="w-full h-full object-cover"
-                              crossOrigin="anonymous"
-                              referrerPolicy="no-referrer"
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                              }}
-                            />
-                          ) : null}
-                          <UserIcon className={`w-4 h-4 text-white ${user.profile_photo_url ? 'hidden' : ''}`} />
-                        </div>
-                      </button>
-
-                      {/* User Profile Dropdown Menu */}
-                      {userProfileDropdownOpen && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-40"
-                            onClick={() => setUserProfileDropdownOpen(false)}
-                          />
-                          <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-2 z-50">
-                            <div className="py-1">
-                              <Link
-                                to={`/users/${user.id}`}
-                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                                onClick={() => setUserProfileDropdownOpen(false)}
-                              >
-                                <UserIcon className="w-4 h-4 mr-3 text-gray-400" />
-                                My Profile
-                              </Link>
-                              <Link
-                                to="/discussions"
-                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                                onClick={() => setUserProfileDropdownOpen(false)}
-                              >
-                                <ChatBubbleLeftRightIcon className="w-4 h-4 mr-3 text-gray-400" />
-                                My Discussions
-                              </Link>
-                              <Link
-                                to="/dashboard"
-                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                                onClick={() => setUserProfileDropdownOpen(false)}
-                              >
-                                <ChartPieIcon className="w-4 h-4 mr-3 text-gray-400" />
-                                Dashboard
-                              </Link>
-                              <Link
-                                to="/settings"
-                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                                onClick={() => setUserProfileDropdownOpen(false)}
-                              >
-                                <Cog6ToothIcon className="w-4 h-4 mr-3 text-gray-400" />
-                                Settings
-                              </Link>
-                              {user.role === 'admin' && (
-                                <Link
-                                  to="/admin"
-                                  className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                                  onClick={() => setUserProfileDropdownOpen(false)}
-                                >
-                                  <ShieldCheckIcon className="w-4 h-4 mr-3 text-gray-400" />
-                                  Admin Panel
-                                </Link>
-                              )}
-                              <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
-                              <button
-                                onClick={handleLogout}
-                                className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                              >
-                                <ArrowRightOnRectangleIcon className="w-4 h-4 mr-3" />
-                                Logout
-                              </button>
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Mobile: Hamburger Menu */}
-                    <button
-                      onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                      className="md:hidden p-1.5 rounded-lg bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-200"
-                      aria-label="Toggle mobile menu"
-                    >
-                      {mobileMenuOpen ? (
-                        <XMarkIcon className="w-5 h-5 text-white" />
-                      ) : (
-                        <Bars3Icon className="w-5 h-5 text-white" />
-                      )}
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Mobile Menu Dropdown */}
-            {mobileMenuOpen && user && (
-              <div className="md:hidden absolute top-full left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-white/20 shadow-lg z-50">
-                <div className="max-w-7xl mx-auto px-4 py-3 space-y-1">
-                  <Link
-                    to="/"
-                    className="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-gray-100 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <HomeIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                    <span className="text-sm font-medium">Home</span>
-                  </Link>
-                  <Link
-                    to="/dashboard"
-                    className="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-gray-100 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <ChartPieIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                    <span className="text-sm font-medium">Dashboard</span>
-                  </Link>
-                  <Link
-                    to="/discussions"
-                    className="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-gray-100 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <ChatBubbleLeftRightIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                    <span className="text-sm font-medium">Discussions</span>
-                  </Link>
-                  <Link
-                    to="/about"
-                    className="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-gray-100 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <InformationCircleIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                    <span className="text-sm font-medium">About Us</span>
-                  </Link>
-                  <Link
-                    to="/settings"
-                    className="flex items-center gap-3 px-3 py-2 text-gray-900 dark:text-gray-100 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Cog6ToothIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                    <span className="text-sm font-medium">Settings</span>
-                  </Link>
-                  <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-3 w-full px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                  >
-                    <ArrowRightOnRectangleIcon className="w-4 h-4" />
-                    <span className="text-sm font-medium">Logout</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
+    <PageLayout
+      title="Chat - Lisu Dictionary"
+      description="Real-time messaging and communication platform"
+    >
+      {/* Main Container */}
+      <div className="h-screen flex flex-col">
+        {/* Navigation Bar */}
+        <HeroNavbar />
 
         {/* Chat Container - Responsive Three Column Layout */}
-        <div className="flex-1 flex overflow-hidden bg-gray-50 dark:bg-gray-900">
+        <div className="flex-1 flex overflow-hidden bg-gray-50">
 
-          {/* Left Sidebar - Conversation List */}
-          {/* Desktop: Always visible | Mobile: Hidden when conversation selected */}
-          <div className={`
-            ${selectedConversation ? 'hidden md:flex' : 'flex'}
-            flex-col w-full md:w-80 lg:w-[320px] xl:w-[360px] flex-shrink-0
-            border-r border-gray-200 dark:border-gray-700
-            bg-white dark:bg-gray-800
-          `}>
+          {/* 
+            LEFT COLUMN: Conversation List
+            - Desktop: Always visible
+            - Mobile: Hidden when conversation is selected
+          */}
+          <aside
+            className={`
+              ${selectedConversation ? 'hidden md:flex' : 'flex'}
+              flex-col w-full md:w-80 lg:w-[320px] xl:w-[360px] flex-shrink-0
+              border-r border-gray-200
+              bg-white
+            `}
+            aria-label="Conversations list"
+          >
             <ConversationList
               conversations={conversations}
               selectedConversation={selectedConversation}
@@ -790,66 +465,69 @@ const Chat = () => {
               onlineUsers={onlineUsers}
               publicChannel={allChatChannel}
             />
-          </div>
+          </aside>
 
-          {/* Middle Column - Chat Window */}
-          {/* Desktop: Always visible | Mobile: Full screen when conversation selected */}
-          <div className={`
-            ${selectedConversation ? 'flex' : 'hidden md:flex'}
-            flex-col flex-1 min-w-0
-            ${showDetails ? 'md:border-r md:border-gray-200 md:dark:border-gray-700' : ''}
-            bg-white dark:bg-gray-800
-          `}>
+          {/* 
+            MIDDLE COLUMN: Chat Window
+            - Desktop: Always visible
+            - Mobile: Full screen when conversation is selected
+          */}
+          <main
+            className={`
+              ${selectedConversation ? 'flex' : 'hidden md:flex'}
+              flex-col flex-1 min-w-0
+              ${showDetails ? 'md:border-r md:border-gray-200' : ''}
+              bg-white
+            `}
+            aria-label="Chat window"
+          >
             <ChatWindow
               conversation={selectedConversation}
               messages={messages}
               onSendMessage={handleSendMessage}
               loading={loading}
               typingUsers={typingUsers}
-              onToggleDetails={() => setShowDetails(!showDetails)}
+              onToggleDetails={handleToggleDetails}
               showDetails={showDetails}
-              onBack={() => {
-                setSelectedConversation(null);
-                setSearchParams({});
-              }}
+              onBack={handleBack}
             />
-          </div>
+          </main>
 
-          {/* Right Sidebar - Conversation Details */}
-          {/* Desktop: Collapsible sidebar | Mobile: Full-screen overlay */}
+          {/* 
+            RIGHT COLUMN: Conversation Details
+            - Desktop: Collapsible sidebar
+            - Mobile: Full-screen overlay with backdrop
+          */}
           {showDetails && selectedConversation && (
             <>
               {/* Mobile Backdrop */}
               <div
                 className="fixed inset-0 bg-black/50 z-40 md:hidden"
                 onClick={() => setShowDetails(false)}
+                aria-hidden="true"
               />
 
               {/* Details Panel */}
-              <div className={`
-                fixed md:relative
-                right-0 top-0 bottom-0
-                w-full md:w-80 lg:w-[320px] xl:w-[360px]
-                bg-white dark:bg-gray-800
-                z-50 md:z-auto
-                transform transition-transform duration-300 ease-in-out
-                ${showDetails ? 'translate-x-0' : 'translate-x-full'}
-                shadow-2xl md:shadow-none
-                flex flex-col
-              `}>
+              <aside
+                className={`
+                  fixed md:relative
+                  right-0 top-0 bottom-0
+                  w-full md:w-80 lg:w-[320px] xl:w-[360px]
+                  bg-white
+                  z-50 md:z-auto
+                  transform transition-transform duration-300 ease-in-out
+                  ${showDetails ? 'translate-x-0' : 'translate-x-full'}
+                  shadow-2xl md:shadow-none
+                  flex flex-col
+                `}
+                aria-label="Conversation details"
+              >
                 <ConversationDetails
                   conversation={selectedConversation}
                   onClose={() => setShowDetails(false)}
-                  onUpdateConversation={(updates) => {
-                    setSelectedConversation({ ...selectedConversation, ...updates });
-                    setConversations(prev => prev.map(conv =>
-                      conv.id === selectedConversation.id
-                        ? { ...conv, ...updates }
-                        : conv
-                    ));
-                  }}
+                  onUpdateConversation={handleUpdateConversation}
                 />
-              </div>
+              </aside>
             </>
           )}
         </div>
@@ -862,7 +540,7 @@ const Chat = () => {
           onCreate={handleNewChat}
         />
       )}
-    </>
+    </PageLayout>
   );
 };
 

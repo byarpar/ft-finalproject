@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { notificationsAPI } from '../services/notificationsAPI';
-import { Helmet } from 'react-helmet-async';
 import {
   BellIcon,
   Cog6ToothIcon,
@@ -17,9 +16,19 @@ import {
   MegaphoneIcon,
   XMarkIcon,
   EnvelopeIcon,
-  UserGroupIcon
+  UserGroupIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
+import PageLayout from '../components/Layout/PageLayout';
+import SkeletonLoader from '../components/UI/SkeletonLoader';
+
+/**
+ * Notifications Component
+ * 
+ * Displays and manages user notifications with filtering, 
+ * marking as read/unread, and bulk actions.
+ */
 
 const Notifications = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -30,6 +39,7 @@ const Notifications = () => {
 
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalNotifications, setTotalNotifications] = useState(0);
   const [hasMore, setHasMore] = useState(false);
@@ -251,6 +261,50 @@ const Notifications = () => {
     { id: 'system', label: 'System', icon: MegaphoneIcon },
   ];
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Ignore if user is typing in an input field
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      switch (e.key.toLowerCase()) {
+        case 'r':
+          handleRefresh();
+          break;
+        case 'm':
+          if (unreadCount > 0) {
+            handleMarkAllAsRead();
+          }
+          break;
+        case 'u':
+          handleTabChange('unread');
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [categoryCounts]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Refresh notifications
+  const handleRefresh = useCallback(async () => {
+    if (refreshing) return;
+
+    setRefreshing(true);
+    try {
+      await Promise.all([loadNotifications(), loadCategoryCounts()]);
+      toast.success('Notifications refreshed');
+    } catch (error) {
+      toast.error('Failed to refresh');
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshing]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Load notifications on mount and when filter changes
   useEffect(() => {
     loadNotifications();
@@ -258,7 +312,7 @@ const Notifications = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, currentPage]);
 
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     setLoading(true);
     try {
       const offset = (currentPage - 1) * notificationsPerPage;
@@ -278,9 +332,9 @@ const Notifications = () => {
       setNotifications([]);
       setLoading(false);
     }
-  };
+  }, [activeTab, currentPage, notificationsPerPage]);
 
-  const loadCategoryCounts = async () => {
+  const loadCategoryCounts = useCallback(async () => {
     try {
       const response = await notificationsAPI.getCategoryCounts();
       setCategoryCounts(response.counts || {
@@ -296,9 +350,9 @@ const Notifications = () => {
     } catch (error) {
       console.error('Error loading category counts:', error);
     }
-  };
+  }, []);
 
-  const handleMarkAllAsRead = async () => {
+  const handleMarkAllAsRead = useCallback(async () => {
     try {
       await notificationsAPI.markAllAsRead();
 
@@ -309,9 +363,9 @@ const Notifications = () => {
       console.error('Error marking all as read:', error);
       toast.error('Failed to mark notifications as read');
     }
-  };
+  }, [loadCategoryCounts]);
 
-  const handleNotificationClick = async (notification) => {
+  const handleNotificationClick = useCallback(async (notification) => {
     if (!notification.is_read) {
       try {
         await notificationsAPI.markAsRead(notification.id);
@@ -326,9 +380,9 @@ const Notifications = () => {
     }
 
     navigate(notification.target_link);
-  };
+  }, [navigate, loadCategoryCounts]);
 
-  const handleDismissNotification = async (e, notificationId) => {
+  const handleDismissNotification = useCallback(async (e, notificationId) => {
     e.stopPropagation();
 
     try {
@@ -341,7 +395,7 @@ const Notifications = () => {
       console.error('Error dismissing notification:', error);
       toast.error('Failed to dismiss notification');
     }
-  };
+  }, [loadCategoryCounts]);
 
   const getNotificationIcon = (type) => {
     const iconClass = "w-5 h-5";
@@ -374,36 +428,34 @@ const Notifications = () => {
     }
   };
 
-  const handleTabChange = (tabId) => {
+  const handleTabChange = useCallback((tabId) => {
     setSearchParams({ filter: tabId });
     setCurrentPage(1);
-  };
+  }, [setSearchParams]);
 
   const totalPages = Math.ceil(totalNotifications / notificationsPerPage);
   const unreadCount = categoryCounts.unread || 0;
 
   return (
-    <>
-      <Helmet>
-        <title>Your Notifications - Lisu Dictionary</title>
-        <meta name="description" content="View and manage your notifications from the Lisu Dictionary community" />
-      </Helmet>
-
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <PageLayout
+      title="Your Notifications - Lisu Dictionary"
+      description="View and manage your notifications from the Lisu Dictionary community"
+    >
+      <div className="min-h-screen bg-gray-50">
         {/* Mobile-Optimized Header - Sticky */}
-        <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
           <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             {/* Header Section - Mobile Optimized */}
             <div className="flex items-center justify-between py-3 sm:py-4">
               {/* Left: Title with Icon */}
               <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                <BellIcon className="w-6 h-6 sm:w-8 sm:h-8 text-teal-600 dark:text-teal-400 flex-shrink-0" />
+                <BellIcon className="w-6 h-6 sm:w-8 sm:h-8 text-teal-600 flex-shrink-0" />
                 <div className="min-w-0">
-                  <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white truncate">
+                  <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
                     Your Notifications
                   </h1>
                   {unreadCount > 0 && (
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-xs sm:text-sm text-gray-600">
                       <span className="inline-flex items-center gap-1">
                         <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
                         {unreadCount} unread
@@ -415,12 +467,22 @@ const Notifications = () => {
 
               {/* Right: Action Buttons */}
               <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Refresh Button */}
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="p-2 text-gray-700 hover:text-gray-900:text-white hover:bg-gray-100:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                  title="Refresh notifications (R)"
+                >
+                  <ArrowPathIcon className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
+                </button>
+
                 {/* Mark All as Read - Icon on mobile, text on desktop */}
                 {unreadCount > 0 && (
                   <button
                     onClick={handleMarkAllAsRead}
-                    className="p-2 sm:px-4 sm:py-2 text-sm font-medium text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
-                    title="Mark all as read"
+                    className="p-2 sm:px-4 sm:py-2 text-sm font-medium text-teal-600 hover:text-teal-700:text-teal-300 hover:bg-teal-50:bg-teal-900/20 rounded-lg transition-colors"
+                    title="Mark all as read (M)"
                   >
                     <CheckCircleIcon className="w-5 h-5 sm:hidden" />
                     <span className="hidden sm:inline">Mark All Read</span>
@@ -430,7 +492,7 @@ const Notifications = () => {
                 {/* Settings Icon */}
                 <Link
                   to="/settings?tab=notifications"
-                  className="p-2 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="p-2 text-gray-700 hover:text-gray-900:text-white hover:bg-gray-100:bg-gray-700 rounded-lg transition-colors"
                   title="Notification settings"
                 >
                   <Cog6ToothIcon className="w-5 h-5" />
@@ -438,9 +500,24 @@ const Notifications = () => {
               </div>
             </div>
 
+            {/* Keyboard Shortcuts Hint */}
+            <div className="hidden sm:block pb-2">
+              <p className="text-xs text-gray-500">
+                Press <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">R</kbd> to refresh
+                {unreadCount > 0 && (
+                  <>
+                    {' • '}
+                    <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">M</kbd> to mark all read
+                  </>
+                )}
+                {' • '}
+                <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">U</kbd> for unread
+              </p>
+            </div>
+
             {/* Filter Tabs - Scrollable on Mobile */}
-            <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
-              <div className="flex gap-1 sm:gap-2 border-b border-gray-200 dark:border-gray-700 min-w-min">
+            <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+              <div className="flex gap-1 sm:gap-2 border-b border-gray-200 min-w-min">
                 {filterTabs.map((tab) => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
@@ -454,8 +531,8 @@ const Notifications = () => {
                       className={`
                         flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium border-b-2 whitespace-nowrap transition-all flex-shrink-0
                         ${isActive
-                          ? 'border-teal-600 text-teal-600 dark:border-teal-400 dark:text-teal-400 bg-teal-50/50 dark:bg-teal-900/20'
-                          : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700/50'
+                          ? 'border-teal-600 text-teal-600 bg-teal-50/50'
+                          : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50:text-gray-200:bg-gray-700/50'
                         }
                       `}
                     >
@@ -466,8 +543,8 @@ const Notifications = () => {
                         <span className={`
                           px-1.5 py-0.5 text-xs font-bold rounded-full min-w-[20px] text-center
                           ${isActive
-                            ? 'bg-teal-600 text-white dark:bg-teal-500'
-                            : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                            ? 'bg-teal-600 text-white'
+                            : 'bg-gray-200 text-gray-700'
                           }
                         `}>
                           {tabCount > 99 ? '99+' : tabCount}
@@ -480,7 +557,7 @@ const Notifications = () => {
                 {/* Settings Tab Option (alternative placement) */}
                 <Link
                   to="/settings?tab=notifications"
-                  className="flex items-center gap-1.5 px-3 py-2.5 text-xs sm:text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap border-b-2 border-transparent hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all flex-shrink-0 sm:hidden"
+                  className="flex items-center gap-1.5 px-3 py-2.5 text-xs sm:text-sm font-medium text-gray-500 hover:text-gray-700:text-gray-200 whitespace-nowrap border-b-2 border-transparent hover:bg-gray-50:bg-gray-700/50 transition-all flex-shrink-0 sm:hidden"
                 >
                   <Cog6ToothIcon className="w-4 h-4" />
                 </Link>
@@ -494,17 +571,31 @@ const Notifications = () => {
 
           {/* Notifications List - Mobile-Optimized Card Layout */}
           {loading ? (
-            <div className="flex flex-col justify-center items-center py-16 sm:py-20">
-              <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-teal-600"></div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">Loading notifications...</p>
+            <div className="space-y-3">
+              {/* Skeleton for notification items */}
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border border-gray-200 bg-white"
+                >
+                  {/* Avatar skeleton */}
+                  <SkeletonLoader variant="avatar" className="w-10 h-10 sm:w-12 sm:h-12" />
+
+                  {/* Content skeleton */}
+                  <div className="flex-1 space-y-2">
+                    <SkeletonLoader variant="text" className="h-4 w-3/4" />
+                    <SkeletonLoader variant="text" className="h-3 w-1/4" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : notifications.length === 0 ? (
             <div className="text-center py-16 sm:py-20 px-4">
-              <BellIcon className="w-14 h-14 sm:w-16 sm:h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              <BellIcon className="w-14 h-14 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
                 No notifications
               </h3>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-sm mx-auto">
+              <p className="text-sm sm:text-base text-gray-600 max-w-sm mx-auto">
                 {activeTab === 'all'
                   ? "You're all caught up! Check back later for updates."
                   : `No ${activeTab} notifications at the moment.`
@@ -528,10 +619,10 @@ const Notifications = () => {
                     className={`
                       group relative flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border cursor-pointer transition-all touch-manipulation
                       ${!notification.is_read
-                        ? 'bg-teal-50/50 border-teal-200 active:bg-teal-50 dark:bg-teal-900/10 dark:border-teal-800 dark:active:bg-teal-900/20 shadow-sm'
-                        : 'bg-white border-gray-200 active:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:active:bg-gray-750'
+                        ? 'bg-teal-50/50 border-teal-200 active:bg-teal-50:bg-teal-900/20 shadow-sm'
+                        : 'bg-white border-gray-200 active:bg-gray-50:bg-gray-750'
                       }
-                      hover:shadow-md dark:hover:shadow-lg
+                      hover:shadow-md:shadow-lg
                     `}
                   >
                     {/* Unread Indicator Strip - Left Edge for Mobile */}
@@ -547,7 +638,7 @@ const Notifications = () => {
                             <img
                               src={actorAvatar}
                               alt={actorName}
-                              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover ring-2 ring-white dark:ring-gray-800"
+                              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover ring-2 ring-white"
                             />
                           ) : (
                             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-teal-400 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
@@ -557,12 +648,12 @@ const Notifications = () => {
                             </div>
                           )}
                           {/* Notification Type Icon Badge */}
-                          <div className="absolute -bottom-0.5 -right-0.5 bg-white dark:bg-gray-800 rounded-full p-0.5 shadow-sm ring-2 ring-white dark:ring-gray-800">
+                          <div className="absolute -bottom-0.5 -right-0.5 bg-white rounded-full p-0.5 shadow-sm ring-2 ring-white">
                             {getNotificationIcon(notification.type)}
                           </div>
                         </div>
                       ) : (
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center shadow-sm">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-100 flex items-center justify-center shadow-sm">
                           {getNotificationIcon(notification.type)}
                         </div>
                       )}
@@ -572,24 +663,24 @@ const Notifications = () => {
                     <div className="flex-1 min-w-0">
                       {/* Main Message */}
                       <div className="flex items-start justify-between gap-2 mb-1.5">
-                        <p className="text-sm sm:text-base leading-relaxed text-gray-900 dark:text-gray-100">
+                        <p className="text-sm sm:text-base leading-relaxed text-gray-900">
                           {actorName && notification.actor_id && (
                             <Link
                               to={`/users/${notification.actor_id}`}
                               onClick={(e) => e.stopPropagation()}
-                              className="font-bold hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                              className="font-bold hover:text-teal-600:text-teal-400 transition-colors"
                             >
                               {actorName}
                             </Link>
                           )}
                           {actorName && ' '}
-                          <span className={actorName ? 'text-gray-700 dark:text-gray-300' : 'font-semibold'}>
+                          <span className={actorName ? 'text-gray-700' : 'font-semibold'}>
                             {notification.message}
                           </span>
                           {notification.target_title && (
                             <>
                               {' '}
-                              <span className="font-bold text-gray-900 dark:text-white break-words">
+                              <span className="font-bold text-gray-900 break-words">
                                 "{notification.target_title}"
                               </span>
                             </>
@@ -597,7 +688,7 @@ const Notifications = () => {
                           {notification.secondary_message && (
                             <>
                               {' '}
-                              <span className="text-gray-700 dark:text-gray-300">{notification.secondary_message}</span>
+                              <span className="text-gray-700">{notification.secondary_message}</span>
                             </>
                           )}
                         </p>
@@ -605,7 +696,7 @@ const Notifications = () => {
                         {/* Dismiss Button - Always visible on mobile for better touch */}
                         <button
                           onClick={(e) => handleDismissNotification(e, notification.id)}
-                          className="p-1.5 sm:p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-all flex-shrink-0 sm:opacity-0 sm:group-hover:opacity-100 touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
+                          className="p-1.5 sm:p-1 text-gray-400 hover:text-gray-600:text-gray-300 hover:bg-gray-100:bg-gray-700 rounded-full transition-all flex-shrink-0 sm:opacity-0 sm:group-hover:opacity-100 touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
                           title="Dismiss notification"
                         >
                           <XMarkIcon className="w-5 h-5" />
@@ -613,7 +704,7 @@ const Notifications = () => {
                       </div>
 
                       {/* Timestamp */}
-                      <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-2">
+                      <p className="text-xs sm:text-sm text-gray-500 mb-2">
                         {new Date(notification.created_at).toLocaleString(undefined, {
                           month: 'short',
                           day: 'numeric',
@@ -632,7 +723,7 @@ const Notifications = () => {
                                 e.stopPropagation();
                                 handleNotificationClick(notification);
                               }}
-                              className="w-full sm:w-auto px-4 py-2 sm:py-1.5 text-sm font-medium text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 active:bg-teal-200 dark:text-teal-300 dark:bg-teal-900/30 dark:hover:bg-teal-900/50 transition-colors touch-manipulation min-h-[44px] sm:min-h-0 flex items-center justify-center"
+                              className="w-full sm:w-auto px-4 py-2 sm:py-1.5 text-sm font-medium text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 active:bg-teal-200:bg-teal-900/50 transition-colors touch-manipulation min-h-[44px] sm:min-h-0 flex items-center justify-center"
                             >
                               {button.label}
                             </button>
@@ -663,13 +754,13 @@ const Notifications = () => {
                 {hasMore && (
                   <button
                     onClick={() => setCurrentPage(prev => prev + 1)}
-                    className="w-full py-3.5 text-sm font-semibold text-teal-700 bg-teal-50 border-2 border-teal-200 rounded-xl hover:bg-teal-100 active:bg-teal-200 dark:text-teal-300 dark:bg-teal-900/30 dark:border-teal-800 dark:hover:bg-teal-900/50 transition-all touch-manipulation shadow-sm"
+                    className="w-full py-3.5 text-sm font-semibold text-teal-700 bg-teal-50 border-2 border-teal-200 rounded-xl hover:bg-teal-100 active:bg-teal-200:bg-teal-900/50 transition-all touch-manipulation shadow-sm"
                   >
                     Load More Notifications
                   </button>
                 )}
                 {/* Page indicator */}
-                <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-3">
+                <p className="text-center text-xs text-gray-500 mt-3">
                   Page {currentPage} of {totalPages} • {totalNotifications} total
                 </p>
               </div>
@@ -679,7 +770,7 @@ const Notifications = () => {
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-750 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed:bg-gray-750 transition-colors"
                 >
                   Previous
                 </button>
@@ -693,7 +784,7 @@ const Notifications = () => {
                         min-w-[40px] h-10 px-3 text-sm font-medium rounded-lg transition-colors
                         ${currentPage === 1
                           ? 'bg-teal-600 text-white shadow-sm'
-                          : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-750'
+                          : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50:bg-gray-750'
                         }
                       `}
                     >
@@ -703,7 +794,7 @@ const Notifications = () => {
 
                   {/* Ellipsis if needed */}
                   {currentPage > 3 && totalPages > 5 && (
-                    <span className="text-gray-500 dark:text-gray-400 px-2">...</span>
+                    <span className="text-gray-500 px-2">...</span>
                   )}
 
                   {/* Middle pages */}
@@ -720,7 +811,7 @@ const Notifications = () => {
                           min-w-[40px] h-10 px-3 text-sm font-medium rounded-lg transition-colors
                           ${currentPage === page
                             ? 'bg-teal-600 text-white shadow-sm'
-                            : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-750'
+                            : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50:bg-gray-750'
                           }
                         `}
                       >
@@ -730,7 +821,7 @@ const Notifications = () => {
 
                   {/* Ellipsis if needed */}
                   {currentPage < totalPages - 2 && totalPages > 5 && (
-                    <span className="text-gray-500 dark:text-gray-400 px-2">...</span>
+                    <span className="text-gray-500 px-2">...</span>
                   )}
 
                   {/* Show last page */}
@@ -741,7 +832,7 @@ const Notifications = () => {
                         min-w-[40px] h-10 px-3 text-sm font-medium rounded-lg transition-colors
                         ${currentPage === totalPages
                           ? 'bg-teal-600 text-white shadow-sm'
-                          : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-750'
+                          : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50:bg-gray-750'
                         }
                       `}
                     >
@@ -753,7 +844,7 @@ const Notifications = () => {
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-750 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed:bg-gray-750 transition-colors"
                 >
                   Next
                 </button>
@@ -763,7 +854,7 @@ const Notifications = () => {
 
         </div>
       </div>
-    </>
+    </PageLayout>
   );
 };
 

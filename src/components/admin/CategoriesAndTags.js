@@ -5,18 +5,18 @@ const CategoriesAndTags = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Categories & Tags
         </h1>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-gray-600">
           Manage content categories and tags
         </p>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8 border border-gray-200 dark:border-gray-700">
+      <div className="bg-white rounded-lg shadow-sm p-8 border border-gray-200">
         <div className="text-center">
           <TagIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600">
             Categories and tags management coming soon...
           </p>
         </div>

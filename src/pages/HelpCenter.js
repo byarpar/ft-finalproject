@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import {
   MagnifyingGlassIcon,
   BookOpenIcon,
@@ -17,8 +16,13 @@ import {
   ShieldCheckIcon,
   PhoneIcon
 } from '@heroicons/react/24/outline';
+import PageLayout from '../components/Layout/PageLayout';
 
-const HelpCenter = () => {
+/**
+ * HelpCenter Component
+ * 
+ * Main help center page with categories and search functionality.
+ */const HelpCenter = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchSuggestions, setSearchSuggestions] = useState([]);
@@ -82,45 +86,45 @@ const HelpCenter = () => {
       title: 'Reset Your Password',
       icon: ShieldCheckIcon,
       link: '/help/article/reset-password',
-      color: 'text-blue-600 dark:text-blue-400'
+      color: 'text-blue-600'
     },
     {
       title: 'Report a Bug',
       icon: ExclamationTriangleIcon,
       link: '/contact?subject=bug',
-      color: 'text-red-600 dark:text-red-400'
+      color: 'text-red-600'
     },
     {
       title: 'Suggest a New Word',
       icon: LightBulbIcon,
       link: '/contribute',
-      color: 'text-green-600 dark:text-green-400'
+      color: 'text-green-600'
     },
     {
       title: 'Community Guidelines',
       icon: DocumentTextIcon,
       link: '/help/article/community-guidelines',
-      color: 'text-purple-600 dark:text-purple-400'
+      color: 'text-purple-600'
     }
   ];
 
-  // Search suggestions data
-  const allSuggestions = [
-    'How to reset my password',
-    'How to use the Lisu keyboard',
-    'Understanding Lisu tones',
-    'How to report a word error',
-    'Community posting guidelines',
-    'How to save words',
-    'Account verification issues',
-    'Pronunciation audio not working',
-    'How to contribute translations',
-    'Delete my account'
-  ];
-
-  const handleSearchChange = (e) => {
+  const handleSearchChange = useCallback((e) => {
     const query = e.target.value;
     setSearchQuery(query);
+
+    // Search suggestions data
+    const allSuggestions = [
+      'How to reset my password',
+      'How to use the Lisu keyboard',
+      'Understanding Lisu tones',
+      'How to report a word error',
+      'Community posting guidelines',
+      'How to save words',
+      'Account verification issues',
+      'Pronunciation audio not working',
+      'How to contribute translations',
+      'Delete my account'
+    ];
 
     if (query.trim().length > 0) {
       const filtered = allSuggestions.filter(suggestion =>
@@ -132,35 +136,30 @@ const HelpCenter = () => {
       setSearchSuggestions([]);
       setShowSuggestions(false);
     }
-  };
+  }, []);
 
-  const handleSearch = (e) => {
+  const handleSearch = useCallback((e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/help/search?q=${encodeURIComponent(searchQuery)}`);
       setShowSuggestions(false);
     }
-  };
+  }, [searchQuery, navigate]);
 
-  const handleSuggestionClick = (suggestion) => {
+  const handleSuggestionClick = useCallback((suggestion) => {
     setSearchQuery(suggestion);
     setShowSuggestions(false);
     navigate(`/help/search?q=${encodeURIComponent(suggestion)}`);
-  };
+  }, [navigate]);
 
   return (
-    <>
-      <Helmet>
-        <title>Help Center - Lisu Dictionary</title>
-        <meta
-          name="description"
-          content="Find answers to common questions, troubleshoot issues, and learn how to use the Lisu Dictionary effectively."
-        />
-      </Helmet>
-
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <PageLayout
+      title="Help Center - Lisu Dictionary"
+      description="Find answers to common questions, troubleshoot issues, and learn how to use the Lisu Dictionary effectively."
+    >
+      <div className="min-h-screen bg-gray-50">
         {/* Hero Section with Search */}
-        <section className="relative bg-gradient-to-br from-teal-600 via-cyan-600 to-blue-600 dark:from-teal-700 dark:via-cyan-700 dark:to-blue-700 text-white overflow-hidden">
+        <section className="relative bg-gradient-to-br from-teal-600 via-cyan-600 to-blue-600 text-white overflow-hidden">
           {/* Decorative Pattern */}
           <div
             className="absolute inset-0 opacity-10"
@@ -198,7 +197,7 @@ const HelpCenter = () => {
                       onChange={handleSearchChange}
                       onFocus={() => searchQuery && setShowSuggestions(true)}
                       onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                      className="w-full pl-14 pr-14 py-5 text-lg border-2 border-transparent rounded-xl focus:ring-4 focus:ring-white/20 focus:border-white bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 shadow-xl transition-all"
+                      className="w-full pl-14 pr-14 py-5 text-lg border-2 border-transparent rounded-xl focus:ring-4 focus:ring-white/20 focus:border-white bg-white text-gray-900 placeholder-gray-400 shadow-xl transition-all"
                     />
                     <button
                       type="submit"
@@ -211,16 +210,16 @@ const HelpCenter = () => {
 
                   {/* Search Suggestions Dropdown */}
                   {showSuggestions && searchSuggestions.length > 0 && (
-                    <div className="absolute z-10 w-full mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div className="absolute z-10 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden">
                       {searchSuggestions.map((suggestion, index) => (
                         <button
                           key={index}
                           type="button"
                           onClick={() => handleSuggestionClick(suggestion)}
-                          className="w-full px-5 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-3 group"
+                          className="w-full px-5 py-3 text-left hover:bg-gray-50:bg-gray-700 transition-colors flex items-center gap-3 group"
                         >
-                          <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 group-hover:text-teal-600 dark:group-hover:text-teal-400" />
-                          <span className="text-gray-700 dark:text-gray-300 group-hover:text-teal-600 dark:group-hover:text-teal-400">
+                          <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 group-hover:text-teal-600:text-teal-400" />
+                          <span className="text-gray-700 group-hover:text-teal-600:text-teal-400">
                             {suggestion}
                           </span>
                         </button>
@@ -250,10 +249,10 @@ const HelpCenter = () => {
             {/* Browse by Category - Main Section */}
             <div className="lg:col-span-2">
               <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">
                   Browse by Category
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-gray-600">
                   Find help articles organized by topic
                 </p>
               </div>
@@ -266,7 +265,7 @@ const HelpCenter = () => {
                     <Link
                       key={category.id}
                       to={`/help/category/${category.id}`}
-                      className="group bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl transition-all duration-300 hover:border-teal-500 dark:hover:border-teal-400"
+                      className="group bg-white rounded-xl border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 hover:border-teal-500:border-teal-400"
                     >
                       {/* Icon with gradient background */}
                       <div className={`w-14 h-14 bg-gradient-to-br ${category.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
@@ -274,21 +273,21 @@ const HelpCenter = () => {
                       </div>
 
                       {/* Category Name */}
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                      <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-teal-600:text-teal-400 transition-colors">
                         {category.name}
                       </h3>
 
                       {/* Description */}
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                      <p className="text-sm text-gray-600 mb-4 line-clamp-2">
                         {category.description}
                       </p>
 
                       {/* Article Count and Arrow */}
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        <span className="text-sm font-medium text-gray-500">
                           {category.articleCount} articles
                         </span>
-                        <ChevronRightIcon className="w-5 h-5 text-gray-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 group-hover:translate-x-1 transition-all" />
+                        <ChevronRightIcon className="w-5 h-5 text-gray-400 group-hover:text-teal-600:text-teal-400 group-hover:translate-x-1 transition-all" />
                       </div>
                     </Link>
                   );
@@ -299,9 +298,9 @@ const HelpCenter = () => {
             {/* Sidebar - Quick Links & Support */}
             <div className="lg:col-span-1 space-y-6">
               {/* Quick Links Section */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <LightBulbIcon className="w-6 h-6 text-teal-600 dark:text-teal-400" />
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <LightBulbIcon className="w-6 h-6 text-teal-600" />
                   Quick Links
                 </h3>
                 <div className="space-y-3">
@@ -311,15 +310,15 @@ const HelpCenter = () => {
                       <Link
                         key={index}
                         to={link.link}
-                        className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
+                        className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50:bg-gray-700 transition-colors group"
                       >
                         <IconComponent className={`w-5 h-5 mt-0.5 ${link.color}`} />
                         <div className="flex-1">
-                          <span className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                          <span className="text-sm font-medium text-gray-900 group-hover:text-teal-600:text-teal-400 transition-colors">
                             {link.title}
                           </span>
                         </div>
-                        <ChevronRightIcon className="w-4 h-4 text-gray-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors" />
+                        <ChevronRightIcon className="w-4 h-4 text-gray-400 group-hover:text-teal-600:text-teal-400 transition-colors" />
                       </Link>
                     );
                   })}
@@ -327,7 +326,7 @@ const HelpCenter = () => {
               </div>
 
               {/* Contact Support CTA */}
-              <div className="bg-gradient-to-br from-teal-500 to-cyan-600 dark:from-teal-600 dark:to-cyan-700 rounded-xl p-6 text-white shadow-lg">
+              <div className="bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl p-6 text-white shadow-lg">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
                     <PhoneIcon className="w-6 h-6 text-white" />
@@ -346,29 +345,29 @@ const HelpCenter = () => {
               </div>
 
               {/* Latest Updates */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 p-6">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                  <DocumentTextIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <DocumentTextIcon className="w-5 h-5 text-blue-600" />
                   Latest Updates
                 </h3>
                 <div className="space-y-3 text-sm">
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
+                    <p className="font-medium text-gray-900">
                       New: Lisu Keyboard Guide
                     </p>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs">2 days ago</p>
+                    <p className="text-gray-600 text-xs">2 days ago</p>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
+                    <p className="font-medium text-gray-900">
                       Updated: Community Guidelines
                     </p>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs">1 week ago</p>
+                    <p className="text-gray-600 text-xs">1 week ago</p>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
+                    <p className="font-medium text-gray-900">
                       New: Pronunciation Tips
                     </p>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs">2 weeks ago</p>
+                    <p className="text-gray-600 text-xs">2 weeks ago</p>
                   </div>
                 </div>
               </div>
@@ -376,7 +375,7 @@ const HelpCenter = () => {
           </div>
         </div>
       </div>
-    </>
+    </PageLayout>
   );
 };
 

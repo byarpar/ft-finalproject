@@ -25,7 +25,7 @@ const BestAnswerBadge = ({
     return (
       <button
         onClick={() => onMarkAsBest(answerId)}
-        className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-green-100 dark:hover:bg-green-900/30 hover:text-green-700 dark:hover:text-green-400 rounded-lg transition-colors group"
+        className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 hover:bg-green-100:bg-green-900/30 hover:text-green-700:text-green-400 rounded-lg transition-colors group"
         title="Mark this as the best answer"
       >
         <CheckCircleIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />

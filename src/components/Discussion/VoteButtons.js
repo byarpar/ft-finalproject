@@ -100,8 +100,8 @@ const VoteButtons = ({
       onClick={handleVote}
       disabled={isLoading}
       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-200 ${userVote === 'upvote'
-        ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400'
+        ? 'bg-green-100 text-green-600'
+        : 'bg-gray-100 text-gray-600 hover:bg-green-50:bg-green-900/20 hover:text-green-600:text-green-400'
         } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}`}
       title={userVote === 'upvote' ? 'Remove vote' : 'Vote'}
       aria-label={userVote === 'upvote' ? 'Remove vote' : 'Vote'}

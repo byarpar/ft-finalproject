@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { adminAPI } from '../../services/api';
+import adminAPI from '../../services/adminAPI';
 import StatCard from './StatCard';
 import {
   UsersIcon,
@@ -73,11 +73,11 @@ const DashboardOverview = () => {
 
   if (error) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-        <p className="text-red-800 dark:text-red-400">{error}</p>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <p className="text-red-800">{error}</p>
         <button
           onClick={fetchDashboardStats}
-          className="mt-2 text-sm text-red-600 dark:text-red-400 underline"
+          className="mt-2 text-sm text-red-600 underline"
         >
           Try again
         </button>
@@ -180,10 +180,10 @@ const DashboardOverview = () => {
     <div className="space-y-6">
       {/* Welcome Message */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Welcome, Super Admin!
         </h1>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-gray-600">
           Here's what's happening with your Lisu Dictionary today.
         </p>
       </div>
@@ -254,8 +254,8 @@ const DashboardOverview = () => {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Website Activity Chart */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Website Activity
           </h3>
           <div className="h-64">
@@ -264,15 +264,15 @@ const DashboardOverview = () => {
         </div>
 
         {/* Part of Speech Distribution */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Words by Part of Speech
           </h3>
           <div className="h-64">
             {stats?.part_of_speech_distribution?.length > 0 ? (
               <Doughnut data={partOfSpeechData} options={doughnutOptions} />
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+              <div className="flex items-center justify-center h-full text-gray-500">
                 No data available
               </div>
             )}
@@ -283,21 +283,21 @@ const DashboardOverview = () => {
       {/* Pending Reviews Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pending Word Contributions */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">
               Pending Word Contributions
             </h3>
           </div>
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+          <div className="divide-y divide-gray-200">
             {[1, 2, 3].map((item) => (
-              <div key={item} className="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+              <div key={item} className="px-6 py-4 hover:bg-gray-50:bg-gray-700/50">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    <p className="text-sm font-medium text-gray-900">
                       ꓞꓳꓽ • To Teach
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    <p className="text-xs text-gray-500 mt-1">
                       Submitted by <span className="font-medium">JohnDoe</span> • 2 hours ago
                     </p>
                   </div>
@@ -313,42 +313,42 @@ const DashboardOverview = () => {
               </div>
             ))}
           </div>
-          <div className="px-6 py-3 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700">
-            <button className="text-sm text-teal-600 dark:text-teal-400 hover:underline">
+          <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
+            <button className="text-sm text-teal-600 hover:underline">
               View all pending contributions →
             </button>
           </div>
         </div>
 
         {/* Recent User Registrations */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">
               Recent User Registrations
             </h3>
           </div>
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+          <div className="divide-y divide-gray-200">
             {[1, 2, 3].map((item) => (
-              <div key={item} className="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+              <div key={item} className="px-6 py-4 hover:bg-gray-50:bg-gray-700/50">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center text-white font-medium">
                       UN
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      <p className="text-sm font-medium text-gray-900">
                         Username{item}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-gray-500">
                         user{item}@example.com
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-gray-500">
                       {item} hour{item > 1 ? 's' : ''} ago
                     </p>
-                    <button className="text-xs text-teal-600 dark:text-teal-400 hover:underline mt-1">
+                    <button className="text-xs text-teal-600 hover:underline mt-1">
                       View Profile
                     </button>
                   </div>
@@ -356,8 +356,8 @@ const DashboardOverview = () => {
               </div>
             ))}
           </div>
-          <div className="px-6 py-3 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700">
-            <button className="text-sm text-teal-600 dark:text-teal-400 hover:underline">
+          <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
+            <button className="text-sm text-teal-600 hover:underline">
               View all users →
             </button>
           </div>
@@ -366,20 +366,20 @@ const DashboardOverview = () => {
 
       {/* Recent Searches */}
       {stats?.recent_searches?.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Popular Searches (Last 24h)
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {stats.recent_searches.map((search, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-md"
+                className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-md"
               >
-                <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                <span className="text-sm text-gray-700 truncate">
                   {search.search_term}
                 </span>
-                <span className="ml-2 text-xs font-medium text-teal-600 dark:text-teal-400">
+                <span className="ml-2 text-xs font-medium text-teal-600">
                   {search.search_count}
                 </span>
               </div>
@@ -390,28 +390,28 @@ const DashboardOverview = () => {
 
       {/* System Status */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
             System Status
           </h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-400">Database</span>
-              <span className="flex items-center text-sm font-medium text-green-600 dark:text-green-400">
+              <span className="text-sm text-gray-600">Database</span>
+              <span className="flex items-center text-sm font-medium text-green-600">
                 <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
                 Online
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-400">API Server</span>
-              <span className="flex items-center text-sm font-medium text-green-600 dark:text-green-400">
+              <span className="text-sm text-gray-600">API Server</span>
+              <span className="flex items-center text-sm font-medium text-green-600">
                 <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
                 Operational
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-400">Search Service</span>
-              <span className="flex items-center text-sm font-medium text-green-600 dark:text-green-400">
+              <span className="text-sm text-gray-600">Search Service</span>
+              <span className="flex items-center text-sm font-medium text-green-600">
                 <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
                 Running
               </span>
@@ -419,35 +419,35 @@ const DashboardOverview = () => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Server Load
           </h3>
           <div className="space-y-3">
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-gray-600 dark:text-gray-400">CPU Usage</span>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">45%</span>
+                <span className="text-sm text-gray-600">CPU Usage</span>
+                <span className="text-sm font-medium text-gray-900">45%</span>
               </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div className="w-full bg-gray-200 rounded-full h-2">
                 <div className="bg-teal-500 h-2 rounded-full" style={{ width: '45%' }}></div>
               </div>
             </div>
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Memory</span>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">62%</span>
+                <span className="text-sm text-gray-600">Memory</span>
+                <span className="text-sm font-medium text-gray-900">62%</span>
               </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div className="w-full bg-gray-200 rounded-full h-2">
                 <div className="bg-blue-500 h-2 rounded-full" style={{ width: '62%' }}></div>
               </div>
             </div>
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Disk Space</span>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">38%</span>
+                <span className="text-sm text-gray-600">Disk Space</span>
+                <span className="text-sm font-medium text-gray-900">38%</span>
               </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div className="w-full bg-gray-200 rounded-full h-2">
                 <div className="bg-green-500 h-2 rounded-full" style={{ width: '38%' }}></div>
               </div>
             </div>

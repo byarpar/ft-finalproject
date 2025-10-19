@@ -1,11 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import {
   ShieldCheckIcon,
   ChevronUpIcon,
   DocumentTextIcon
 } from '@heroicons/react/24/outline';
+import PageLayout from '../components/Layout/PageLayout';
+
+/**
+ * PrivacyPolicy Component
+ * 
+ * Displays the privacy policy and data handling practices
+ * for the Lisu Dictionary platform.
+ */
 
 const PrivacyPolicy = () => {
   const [activeSection, setActiveSection] = useState('');
@@ -59,7 +66,7 @@ const PrivacyPolicy = () => {
   }, []);
 
   // Smooth scroll to section
-  const scrollToSection = (sectionId) => {
+  const scrollToSection = useCallback((sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
       const offset = 100;
@@ -71,27 +78,22 @@ const PrivacyPolicy = () => {
         behavior: 'smooth'
       });
     }
-  };
+  }, []);
 
   // Scroll to top
-  const scrollToTop = () => {
+  const scrollToTop = useCallback(() => {
     window.scrollTo({
       top: 0,
       behavior: 'smooth'
     });
-  };
+  }, []);
 
   return (
-    <>
-      <Helmet>
-        <title>Privacy Policy - Lisu Dictionary</title>
-        <meta
-          name="description"
-          content="Learn how Lisu Dictionary collects, uses, and protects your personal data. Your privacy matters to us."
-        />
-      </Helmet>
-
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <PageLayout
+      title="Privacy Policy - Lisu Dictionary"
+      description="Learn how Lisu Dictionary collects, uses, and protects your personal data. Your privacy matters to us."
+    >
+      <div className="min-h-screen bg-gray-50">
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-teal-600 to-cyan-600 text-white overflow-hidden">
           <div className="absolute inset-0 bg-black/10"></div>
@@ -113,9 +115,9 @@ const PrivacyPolicy = () => {
           <div className="lg:grid lg:grid-cols-12 lg:gap-8">
             {/* Table of Contents - Sticky Sidebar */}
             <aside className="hidden lg:block lg:col-span-3">
-              <div className="sticky top-24 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <DocumentTextIcon className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+              <div className="sticky top-24 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <DocumentTextIcon className="w-5 h-5 text-teal-600" />
                   Table of Contents
                 </h2>
                 <nav className="space-y-1">
@@ -124,8 +126,8 @@ const PrivacyPolicy = () => {
                       key={section.id}
                       onClick={() => scrollToSection(section.id)}
                       className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${activeSection === section.id
-                        ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 font-semibold'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                        ? 'bg-teal-50 text-teal-700 font-semibold'
+                        : 'text-gray-700 hover:bg-gray-100:bg-gray-700'
                         }`}
                     >
                       <span className="font-medium">{section.number}.</span> {section.title}
@@ -138,8 +140,8 @@ const PrivacyPolicy = () => {
             {/* Main Content - Privacy Document */}
             <main className="lg:col-span-9">
               {/* Mobile Table of Contents */}
-              <div className="lg:hidden mb-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+              <div className="lg:hidden mb-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h2 className="text-lg font-bold text-gray-900 mb-4">
                   Table of Contents
                 </h2>
                 <nav className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -147,7 +149,7 @@ const PrivacyPolicy = () => {
                     <button
                       key={section.id}
                       onClick={() => scrollToSection(section.id)}
-                      className="text-left px-3 py-2 rounded-lg text-sm text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors"
+                      className="text-left px-3 py-2 rounded-lg text-sm text-teal-600 hover:bg-teal-50:bg-teal-900/20 transition-colors"
                     >
                       {section.number}. {section.title}
                     </button>
@@ -156,23 +158,23 @@ const PrivacyPolicy = () => {
               </div>
 
               {/* Privacy Document */}
-              <article className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 lg:p-12">
-                <header className="mb-8 pb-6 border-b border-gray-200 dark:border-gray-700">
-                  <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <article className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 lg:p-12">
+                <header className="mb-8 pb-6 border-b border-gray-200">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">
                     Website Privacy Policy
                   </h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-gray-600">
                     Last Updated: {lastUpdated}
                   </p>
                 </header>
 
                 {/* Section 1: Introduction */}
                 <section id="introduction" className="mb-12 scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">1.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">1.</span>
                     Introduction
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
                     <p>
                       Welcome to Lisu Dictionary. We respect your privacy and are committed to protecting
                       your personal data. This Privacy Policy explains how we collect, use, disclose, and
@@ -187,7 +189,7 @@ const PrivacyPolicy = () => {
                       Please read this Privacy Policy carefully. If you do not agree with the terms of this
                       Privacy Policy, please do not access or use the Service. This policy should be read
                       in conjunction with our{' '}
-                      <Link to="/terms" className="text-teal-600 dark:text-teal-400 hover:underline font-medium">
+                      <Link to="/terms" className="text-teal-600 hover:underline font-medium">
                         Terms of Service
                       </Link>.
                     </p>
@@ -196,16 +198,16 @@ const PrivacyPolicy = () => {
 
                 {/* Section 2: What Data We Collect */}
                 <section id="data-collect" className="mb-12 scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">2.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">2.</span>
                     What Data We Collect
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
                     <p>
                       We collect several types of information from and about users of our Service:
                     </p>
 
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mt-6">
                       2.1 Account Data
                     </h4>
                     <p>
@@ -219,7 +221,7 @@ const PrivacyPolicy = () => {
                       <li><strong>Account creation date:</strong> Timestamp of registration</li>
                     </ul>
 
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mt-6">
                       2.2 Usage Data
                     </h4>
                     <p>
@@ -236,7 +238,7 @@ const PrivacyPolicy = () => {
                       <li><strong>Device information:</strong> Type of device used to access the Service</li>
                     </ul>
 
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mt-6">
                       2.3 User-Generated Content
                     </h4>
                     <p>
@@ -249,7 +251,7 @@ const PrivacyPolicy = () => {
                       <li><strong>Feedback and ratings:</strong> Your ratings of content or feedback submissions</li>
                     </ul>
 
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mt-6">
                       2.4 Cookies & Tracking Technologies
                     </h4>
                     <p>
@@ -261,8 +263,8 @@ const PrivacyPolicy = () => {
                       <li><strong>Analytics Cookies:</strong> To understand how you use the Service (via Google Analytics or similar)</li>
                       <li><strong>Security Cookies:</strong> To detect and prevent security threats</li>
                     </ul>
-                    <div className="bg-teal-50 dark:bg-teal-900/20 border-l-4 border-teal-500 p-4 rounded-r-lg mt-4">
-                      <p className="text-teal-900 dark:text-teal-100 font-medium">
+                    <div className="bg-teal-50 border-l-4 border-teal-500 p-4 rounded-r-lg mt-4">
+                      <p className="text-teal-900 font-medium">
                         💡 You can control cookie preferences through your browser settings. However,
                         disabling cookies may affect the functionality of the Service.
                       </p>
@@ -272,11 +274,11 @@ const PrivacyPolicy = () => {
 
                 {/* Section 3: How We Use Your Data */}
                 <section id="data-use" className="mb-12 scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">3.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">3.</span>
                     How We Use Your Data
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
                     <p>
                       We use the collected data for various purposes:
                     </p>
@@ -298,7 +300,7 @@ const PrivacyPolicy = () => {
                       <li><strong>For analytics and research:</strong> Understand how users interact with
                         the Service to make data-driven improvements</li>
                     </ul>
-                    <div className="bg-gray-100 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg p-4 mt-4">
+                    <div className="bg-gray-100 border border-gray-300 rounded-lg p-4 mt-4">
                       <p className="text-sm">
                         <strong>Legal Basis for Processing (GDPR):</strong> We process your data based on:
                       </p>
@@ -314,17 +316,17 @@ const PrivacyPolicy = () => {
 
                 {/* Section 4: How We Share Your Data */}
                 <section id="data-share" className="mb-12 scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">4.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">4.</span>
                     How We Share Your Data
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
                     <p>
                       We do not sell your personal data. However, we may share your information in the
                       following circumstances:
                     </p>
 
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mt-6">
                       4.1 With Service Providers
                     </h4>
                     <p>
@@ -341,7 +343,7 @@ const PrivacyPolicy = () => {
                       only for the purposes we specify.
                     </p>
 
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mt-6">
                       4.2 For Legal Reasons
                     </h4>
                     <p>
@@ -356,7 +358,7 @@ const PrivacyPolicy = () => {
                       <li>To protect against legal liability</li>
                     </ul>
 
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mt-6">
                       4.3 Business Transfers
                     </h4>
                     <p>
@@ -365,14 +367,14 @@ const PrivacyPolicy = () => {
                       becomes subject to a different Privacy Policy.
                     </p>
 
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mt-6">
                       4.4 With Your Consent
                     </h4>
                     <p>
                       We may share your information for any other purpose with your explicit consent.
                     </p>
 
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mt-6">
                       4.5 Aggregated or Anonymized Data
                     </h4>
                     <p>
@@ -385,12 +387,12 @@ const PrivacyPolicy = () => {
 
                 {/* Section 5: Data Retention & Security */}
                 <section id="data-retention" className="mb-12 scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">5.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">5.</span>
                     Data Retention & Security
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
+                    <h4 className="text-lg font-semibold text-gray-900">
                       5.1 How Long We Keep Your Data
                     </h4>
                     <p>
@@ -410,7 +412,7 @@ const PrivacyPolicy = () => {
                       When data is no longer needed, we will securely delete or anonymize it.
                     </p>
 
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mt-6">
                       5.2 How We Protect Your Data
                     </h4>
                     <p>
@@ -427,8 +429,8 @@ const PrivacyPolicy = () => {
                       <li><strong>Secure infrastructure:</strong> Hosting on reputable cloud providers with
                         strong security measures</li>
                     </ul>
-                    <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 rounded-r-lg mt-4">
-                      <p className="text-amber-900 dark:text-amber-100 font-medium">
+                    <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg mt-4">
+                      <p className="text-amber-900 font-medium">
                         ⚠️ <strong>Important:</strong> No method of transmission over the Internet or
                         electronic storage is 100% secure. While we strive to protect your personal data,
                         we cannot guarantee absolute security.
@@ -439,16 +441,16 @@ const PrivacyPolicy = () => {
 
                 {/* Section 6: Your Rights & Choices */}
                 <section id="your-rights" className="mb-12 scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">6.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">6.</span>
                     Your Rights & Choices
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
                     <p>
                       Depending on your location, you may have certain rights regarding your personal data:
                     </p>
 
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mt-6">
                       6.1 General Rights (All Users)
                     </h4>
                     <ul className="list-disc pl-6 space-y-2">
@@ -462,7 +464,7 @@ const PrivacyPolicy = () => {
                       <li><strong>Cookie management:</strong> Control cookies through your browser settings</li>
                     </ul>
 
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mt-6">
                       6.2 GDPR Rights (European Union Users)
                     </h4>
                     <p>
@@ -485,7 +487,7 @@ const PrivacyPolicy = () => {
                         protection authority</li>
                     </ul>
 
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mt-6">
                       6.3 CCPA Rights (California Users)
                     </h4>
                     <p>
@@ -501,7 +503,7 @@ const PrivacyPolicy = () => {
                         exercising your rights</li>
                     </ul>
 
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mt-6">
                       6.4 How to Exercise Your Rights
                     </h4>
                     <p>
@@ -509,12 +511,12 @@ const PrivacyPolicy = () => {
                     </p>
                     <ul className="list-disc pl-6 space-y-2">
                       <li>Email us at{' '}
-                        <a href="mailto:privacy@lisudictionary.com" className="text-teal-600 dark:text-teal-400 hover:underline font-medium">
+                        <a href="mailto:privacy@lisudictionary.com" className="text-teal-600 hover:underline font-medium">
                           privacy@lisudictionary.com
                         </a>
                       </li>
                       <li>Use our{' '}
-                        <Link to="/contact" className="text-teal-600 dark:text-teal-400 hover:underline font-medium">
+                        <Link to="/contact" className="text-teal-600 hover:underline font-medium">
                           Contact Form
                         </Link>
                       </li>
@@ -529,11 +531,11 @@ const PrivacyPolicy = () => {
 
                 {/* Section 7: Children's Privacy */}
                 <section id="children" className="mb-12 scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">7.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">7.</span>
                     Children's Privacy
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
                     <p>
                       Our Service is not directed to children under the age of <strong>13</strong> (or the
                       applicable age of digital consent in your jurisdiction). We do not knowingly collect
@@ -542,7 +544,7 @@ const PrivacyPolicy = () => {
                     <p>
                       If you are a parent or guardian and believe that your child has provided us with
                       personal information, please contact us at{' '}
-                      <a href="mailto:privacy@lisudictionary.com" className="text-teal-600 dark:text-teal-400 hover:underline font-medium">
+                      <a href="mailto:privacy@lisudictionary.com" className="text-teal-600 hover:underline font-medium">
                         privacy@lisudictionary.com
                       </a>.
                       We will take steps to delete such information from our systems.
@@ -556,11 +558,11 @@ const PrivacyPolicy = () => {
 
                 {/* Section 8: Links to Other Websites */}
                 <section id="third-party" className="mb-12 scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">8.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">8.</span>
                     Links to Other Websites
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
                     <p>
                       Our Service may contain links to third-party websites, plugins, and applications that
                       are not operated by us. If you click on a third-party link, you will be directed to
@@ -585,11 +587,11 @@ const PrivacyPolicy = () => {
 
                 {/* Section 9: Changes to This Policy */}
                 <section id="changes" className="mb-12 scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">9.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">9.</span>
                     Changes to This Policy
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
                     <p>
                       We may update our Privacy Policy from time to time to reflect changes in our practices,
                       technology, legal requirements, or other factors.
@@ -621,35 +623,35 @@ const PrivacyPolicy = () => {
 
                 {/* Section 10: Contact Us */}
                 <section id="contact" className="scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">10.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">10.</span>
                     Contact Us
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
                     <p>
                       If you have any questions, concerns, or requests regarding this Privacy Policy or our
                       data practices, please contact us:
                     </p>
-                    <div className="bg-teal-50 dark:bg-teal-900/20 rounded-lg p-6 border border-teal-200 dark:border-teal-800">
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+                    <div className="bg-teal-50 rounded-lg p-6 border border-teal-200">
+                      <h4 className="font-semibold text-gray-900 mb-3">
                         Lisu Dictionary Privacy Team
                       </h4>
                       <div className="space-y-2 text-sm">
                         <p>
                           <strong>Email:</strong>{' '}
-                          <a href="mailto:privacy@lisudictionary.com" className="text-teal-600 dark:text-teal-400 hover:underline">
+                          <a href="mailto:privacy@lisudictionary.com" className="text-teal-600 hover:underline">
                             privacy@lisudictionary.com
                           </a>
                         </p>
                         <p>
                           <strong>General Support:</strong>{' '}
-                          <a href="mailto:support@lisudictionary.com" className="text-teal-600 dark:text-teal-400 hover:underline">
+                          <a href="mailto:support@lisudictionary.com" className="text-teal-600 hover:underline">
                             support@lisudictionary.com
                           </a>
                         </p>
                         <p>
                           <strong>Contact Form:</strong>{' '}
-                          <Link to="/contact" className="text-teal-600 dark:text-teal-400 hover:underline">
+                          <Link to="/contact" className="text-teal-600 hover:underline">
                             Contact Page
                           </Link>
                         </p>
@@ -663,11 +665,11 @@ const PrivacyPolicy = () => {
                 </section>
 
                 {/* Additional Information */}
-                <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                <div className="mt-12 pt-8 border-t border-gray-200">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">
                     Additional Information
                   </h3>
-                  <div className="space-y-4 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                  <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
                     <p>
                       <strong>International Data Transfers:</strong> Your information may be transferred to
                       and maintained on computers located outside of your jurisdiction where data protection
@@ -682,29 +684,29 @@ const PrivacyPolicy = () => {
                 </div>
 
                 {/* Acknowledgment Footer */}
-                <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700 text-center">
-                  <p className="text-gray-700 dark:text-gray-300 font-medium mb-4">
+                <div className="mt-12 pt-8 border-t border-gray-200 text-center">
+                  <p className="text-gray-700 font-medium mb-4">
                     By using Lisu Dictionary, you acknowledge that you have read and understood this
                     Privacy Policy.
                   </p>
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <Link
                       to="/terms"
-                      className="text-teal-600 dark:text-teal-400 hover:underline font-medium"
+                      className="text-teal-600 hover:underline font-medium"
                     >
                       View Terms of Service
                     </Link>
                     <span className="hidden sm:inline text-gray-400">•</span>
                     <Link
                       to="/help"
-                      className="text-teal-600 dark:text-teal-400 hover:underline font-medium"
+                      className="text-teal-600 hover:underline font-medium"
                     >
                       Help Center
                     </Link>
                     <span className="hidden sm:inline text-gray-400">•</span>
                     <Link
                       to="/contact"
-                      className="text-teal-600 dark:text-teal-400 hover:underline font-medium"
+                      className="text-teal-600 hover:underline font-medium"
                     >
                       Contact Us
                     </Link>
@@ -726,7 +728,7 @@ const PrivacyPolicy = () => {
           </button>
         )}
       </div>
-    </>
+    </PageLayout>
   );
 };
 

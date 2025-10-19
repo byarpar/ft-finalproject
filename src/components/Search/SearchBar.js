@@ -254,11 +254,11 @@ const SearchBar = ({
 
   return (
     <div className={`relative ${className}`}>
-      <form onSubmit={handleSubmit} className="relative flex items-center bg-white dark:bg-gray-800 rounded-full shadow-lg overflow-hidden">
+      <form onSubmit={handleSubmit} className="relative flex items-center bg-white rounded-full shadow-lg overflow-hidden">
         {/* Search Icon */}
-        <div className="pl-4 pr-2 pointer-events-none flex-shrink-0">
+        <div className="pl-3 sm:pl-4 pr-2 pointer-events-none flex-shrink-0">
           <MagnifyingGlassIcon
-            className={`${iconSizeClasses[size]} text-gray-400 dark:text-gray-500`}
+            className={`${iconSizeClasses[size]} text-gray-400`}
           />
         </div>
 
@@ -277,32 +277,32 @@ const SearchBar = ({
             bg-transparent
             border-none
             outline-none
-            text-gray-700 dark:text-white
-            placeholder-gray-400 dark:placeholder-gray-400
+            text-gray-700
+            placeholder-gray-400
             disabled:opacity-50 disabled:cursor-not-allowed
             pr-2
             font-normal
+            text-sm sm:text-base
           `}
-          style={{ fontSize: '14px' }}
           aria-label="Search"
         />
 
         {/* Right Side Icons - Inside the input area */}
-        <div className="flex items-center gap-1 pr-1.5 flex-shrink-0">
+        <div className="flex items-center gap-1 pr-1 sm:pr-1.5 flex-shrink-0">
           {/* Voice Search */}
           {showEnhancedFeatures && (
             <button
               type="button"
               onClick={handleVoiceSearch}
               disabled={isListening}
-              className={`p-1.5 rounded-full transition-colors ${isListening
-                ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 animate-pulse'
-                : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-teal-600 dark:text-teal-400'
+              className={`p-1.5 sm:p-2 rounded-full transition-colors ${isListening
+                ? 'bg-red-100 text-red-600 animate-pulse'
+                : 'hover:bg-gray-100:bg-gray-700 text-teal-600'
                 }`}
               title="Voice Search"
               aria-label="Voice search"
             >
-              <MicrophoneIcon className="w-4 h-4" />
+              <MicrophoneIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           )}
 
@@ -311,7 +311,7 @@ const SearchBar = ({
             <button
               type="button"
               onClick={handleImageSearch}
-              className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-teal-600 dark:text-teal-400 transition-colors"
+              className="p-1.5 rounded-full hover:bg-gray-100:bg-gray-700 text-teal-600 transition-colors"
               title="Search by Image"
               aria-label="Image search"
             >
@@ -320,16 +320,17 @@ const SearchBar = ({
           )} */}
 
           {/* Vertical Divider */}
-          <div className="h-5 w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+          <div className="h-5 w-px bg-gray-300 mx-0.5 sm:mx-1"></div>
 
           {/* Search Button */}
           <button
             type="submit"
             disabled={disabled}
-            className="px-5 py-2 bg-teal-600 hover:bg-teal-700 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-semibold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm"
+            className="px-3 sm:px-5 py-1.5 sm:py-2 bg-teal-600 hover:bg-teal-700:bg-teal-700 text-white font-semibold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-xs sm:text-sm"
             aria-label="Search"
           >
-            Search
+            <span className="hidden sm:inline">Search</span>
+            <MagnifyingGlassIcon className="w-4 h-4 sm:hidden" />
           </button>
         </div>
       </form>
@@ -338,49 +339,49 @@ const SearchBar = ({
       {showSuggestions && showSuggestionsList && suggestions.length > 0 && (
         <div
           ref={suggestionsRef}
-          className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 max-h-[400px] overflow-y-auto"
+          className="absolute z-50 w-full mt-1 bg-white rounded-lg shadow-xl border border-gray-200 max-h-[400px] overflow-y-auto"
           style={{
             scrollbarWidth: 'thin',
             scrollbarColor: '#cbd5e1 #f1f5f9'
           }}
         >
-          <div className="divide-y divide-gray-100 dark:divide-gray-700">
+          <div className="divide-y divide-gray-100">
             {suggestions.map((word, index) => (
               <button
                 key={word.id || index}
                 type="button"
                 onClick={() => handleSuggestionClick(word)}
-                className={`w-full text-left px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-150 ${index === selectedSuggestionIndex ? 'bg-gray-50 dark:bg-gray-700' : ''
+                className={`w-full text-left px-4 py-2.5 hover:bg-gray-50:bg-gray-700 transition-all duration-150 ${index === selectedSuggestionIndex ? 'bg-gray-50' : ''
                   }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     {/* Lisu Word */}
-                    <div className="text-sm font-bold text-gray-800 dark:text-gray-100 mb-0.5 leading-tight">
+                    <div className="text-sm font-bold text-gray-800 mb-0.5 leading-tight">
                       {word.lisu_word || 'ꓡꓴ'}
                     </div>
 
                     {/* English Word and Part of Speech Row */}
                     <div className="flex items-center gap-1.5 mb-0.5">
-                      <span className="text-xs font-semibold text-teal-600 dark:text-teal-400">
+                      <span className="text-xs font-semibold text-teal-600">
                         {word.english_word}
                       </span>
                       {word.part_of_speech && (
-                        <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide rounded">
+                        <span className="px-1.5 py-0.5 bg-gray-100 text-[10px] font-medium text-gray-500 uppercase tracking-wide rounded">
                           {typeof word.part_of_speech === 'object' ? word.part_of_speech?.name : word.part_of_speech}
                         </span>
                       )}
                     </div>
 
                     {/* Definition */}
-                    <p className="text-[11px] text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-1">
+                    <p className="text-[11px] text-gray-600 leading-relaxed line-clamp-1">
                       {word.english_definition || word.lisu_definition || 'No definition available'}
                     </p>
                   </div>
 
                   {/* Search Icon on Right */}
                   <div className="flex-shrink-0 ml-2">
-                    <MagnifyingGlassIcon className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                    <MagnifyingGlassIcon className="w-3.5 h-3.5 text-gray-400" />
                   </div>
                 </div>
               </button>

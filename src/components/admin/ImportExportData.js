@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { adminAPI } from '../../services/api';
+import adminAPI from '../../services/adminAPI';
+import { formatSimpleDate, formatDateTime } from '../../utils/dateUtils';
 import {
   ArrowDownTrayIcon,
   ArrowUpTrayIcon,
@@ -34,28 +35,26 @@ const downloadBlob = (blob, filename) => {
   window.URL.revokeObjectURL(url);
 };
 
-const formatDate = (dateString) => new Date(dateString).toLocaleDateString();
-const formatDateTime = (dateString) => new Date(dateString).toLocaleString();
 const getToday = () => new Date().toISOString().split('T')[0];
 
 const getNotificationStyles = (type) => {
   const styles = {
     success: {
-      bg: 'bg-green-50 dark:bg-green-900/20 border-green-500',
-      text: 'text-green-800 dark:text-green-200',
-      icon: 'text-green-600 dark:text-green-400',
+      bg: 'bg-green-50 border-green-500',
+      text: 'text-green-800',
+      icon: 'text-green-600',
       hover: 'text-green-600 hover:text-green-800'
     },
     error: {
-      bg: 'bg-red-50 dark:bg-red-900/20 border-red-500',
-      text: 'text-red-800 dark:text-red-200',
-      icon: 'text-red-600 dark:text-red-400',
+      bg: 'bg-red-50 border-red-500',
+      text: 'text-red-800',
+      icon: 'text-red-600',
       hover: 'text-red-600 hover:text-red-800'
     },
     warning: {
-      bg: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500',
-      text: 'text-yellow-800 dark:text-yellow-200',
-      icon: 'text-yellow-600 dark:text-yellow-400',
+      bg: 'bg-yellow-50 border-yellow-500',
+      text: 'text-yellow-800',
+      icon: 'text-yellow-600',
       hover: 'text-yellow-600 hover:text-yellow-800'
     }
   };
@@ -64,11 +63,11 @@ const getNotificationStyles = (type) => {
 
 const getStatusBadge = (status, type = null) => {
   const badges = {
-    completed: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    failed: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-    export: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-    import: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    default: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+    completed: 'bg-green-100 text-green-800',
+    failed: 'bg-red-100 text-red-800',
+    export: 'bg-blue-100 text-blue-800',
+    import: 'bg-green-100 text-green-800',
+    default: 'bg-yellow-100 text-yellow-800'
   };
   return badges[status || type] || badges.default;
 };
@@ -130,25 +129,18 @@ const ImportExportData = () => {
   }, []);
 
   const fetchHistory = async () => {
+    // Note: Import/Export history endpoint not yet implemented in backend
+    // Disabling this feature for now
     try {
-      const response = await adminAPI.getImportExportHistory();
-      const historyData = response.data?.history || response.data || [];
-      setHistory(Array.isArray(historyData) ? historyData : []);
+      // const response = await adminAPI.getImportExportHistory();
+      // const historyData = response.data?.history || response.data || [];
+      // setHistory(Array.isArray(historyData) ? historyData : []);
 
-      // Get last dates
-      const exports = historyData.filter(h => h.type === 'export');
-      const imports = historyData.filter(h => h.type === 'import');
-
-      if (exports.length > 0) {
-        setLastExportDate(exports[0].created_at);
-      }
-      if (imports.length > 0) {
-        setLastImportDate(imports[0].created_at);
-      }
+      setHistory([]);
+      setLastExportDate(null);
+      setLastImportDate(null);
     } catch (error) {
       console.error('Failed to fetch history:', error);
-      // Don't show error notification for history fetch failure
-      // Just set empty history
       setHistory([]);
     }
   };
@@ -315,8 +307,10 @@ const ImportExportData = () => {
         formData.append('columnMapping', JSON.stringify(columnMapping));
       }
 
-      const response = await adminAPI.validateImport(formData);
-      const data = response.data.data || { errors: [] };
+      // Note: validateImport endpoint not yet implemented in backend
+      // Using importWords with validateOnly flag instead
+      const response = await adminAPI.importWords(formData);
+      const data = response.data?.data || response.data || { errors: [] };
 
       setValidationResult(data);
 
@@ -410,26 +404,26 @@ const ImportExportData = () => {
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
             {/* Background overlay */}
             <div
-              className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75"
+              className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
               onClick={() => setShowConfirmModal(false)}
             ></div>
 
             {/* Modal panel */}
-            <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
               <div className="sm:flex sm:items-start">
-                <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-teal-100 dark:bg-teal-900/20 sm:mx-0 sm:h-10 sm:w-10">
-                  <ExclamationTriangleIcon className="h-6 w-6 text-teal-600 dark:text-teal-400" />
+                <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-teal-100 sm:mx-0 sm:h-10 sm:w-10">
+                  <ExclamationTriangleIcon className="h-6 w-6 text-teal-600" />
                 </div>
                 <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">
                     Confirm Import
                   </h3>
                   <div className="mt-2">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm text-gray-500">
                       Are you sure you want to proceed with this import? This action cannot be undone.
                     </p>
                     {validationResult && (
-                      <div className="mt-3 text-sm text-gray-700 dark:text-gray-300">
+                      <div className="mt-3 text-sm text-gray-700">
                         <p>• {validationResult.validCount || 0} valid entries will be imported</p>
                         <p>• Import type: <span className="font-medium">{importType}</span></p>
                         <p>• Status: <span className="font-medium">{importStatus}</span></p>
@@ -449,7 +443,7 @@ const ImportExportData = () => {
                 <button
                   type="button"
                   onClick={() => setShowConfirmModal(false)}
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:mt-0 sm:w-auto sm:text-sm"
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:mt-0 sm:w-auto sm:text-sm"
                 >
                   Cancel
                 </button>
@@ -481,27 +475,27 @@ const ImportExportData = () => {
       )}
 
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+      <div className="bg-white rounded-lg shadow-sm p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-gray-900">
               Import/Export Dictionary Data
             </h1>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-sm text-gray-500">
               Bulk import and export dictionary entries with validation and error handling
             </p>
           </div>
-          <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex items-center space-x-4 text-sm text-gray-600">
             {lastExportDate && (
               <div className="flex items-center space-x-2">
                 <ArrowDownTrayIcon className="w-4 h-4" />
-                <span>Last Export: {formatDate(lastExportDate)}</span>
+                <span>Last Export: {formatSimpleDate(lastExportDate)}</span>
               </div>
             )}
             {lastImportDate && (
               <div className="flex items-center space-x-2">
                 <ArrowUpTrayIcon className="w-4 h-4" />
-                <span>Last Import: {formatDate(lastImportDate)}</span>
+                <span>Last Import: {formatSimpleDate(lastImportDate)}</span>
               </div>
             )}
           </div>
@@ -511,25 +505,25 @@ const ImportExportData = () => {
       {/* Main Content - Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* LEFT COLUMN: Export Data */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 space-y-6">
+        <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
           <div className="flex items-center space-x-3">
             <DocumentArrowDownIcon className="w-6 h-6 text-teal-600" />
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-xl font-semibold text-gray-900">
                 Export Dictionary Data
               </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-gray-500">
                 Generate a backup or custom export for analysis
               </p>
             </div>
           </div>
 
           {/* Download Sample Template */}
-          <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-lg p-4">
+          <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
             <div className="flex items-start space-x-3">
               <DocumentTextIcon className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                <p className="text-sm text-gray-700 mb-2">
                   Download a sample template with all available fields for import preparation
                 </p>
                 <button
@@ -546,7 +540,7 @@ const ImportExportData = () => {
           {/* Fields to Export */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+              <h3 className="text-sm font-medium text-gray-900">
                 Fields to Export
               </h3>
               <div className="flex space-x-2">
@@ -565,7 +559,7 @@ const ImportExportData = () => {
                 </button>
               </div>
             </div>
-            <div className="max-h-60 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-3 space-y-2">
+            <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2">
               {availableFields.map(field => (
                 <label key={field.id} className="flex items-center space-x-2 text-sm">
                   <input
@@ -575,7 +569,7 @@ const ImportExportData = () => {
                     disabled={field.required}
                     className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                   />
-                  <span className={`${field.required ? 'font-medium' : ''} text-gray-700 dark:text-gray-300`}>
+                  <span className={`${field.required ? 'font-medium' : ''} text-gray-700`}>
                     {field.label}
                     {field.required && <span className="text-red-500 ml-1">*</span>}
                   </span>
@@ -588,7 +582,7 @@ const ImportExportData = () => {
           <div>
             <button
               onClick={() => setShowExportFilters(!showExportFilters)}
-              className="flex items-center justify-between w-full text-sm font-medium text-gray-900 dark:text-white mb-3"
+              className="flex items-center justify-between w-full text-sm font-medium text-gray-900 mb-3"
             >
               <span className="flex items-center space-x-2">
                 <AdjustmentsHorizontalIcon className="w-4 h-4" />
@@ -604,13 +598,13 @@ const ImportExportData = () => {
             {showExportFilters && (
               <div className="space-y-3 pl-6">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
                     Filter by Status
                   </label>
                   <select
                     value={exportFilters.status}
                     onChange={(e) => setExportFilters({ ...exportFilters, status: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900"
                   >
                     <option value="all">All Words</option>
                     <option value="active">Active Words</option>
@@ -624,7 +618,7 @@ const ImportExportData = () => {
 
           {/* Export Format */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Export Format
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -633,8 +627,8 @@ const ImportExportData = () => {
                   key={format}
                   onClick={() => setExportFormat(format)}
                   className={`p-3 rounded-lg border-2 text-sm font-medium transition-colors ${exportFormat === format
-                    ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 text-gray-700 dark:text-gray-300'
+                    ? 'border-teal-600 bg-teal-50 text-teal-700'
+                    : 'border-gray-200 hover:border-gray-300:border-gray-600 text-gray-700'
                     }`}
                 >
                   {format === 'csv' && <TableCellsIcon className="w-5 h-5 mx-auto mb-1" />}
@@ -644,7 +638,7 @@ const ImportExportData = () => {
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-2 text-xs text-gray-500">
               JSON is best for complex multi-valued fields. CSV/XLSX use delimiters for arrays.
             </p>
           </div>
@@ -661,14 +655,14 @@ const ImportExportData = () => {
         </div>
 
         {/* RIGHT COLUMN: Import Data */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 space-y-6">
+        <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
           <div className="flex items-center space-x-3">
             <DocumentArrowUpIcon className="w-6 h-6 text-teal-600" />
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-xl font-semibold text-gray-900">
                 Import Dictionary Data
               </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-gray-500">
                 Upload a file to add or update words in bulk
               </p>
             </div>
@@ -681,15 +675,15 @@ const ImportExportData = () => {
             onDragOver={handleDrag}
             onDrop={handleDrop}
             className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${dragActive
-              ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
-              : 'border-gray-300 dark:border-gray-600'
+              ? 'border-teal-500 bg-teal-50'
+              : 'border-gray-300'
               }`}
           >
             <ArrowUpTrayIcon className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+            <p className="text-sm text-gray-600 mb-2">
               Drag and drop your file here, or
             </p>
-            <label className="inline-block px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer">
+            <label className="inline-block px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50:bg-gray-600 cursor-pointer">
               Choose File
               <input
                 type="file"
@@ -698,7 +692,7 @@ const ImportExportData = () => {
                 className="hidden"
               />
             </label>
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-2 text-xs text-gray-500">
               Accepts .CSV, .XLSX, .JSON
             </p>
             {importFile && (
@@ -718,13 +712,13 @@ const ImportExportData = () => {
           {/* Import Options */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 Import Type
               </label>
               <select
                 value={importType}
                 onChange={(e) => setImportType(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900"
               >
                 <option value="add">Add New Words Only</option>
                 <option value="update">Update Existing Words</option>
@@ -734,13 +728,13 @@ const ImportExportData = () => {
 
             {(importType === 'update' || importType === 'hybrid') && (
               <div>
-                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                <label className="block text-sm font-medium text-gray-900 mb-2">
                   On Duplicate Lisu Word
                 </label>
                 <select
                   value={duplicateAction}
                   onChange={(e) => setDuplicateAction(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900"
                 >
                   <option value="skip">Skip Row</option>
                   <option value="overwrite">Overwrite Existing Data</option>
@@ -750,13 +744,13 @@ const ImportExportData = () => {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 Assign Status on Import
               </label>
               <select
                 value={importStatus}
                 onChange={(e) => setImportStatus(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900"
               >
                 <option value="active">Active</option>
                 <option value="pending">Pending Review</option>
@@ -765,7 +759,7 @@ const ImportExportData = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 Delimiter for Multi-Value Fields
               </label>
               <input
@@ -773,10 +767,10 @@ const ImportExportData = () => {
                 value={delimiter}
                 onChange={(e) => setDelimiter(e.target.value)}
                 maxLength={1}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900"
                 placeholder=";"
               />
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-xs text-gray-500">
                 Character used to separate multiple values (e.g., tags, meanings)
               </p>
             </div>
@@ -786,7 +780,7 @@ const ImportExportData = () => {
           <div>
             <button
               onClick={() => setShowColumnMapping(!showColumnMapping)}
-              className="flex items-center justify-between w-full text-sm font-medium text-gray-900 dark:text-white"
+              className="flex items-center justify-between w-full text-sm font-medium text-gray-900"
             >
               <span>Column Mapping (Advanced)</span>
               {showColumnMapping ? (
@@ -796,12 +790,12 @@ const ImportExportData = () => {
               )}
             </button>
             {showColumnMapping && (
-              <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+              <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                <p className="text-xs text-gray-600 mb-2">
                   Auto-mapping will be attempted on upload. Adjust if needed.
                 </p>
                 {/* Column mapping interface would go here */}
-                <p className="text-xs text-gray-500 dark:text-gray-500 italic">
+                <p className="text-xs text-gray-500 italic">
                   Available after file upload
                 </p>
               </div>
@@ -834,50 +828,50 @@ const ImportExportData = () => {
       </div>
 
       {/* Import/Export History */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center space-x-2">
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center space-x-2">
           <ClockIcon className="w-5 h-5" />
           <span>Recent Import/Export History</span>
         </h2>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-700">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Date/Time
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Type
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   File Name
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Performed By
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Summary
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody className="bg-white divide-y divide-gray-200">
               {history.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
                     No import/export history yet
                   </td>
                 </tr>
               ) : (
                 history.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                  <tr key={item.id} className="hover:bg-gray-50:bg-gray-700/50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {formatDateTime(item.created_at)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -886,10 +880,10 @@ const ImportExportData = () => {
                         {item.type}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                    <td className="px-6 py-4 text-sm text-gray-900">
                       {item.file_name || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {item.performed_by || 'Admin'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -897,7 +891,7 @@ const ImportExportData = () => {
                         {item.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                    <td className="px-6 py-4 text-sm text-gray-700">
                       {item.summary || 'No details available'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">

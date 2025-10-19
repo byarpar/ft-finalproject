@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import {
   MagnifyingGlassIcon,
   ChevronRightIcon,
@@ -13,6 +12,14 @@ import {
   PencilSquareIcon,
   ArrowLeftIcon
 } from '@heroicons/react/24/outline';
+import PageLayout from '../components/Layout/PageLayout';
+
+/**
+ * HelpCategory Component
+ * 
+ * Displays articles within a specific help category.
+ */
+import { formatDate } from '../utils/dateUtils';
 
 const HelpCategory = () => {
   const { categoryId } = useParams();
@@ -339,14 +346,14 @@ const HelpCategory = () => {
 
   if (!category) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
             Category Not Found
           </h1>
           <Link
             to="/help"
-            className="text-teal-600 dark:text-teal-400 hover:underline"
+            className="text-teal-600 hover:underline"
           >
             Return to Help Center
           </Link>
@@ -356,23 +363,13 @@ const HelpCategory = () => {
   }
 
   const IconComponent = category.icon;
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
 
   return (
-    <>
-      <Helmet>
-        <title>{category.name} - Help Center - Lisu Dictionary</title>
-        <meta name="description" content={category.description} />
-      </Helmet>
-
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <PageLayout
+      title={`${category.name} - Help Center - Lisu Dictionary`}
+      description={category.description}
+    >
+      <div className="min-h-screen bg-gray-50">
         {/* Hero Section */}
         <section className={`relative bg-gradient-to-br ${category.color} text-white overflow-hidden`}>
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -407,7 +404,7 @@ const HelpCategory = () => {
           {/* Back Button */}
           <Link
             to="/help"
-            className="inline-flex items-center gap-2 text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-medium mb-6 transition-colors"
+            className="inline-flex items-center gap-2 text-teal-600 hover:text-teal-700:text-teal-300 font-medium mb-6 transition-colors"
           >
             <ArrowLeftIcon className="w-4 h-4" />
             Back to Help Center
@@ -422,14 +419,14 @@ const HelpCategory = () => {
                 placeholder={`Search in ${category.name}...`}
                 value={searchQuery}
                 onChange={handleSearchInCategory}
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white text-gray-900 placeholder-gray-400"
               />
             </div>
           </div>
 
           {/* Article List */}
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
               Articles ({filteredArticles.length})
             </h2>
 
@@ -438,28 +435,28 @@ const HelpCategory = () => {
                 <Link
                   key={article.slug}
                   to={`/help/article/${article.slug}`}
-                  className="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:border-teal-500 dark:hover:border-teal-400 hover:shadow-md transition-all group"
+                  className="block bg-white rounded-lg border border-gray-200 p-6 hover:border-teal-500:border-teal-400 hover:shadow-md transition-all group"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-teal-600:text-teal-400 transition-colors">
                         {article.title}
                       </h3>
-                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
+                      <p className="text-gray-600 text-sm mb-3">
                         {article.description}
                       </p>
-                      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
                         <ClockIcon className="w-4 h-4" />
                         <span>Updated {formatDate(article.lastUpdated)}</span>
                       </div>
                     </div>
-                    <ChevronRightIcon className="w-5 h-5 text-gray-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 group-hover:translate-x-1 transition-all flex-shrink-0" />
+                    <ChevronRightIcon className="w-5 h-5 text-gray-400 group-hover:text-teal-600:text-teal-400 group-hover:translate-x-1 transition-all flex-shrink-0" />
                   </div>
                 </Link>
               ))
             ) : (
               <div className="text-center py-12">
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-gray-600">
                   No articles found matching "{searchQuery}"
                 </p>
               </div>
@@ -467,11 +464,11 @@ const HelpCategory = () => {
           </div>
 
           {/* Help CTA */}
-          <div className="mt-12 bg-teal-50 dark:bg-teal-900/20 rounded-xl border border-teal-200 dark:border-teal-800 p-8 text-center">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+          <div className="mt-12 bg-teal-50 rounded-xl border border-teal-200 p-8 text-center">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
               Can't Find What You're Looking For?
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-gray-600 mb-6">
               Our support team is here to help you with any questions.
             </p>
             <Link
@@ -483,7 +480,7 @@ const HelpCategory = () => {
           </div>
         </div>
       </div>
-    </>
+    </PageLayout>
   );
 };
 

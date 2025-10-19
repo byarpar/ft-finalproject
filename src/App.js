@@ -5,7 +5,6 @@ import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './contexts/AuthContext';
-import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 
 // Components
 import Navbar from './components/Layout/Navbar';
@@ -43,42 +42,8 @@ import Contribute from './pages/Contribute';
 import FAQ from './pages/FAQ';
 import Settings from './pages/Settings';
 import Notifications from './pages/Notifications';
-// import Tags from './pages/Tags';
 import Chat from './pages/Chat';
 import WordDetail from './pages/WordDetail';
-
-// Toaster component that responds to theme
-const ThemedToaster = () => {
-  const { darkMode } = useTheme();
-
-  return (
-    <Toaster
-      position="top-right"
-      toastOptions={{
-        duration: 4000,
-        style: {
-          background: darkMode ? '#374151' : '#fff',
-          color: darkMode ? '#f9fafb' : '#111827',
-          border: darkMode ? '1px solid #4b5563' : '1px solid #e5e7eb',
-        },
-        success: {
-          style: {
-            background: darkMode ? '#065f46' : '#ecfdf5',
-            color: darkMode ? '#d1fae5' : '#065f46',
-            border: darkMode ? '1px solid #059669' : '1px solid #a7f3d0',
-          },
-        },
-        error: {
-          style: {
-            background: darkMode ? '#7f1d1d' : '#fef2f2',
-            color: darkMode ? '#fecaca' : '#7f1d1d',
-            border: darkMode ? '1px solid #dc2626' : '1px solid #fca5a5',
-          },
-        },
-      }}
-    />
-  );
-};
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -134,117 +99,115 @@ function App() {
     <HelmetProvider>
       <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID || ''}>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider>
-            <AuthProvider>
-              <Router>
-                <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-300">
-                  <ConditionalNavbar />
-                  <main className="flex-grow">
-                    <Routes>
-                      <Route path="/" element={<Home />} />
-                      <Route path="/dictionary" element={<Dictionary />} />
-                      <Route path="/search" element={<Dictionary />} />
-                      <Route path="/word/:id" element={<WordDetail />} />
-                      <Route path="/words/:id" element={<WordDetail />} />
-                      <Route path="/about" element={<About />} />
-                      <Route path="/contact" element={<Contact />} />
-                      <Route path="/contribute" element={<Contribute />} />
-                      <Route path="/faq" element={<FAQ />} />
+          <AuthProvider>
+            <Router>
+              <div className="min-h-screen bg-gray-50 flex flex-col">
+                <ConditionalNavbar />
+                <main className="flex-grow">
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/dictionary" element={<Dictionary />} />
+                    <Route path="/search" element={<Dictionary />} />
+                    <Route path="/word/:id" element={<WordDetail />} />
+                    <Route path="/words/:id" element={<WordDetail />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/contribute" element={<Contribute />} />
+                    <Route path="/faq" element={<FAQ />} />
 
-                      {/* Legal Pages */}
-                      <Route path="/terms" element={<TermsOfService />} />
-                      <Route path="/terms-of-service" element={<TermsOfService />} />
-                      <Route path="/privacy" element={<PrivacyPolicy />} />
-                      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                    {/* Legal Pages */}
+                    <Route path="/terms" element={<TermsOfService />} />
+                    <Route path="/terms-of-service" element={<TermsOfService />} />
+                    <Route path="/privacy" element={<PrivacyPolicy />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
-                      {/* Help Center Routes */}
-                      <Route path="/help" element={<HelpCenter />} />
-                      <Route path="/help/category/:categoryId" element={<HelpCategory />} />
-                      <Route path="/help/article/:articleId" element={<HelpArticle />} />
-                      <Route path="/help/search" element={<HelpSearch />} />
+                    {/* Help Center Routes */}
+                    <Route path="/help" element={<HelpCenter />} />
+                    <Route path="/help/category/:categoryId" element={<HelpCategory />} />
+                    <Route path="/help/article/:articleId" element={<HelpArticle />} />
+                    <Route path="/help/search" element={<HelpSearch />} />
 
-                      {/* Protected Discussions Routes - Login Required */}
-                      <Route path="/discussions" element={
-                        <PrivateRoute>
-                          <Discussions />
-                        </PrivateRoute>
-                      } />
-                      <Route path="/discussions/new" element={
-                        <PrivateRoute>
-                          <NewDiscussion />
-                        </PrivateRoute>
-                      } />
-                      <Route path="/discussions/members" element={
-                        <PrivateRoute>
-                          <Members />
-                        </PrivateRoute>
-                      } />
-                      <Route path="/discussions/:id" element={
-                        <PrivateRoute>
-                          <DiscussionThread />
-                        </PrivateRoute>
-                      } />
-                      <Route path="/users" element={
-                        <PrivateRoute>
-                          <Members />
-                        </PrivateRoute>
-                      } />
-                      <Route path="/users/:userId" element={
-                        <PrivateRoute>
-                          <UserProfile />
-                        </PrivateRoute>
-                      } />
-                      {/* <Route path="/tags" element={<Tags />} /> */}
-                      <Route path="/chat" element={
-                        <PrivateRoute>
-                          <Chat />
-                        </PrivateRoute>
-                      } />
+                    {/* Protected Discussions Routes - Login Required */}
+                    <Route path="/discussions" element={
+                      <PrivateRoute>
+                        <Discussions />
+                      </PrivateRoute>
+                    } />
+                    <Route path="/discussions/new" element={
+                      <PrivateRoute>
+                        <NewDiscussion />
+                      </PrivateRoute>
+                    } />
+                    <Route path="/discussions/members" element={
+                      <PrivateRoute>
+                        <Members />
+                      </PrivateRoute>
+                    } />
+                    <Route path="/discussions/:id" element={
+                      <PrivateRoute>
+                        <DiscussionThread />
+                      </PrivateRoute>
+                    } />
+                    <Route path="/users" element={
+                      <PrivateRoute>
+                        <Members />
+                      </PrivateRoute>
+                    } />
+                    <Route path="/users/:userId" element={
+                      <PrivateRoute>
+                        <UserProfile />
+                      </PrivateRoute>
+                    } />
+                    {/* <Route path="/tags" element={<Tags />} /> */}
+                    <Route path="/chat" element={
+                      <PrivateRoute>
+                        <Chat />
+                      </PrivateRoute>
+                    } />
 
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/register" element={<Register />} />
-                      <Route path="/verify-email" element={<VerifyEmail />} />
-                      <Route path="/forgot-password" element={<ForgotPassword />} />
-                      <Route path="/reset-password" element={<ResetPassword />} />
-                      <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/verify-email" element={<VerifyEmail />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/auth/callback" element={<AuthCallback />} />
 
-                      {/* Protected Routes */}
-                      <Route path="/dashboard" element={
-                        <PrivateRoute>
-                          <Dashboard />
-                        </PrivateRoute>
-                      } />
-                      <Route path="/settings" element={
-                        <PrivateRoute>
-                          <Settings />
-                        </PrivateRoute>
-                      } />
-                      <Route path="/notifications" element={
-                        <PrivateRoute>
-                          <Notifications />
-                        </PrivateRoute>
-                      } />
+                    {/* Protected Routes */}
+                    <Route path="/dashboard" element={
+                      <PrivateRoute>
+                        <Dashboard />
+                      </PrivateRoute>
+                    } />
+                    <Route path="/settings" element={
+                      <PrivateRoute>
+                        <Settings />
+                      </PrivateRoute>
+                    } />
+                    <Route path="/notifications" element={
+                      <PrivateRoute>
+                        <Notifications />
+                      </PrivateRoute>
+                    } />
 
-                      {/* Admin Routes - All nested routes handled within AdminDashboard */}
-                      <Route path="/admin/*" element={
-                        <AdminRoute>
-                          <AdminDashboard />
-                        </AdminRoute>
-                      } />
+                    {/* Admin Routes - All nested routes handled within AdminDashboard */}
+                    <Route path="/admin/*" element={
+                      <AdminRoute>
+                        <AdminDashboard />
+                      </AdminRoute>
+                    } />
 
-                      {/* Error Pages */}
-                      <Route path="/500" element={<ServerError />} />
+                    {/* Error Pages */}
+                    <Route path="/500" element={<ServerError />} />
 
-                      {/* Catch-all route for 404 */}
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </main>
-                  <ConditionalFooter />
-                  <ThemedToaster />
-                </div>
-              </Router>
-            </AuthProvider>
-          </ThemeProvider>
+                    {/* Catch-all route for 404 */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+                <ConditionalFooter />
+                <Toaster position="top-right" />
+              </div>
+            </Router>
+          </AuthProvider>
         </QueryClientProvider>
       </GoogleOAuthProvider>
     </HelmetProvider>

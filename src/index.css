@@ -308,13 +308,6 @@
   }
 }
 
-/* Dark mode support (future enhancement) */
-@media (prefers-color-scheme: dark) {
-  .dark-mode {
-    @apply bg-slate-900 text-slate-100;
-  }
-}
-
 /* High contrast mode support */
 @media (prefers-contrast: high) {
   .high-contrast {
@@ -508,5 +501,24 @@
 
   .dark .chat-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(75, 85, 99, 0.7);
+  }
+
+  /* Auth callback progress animation */
+  @keyframes progress {
+    0% {
+      width: 0%;
+    }
+
+    50% {
+      width: 70%;
+    }
+
+    100% {
+      width: 100%;
+    }
+  }
+
+  .animate-progress {
+    animation: progress 2s ease-in-out infinite;
   }
 }

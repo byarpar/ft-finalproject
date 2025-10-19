@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   PencilIcon,
@@ -10,8 +9,17 @@ import {
   ChevronRightIcon,
   CloudArrowUpIcon,
   CheckCircleIcon,
-  ExclamationCircleIcon
+  ExclamationCircleIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
+import PageLayout from '../components/Layout/PageLayout';
+
+/**
+ * Contribute Component
+ * 
+ * Allows users to contribute new words, edit existing entries,
+ * and participate in community discussions.
+ */
 
 const Contribute = () => {
   const [activeTab, setActiveTab] = useState('new-word');
@@ -28,6 +36,7 @@ const Contribute = () => {
   const [searchWord, setSearchWord] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
   // Parts of speech options
   const partsOfSpeech = [
@@ -52,8 +61,8 @@ const Contribute = () => {
       title: 'Suggest a New Word',
       description: 'Add new Lisu words to expand the dictionary',
       color: 'from-amber-500 to-orange-500',
-      bgColor: 'bg-amber-50 dark:bg-amber-900/20',
-      borderColor: 'border-amber-200 dark:border-amber-800'
+      bgColor: 'bg-amber-50',
+      borderColor: 'border-amber-200'
     },
     {
       id: 'improve-definition',
@@ -61,8 +70,8 @@ const Contribute = () => {
       title: 'Improve a Definition',
       description: 'Help refine existing word definitions',
       color: 'from-blue-500 to-cyan-500',
-      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-      borderColor: 'border-blue-200 dark:border-blue-800'
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-blue-200'
     },
     {
       id: 'add-audio',
@@ -70,8 +79,8 @@ const Contribute = () => {
       title: 'Add Pronunciation Audio',
       description: 'Record audio to help with pronunciation',
       color: 'from-green-500 to-emerald-500',
-      bgColor: 'bg-green-50 dark:bg-green-900/20',
-      borderColor: 'border-green-200 dark:border-green-800'
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-200'
     },
     {
       id: 'moderator',
@@ -79,8 +88,8 @@ const Contribute = () => {
       title: 'Join Our Moderators',
       description: 'Help manage and grow our community',
       color: 'from-purple-500 to-pink-500',
-      bgColor: 'bg-purple-50 dark:bg-purple-900/20',
-      borderColor: 'border-purple-200 dark:border-purple-800'
+      bgColor: 'bg-purple-50',
+      borderColor: 'border-purple-200'
     }
   ];
 
@@ -93,7 +102,37 @@ const Contribute = () => {
     { id: 5, name: 'Lisa Zhang', avatar: 'LZ', contributions: 112 }
   ];
 
-  const handleCardClick = (cardId) => {
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Ignore if user is typing in an input field
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        return;
+      }
+
+      switch (e.key.toLowerCase()) {
+        case 'n':
+          handleCardClick('new-word');
+          break;
+        case 'i':
+          handleCardClick('improve-definition');
+          break;
+        case 'a':
+          handleCardClick('add-audio');
+          break;
+        case 'r':
+          handleReset();
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleCardClick = useCallback((cardId) => {
     setActiveTab(cardId);
     setSubmitted(false);
     setErrors({});
@@ -107,9 +146,9 @@ const Contribute = () => {
         top: offsetPosition
       });
     }
-  };
+  }, []);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -122,9 +161,9 @@ const Contribute = () => {
         [name]: ''
       }));
     }
-  };
+  }, [errors]);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = useCallback((e) => {
     const file = e.target.files[0];
     if (file) {
       // Validate file type (audio only)
@@ -153,9 +192,9 @@ const Contribute = () => {
         audioFile: ''
       }));
     }
-  };
+  }, []);
 
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     const newErrors = {};
 
     if (activeTab === 'new-word') {
@@ -186,14 +225,32 @@ const Contribute = () => {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [activeTab, formData, searchWord]);
 
-  const handleSubmit = (e) => {
+  const handleReset = useCallback(() => {
+    setFormData({
+      lisuWord: '',
+      englishTranslation: '',
+      partOfSpeech: '',
+      exampleSentenceLisu: '',
+      exampleSentenceEnglish: '',
+      pronunciationNotes: '',
+      source: '',
+      audioFile: null
+    });
+    setSearchWord('');
+    setSubmitted(false);
+    setErrors({});
+  }, []);
+
+  const handleSubmit = useCallback((e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
+
+    setIsLoading(true);
 
     // Here you would normally send the data to your backend
     console.log('Submitting contribution:', {
@@ -203,24 +260,16 @@ const Contribute = () => {
     });
 
     // Simulate successful submission
-    setSubmitted(true);
-
-    // Reset form after 3 seconds
     setTimeout(() => {
-      setFormData({
-        lisuWord: '',
-        englishTranslation: '',
-        partOfSpeech: '',
-        exampleSentenceLisu: '',
-        exampleSentenceEnglish: '',
-        pronunciationNotes: '',
-        source: '',
-        audioFile: null
-      });
-      setSearchWord('');
-      setSubmitted(false);
-    }, 3000);
-  };
+      setSubmitted(true);
+      setIsLoading(false);
+
+      // Reset form after 3 seconds
+      setTimeout(() => {
+        handleReset();
+      }, 3000);
+    }, 1000);
+  }, [activeTab, formData, searchWord, validateForm, handleReset]);
 
   const getFormTitle = () => {
     switch (activeTab) {
@@ -238,18 +287,13 @@ const Contribute = () => {
   };
 
   return (
-    <>
-      <Helmet>
-        <title>Contribute - Lisu Dictionary</title>
-        <meta
-          name="description"
-          content="Contribute to the Lisu Dictionary. Share your knowledge, add new words, improve definitions, and help preserve the Lisu language for future generations."
-        />
-      </Helmet>
-
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <PageLayout
+      title="Contribute - Lisu Dictionary"
+      description="Contribute to the Lisu Dictionary. Share your knowledge, add new words, improve definitions, and help preserve the Lisu language for future generations."
+    >
+      <div className="min-h-screen bg-gray-50">
         {/* Hero Section */}
-        <div className="relative bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-700 dark:to-cyan-700 overflow-hidden">
+        <div className="relative bg-gradient-to-r from-teal-600 to-cyan-600 overflow-hidden">
           {/* Background Pattern */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute inset-0 bg-gradient-to-br from-teal-400 via-cyan-500 to-blue-600"></div>
@@ -283,7 +327,7 @@ const Contribute = () => {
 
               {/* Right: Featured Image */}
               <div className="hidden lg:block">
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl overflow-hidden">
+                <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
                   <img
                     src="/images/hero/lisu-people.jpg"
                     alt="People collaborating and learning together"
@@ -293,13 +337,13 @@ const Contribute = () => {
                       const parent = e.target.parentElement;
                       if (parent && !parent.querySelector('.fallback-content')) {
                         parent.innerHTML = `
-                          <div class="fallback-content w-full h-64 bg-white dark:bg-gray-800 flex items-center justify-center p-4">
+                          <div class="fallback-content w-full h-64 bg-white flex items-center justify-center p-4">
                             <div class="text-center">
                               <svg class="h-24 w-24 mx-auto text-teal-500 opacity-50 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                               </svg>
-                              <p class="text-gray-600 dark:text-gray-400 font-medium">Your Knowledge, Your Legacy</p>
-                              <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Empowering Lisu Language Together</p>
+                              <p class="text-gray-600 font-medium">Your Knowledge, Your Legacy</p>
+                              <p class="text-sm text-gray-500 mt-2">Empowering Lisu Language Together</p>
                             </div>
                           </div>
                         `;
@@ -318,21 +362,32 @@ const Contribute = () => {
                   <button
                     key={card.id}
                     onClick={() => handleCardClick(card.id)}
-                    className={`${card.bgColor} ${card.borderColor} border-2 rounded-lg p-6 text-center ${activeTab === card.id ? 'ring-4 ring-white ring-opacity-50' : ''
+                    className={`${card.bgColor} ${card.borderColor} border-2 rounded-lg p-6 text-center hover:shadow-lg transition-all ${activeTab === card.id ? 'ring-4 ring-white ring-opacity-50' : ''
                       }`}
                   >
                     <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br ${card.color} mb-4`}>
                       <Icon className="h-8 w-8 text-white" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
                       {card.title}
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                    <p className="text-sm text-gray-600">
                       {card.description}
                     </p>
                   </button>
                 );
               })}
+            </div>
+
+            {/* Keyboard Shortcuts Hint */}
+            <div className="mt-6 hidden sm:block">
+              <p className="text-sm text-teal-100 text-center">
+                Keyboard shortcuts:
+                <kbd className="mx-1 px-2 py-1 text-xs font-semibold bg-white/20 border border-white/30 rounded">N</kbd> New word •
+                <kbd className="mx-1 px-2 py-1 text-xs font-semibold bg-white/20 border border-white/30 rounded">I</kbd> Improve •
+                <kbd className="mx-1 px-2 py-1 text-xs font-semibold bg-white/20 border border-white/30 rounded">A</kbd> Audio •
+                <kbd className="mx-1 px-2 py-1 text-xs font-semibold bg-white/20 border border-white/30 rounded">R</kbd> Reset
+              </p>
             </div>
           </div>
         </div>
@@ -343,54 +398,54 @@ const Contribute = () => {
             {/* Left Column: Guidelines & Impact */}
             <div className="lg:col-span-2">
               {/* Contribution Guidelines */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+              <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                 <div className="flex items-center mb-4">
-                  <DocumentTextIcon className="h-6 w-6 text-teal-600 dark:text-teal-400 mr-2" />
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <DocumentTextIcon className="h-6 w-6 text-teal-600 mr-2" />
+                  <h2 className="text-2xl font-bold text-gray-900">
                     Contribution Guidelines
                   </h2>
                 </div>
 
-                <p className="text-gray-600 dark:text-gray-300 mb-4">
+                <p className="text-gray-600 mb-4">
                   Follow these guidelines to ensure your contributions are accurate and helpful:
                 </p>
 
                 <div className="space-y-3">
                   <div className="flex items-start">
-                    <CheckCircleIcon className="h-5 w-5 text-teal-600 dark:text-teal-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <CheckCircleIcon className="h-5 w-5 text-teal-600 mr-2 mt-0.5 flex-shrink-0" />
                     <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white">Be Accurate</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                      <h3 className="font-semibold text-gray-900">Be Accurate</h3>
+                      <p className="text-sm text-gray-600">
                         Verify your information from reliable sources before submitting.
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-start">
-                    <CheckCircleIcon className="h-5 w-5 text-teal-600 dark:text-teal-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <CheckCircleIcon className="h-5 w-5 text-teal-600 mr-2 mt-0.5 flex-shrink-0" />
                     <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white">Provide Examples</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                      <h3 className="font-semibold text-gray-900">Provide Examples</h3>
+                      <p className="text-sm text-gray-600">
                         Context is key for definitions and usage. Include example sentences.
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-start">
-                    <CheckCircleIcon className="h-5 w-5 text-teal-600 dark:text-teal-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <CheckCircleIcon className="h-5 w-5 text-teal-600 mr-2 mt-0.5 flex-shrink-0" />
                     <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white">Use Respectful Language</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                      <h3 className="font-semibold text-gray-900">Use Respectful Language</h3>
+                      <p className="text-sm text-gray-600">
                         Maintain a positive and respectful tone in all contributions.
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-start">
-                    <CheckCircleIcon className="h-5 w-5 text-teal-600 dark:text-teal-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <CheckCircleIcon className="h-5 w-5 text-teal-600 mr-2 mt-0.5 flex-shrink-0" />
                     <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white">Review Existing Entries</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                      <h3 className="font-semibold text-gray-900">Review Existing Entries</h3>
+                      <p className="text-sm text-gray-600">
                         Avoid duplicates and focus on enhancing existing content.
                       </p>
                     </div>
@@ -399,7 +454,7 @@ const Contribute = () => {
 
                 <Link
                   to="/help/article/contribution-guidelines"
-                  className="inline-flex items-center mt-6 text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-medium"
+                  className="inline-flex items-center mt-6 text-teal-600 hover:text-teal-700:text-teal-300 font-medium"
                 >
                   Read Full Guidelines
                   <ChevronRightIcon className="h-4 w-4 ml-1" />
@@ -407,12 +462,12 @@ const Contribute = () => {
               </div>
 
               {/* Meet Our Contributors */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
                   Meet Our Contributors
                 </h2>
 
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
+                <p className="text-gray-600 mb-6">
                   Join our community of dedicated language preservers and educators.
                 </p>
 
@@ -426,22 +481,22 @@ const Contribute = () => {
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-white font-semibold text-sm mb-1">
                         {contributor.avatar}
                       </div>
-                      <span className="text-xs text-gray-600 dark:text-gray-400">
+                      <span className="text-xs text-gray-600">
                         {contributor.contributions}
                       </span>
                     </div>
                   ))}
                 </div>
 
-                <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-lg p-4 mb-4">
-                  <p className="text-teal-900 dark:text-teal-100 font-medium text-center">
+                <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 mb-4">
+                  <p className="text-teal-900 font-medium text-center">
                     🌟 Every contribution helps thousands of learners worldwide!
                   </p>
                 </div>
 
                 <Link
                   to="/members"
-                  className="inline-flex items-center text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-medium"
+                  className="inline-flex items-center text-teal-600 hover:text-teal-700:text-teal-300 font-medium"
                 >
                   View All Contributors
                   <ChevronRightIcon className="h-4 w-4 ml-1" />
@@ -451,21 +506,21 @@ const Contribute = () => {
 
             {/* Right Column: Submission Form */}
             <div className="lg:col-span-3" id="submission-form">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 lg:p-8">
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6">
+              <div className="bg-white rounded-lg shadow-md p-6 lg:p-8">
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
                   {getFormTitle()}
                 </h2>
 
                 {/* Success Message */}
                 {submitted && (
-                  <div className="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                  <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
                     <div className="flex items-center">
-                      <CheckCircleIcon className="h-6 w-6 text-green-600 dark:text-green-400 mr-3" />
+                      <CheckCircleIcon className="h-6 w-6 text-green-600 mr-3" />
                       <div>
-                        <h3 className="text-green-900 dark:text-green-100 font-semibold">
+                        <h3 className="text-green-900 font-semibold">
                           Thank you for your contribution!
                         </h3>
-                        <p className="text-green-700 dark:text-green-300 text-sm">
+                        <p className="text-green-700 text-sm">
                           It will be reviewed by our team shortly.
                         </p>
                       </div>
@@ -479,7 +534,7 @@ const Contribute = () => {
                     <>
                       {/* Lisu Word */}
                       <div>
-                        <label htmlFor="lisuWord" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label htmlFor="lisuWord" className="block text-sm font-medium text-gray-700 mb-2">
                           Lisu Word <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -488,12 +543,12 @@ const Contribute = () => {
                           name="lisuWord"
                           value={formData.lisuWord}
                           onChange={handleInputChange}
-                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.lisuWord ? 'border-red-500' : 'border-gray-300'
+                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${errors.lisuWord ? 'border-red-500' : 'border-gray-300'
                             }`}
                           placeholder="Enter the Lisu word"
                         />
                         {errors.lisuWord && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
+                          <p className="mt-1 text-sm text-red-600 flex items-center">
                             <ExclamationCircleIcon className="h-4 w-4 mr-1" />
                             {errors.lisuWord}
                           </p>
@@ -502,7 +557,7 @@ const Contribute = () => {
 
                       {/* English Translation */}
                       <div>
-                        <label htmlFor="englishTranslation" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label htmlFor="englishTranslation" className="block text-sm font-medium text-gray-700 mb-2">
                           English Translation(s) <span className="text-red-500">*</span>
                         </label>
                         <textarea
@@ -511,12 +566,12 @@ const Contribute = () => {
                           value={formData.englishTranslation}
                           onChange={handleInputChange}
                           rows="3"
-                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.englishTranslation ? 'border-red-500' : 'border-gray-300'
+                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${errors.englishTranslation ? 'border-red-500' : 'border-gray-300'
                             }`}
                           placeholder="Enter English translation(s), separated by commas"
                         />
                         {errors.englishTranslation && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
+                          <p className="mt-1 text-sm text-red-600 flex items-center">
                             <ExclamationCircleIcon className="h-4 w-4 mr-1" />
                             {errors.englishTranslation}
                           </p>
@@ -525,7 +580,7 @@ const Contribute = () => {
 
                       {/* Part of Speech */}
                       <div>
-                        <label htmlFor="partOfSpeech" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label htmlFor="partOfSpeech" className="block text-sm font-medium text-gray-700 mb-2">
                           Part of Speech <span className="text-red-500">*</span>
                         </label>
                         <select
@@ -533,7 +588,7 @@ const Contribute = () => {
                           name="partOfSpeech"
                           value={formData.partOfSpeech}
                           onChange={handleInputChange}
-                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.partOfSpeech ? 'border-red-500' : 'border-gray-300'
+                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${errors.partOfSpeech ? 'border-red-500' : 'border-gray-300'
                             }`}
                         >
                           <option value="">Select part of speech</option>
@@ -544,7 +599,7 @@ const Contribute = () => {
                           ))}
                         </select>
                         {errors.partOfSpeech && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
+                          <p className="mt-1 text-sm text-red-600 flex items-center">
                             <ExclamationCircleIcon className="h-4 w-4 mr-1" />
                             {errors.partOfSpeech}
                           </p>
@@ -553,7 +608,7 @@ const Contribute = () => {
 
                       {/* Example Sentence (Lisu) */}
                       <div>
-                        <label htmlFor="exampleSentenceLisu" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label htmlFor="exampleSentenceLisu" className="block text-sm font-medium text-gray-700 mb-2">
                           Example Sentence (Lisu)
                         </label>
                         <input
@@ -562,14 +617,14 @@ const Contribute = () => {
                           name="exampleSentenceLisu"
                           value={formData.exampleSentenceLisu}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                           placeholder="Provide an example sentence in Lisu"
                         />
                       </div>
 
                       {/* Example Sentence (English) */}
                       <div>
-                        <label htmlFor="exampleSentenceEnglish" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label htmlFor="exampleSentenceEnglish" className="block text-sm font-medium text-gray-700 mb-2">
                           Example Sentence (English)
                         </label>
                         <input
@@ -578,14 +633,14 @@ const Contribute = () => {
                           name="exampleSentenceEnglish"
                           value={formData.exampleSentenceEnglish}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                           placeholder="English translation of the example sentence"
                         />
                       </div>
 
                       {/* Pronunciation Notes */}
                       <div>
-                        <label htmlFor="pronunciationNotes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label htmlFor="pronunciationNotes" className="block text-sm font-medium text-gray-700 mb-2">
                           Pronunciation Notes (Optional)
                         </label>
                         <input
@@ -594,20 +649,20 @@ const Contribute = () => {
                           name="pronunciationNotes"
                           value={formData.pronunciationNotes}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                           placeholder="e.g., Tone: Rising, IPA: /ˈexample/"
                         />
                       </div>
 
                       {/* Audio Upload */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           Pronunciation Audio (Optional)
                         </label>
                         <div className="flex items-center space-x-4">
-                          <label className="flex-1 flex items-center justify-center px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-teal-500 dark:hover:border-teal-400">
-                            <CloudArrowUpIcon className="h-6 w-6 text-gray-400 dark:text-gray-500 mr-2" />
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                          <label className="flex-1 flex items-center justify-center px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-teal-500:border-teal-400">
+                            <CloudArrowUpIcon className="h-6 w-6 text-gray-400 mr-2" />
+                            <span className="text-sm text-gray-600">
                               {formData.audioFile ? formData.audioFile.name : 'Choose audio file'}
                             </span>
                             <input
@@ -619,19 +674,19 @@ const Contribute = () => {
                           </label>
                         </div>
                         {errors.audioFile && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
+                          <p className="mt-1 text-sm text-red-600 flex items-center">
                             <ExclamationCircleIcon className="h-4 w-4 mr-1" />
                             {errors.audioFile}
                           </p>
                         )}
-                        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        <p className="mt-2 text-xs text-gray-500">
                           Supported formats: MP3, WAV, OGG (Max 10MB)
                         </p>
                       </div>
 
                       {/* Source/Reference */}
                       <div>
-                        <label htmlFor="source" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label htmlFor="source" className="block text-sm font-medium text-gray-700 mb-2">
                           Source/Reference (Optional)
                         </label>
                         <input
@@ -640,7 +695,7 @@ const Contribute = () => {
                           name="source"
                           value={formData.source}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                           placeholder="Where did you learn this word?"
                         />
                       </div>
@@ -652,7 +707,7 @@ const Contribute = () => {
                     <>
                       {/* Search for Word */}
                       <div>
-                        <label htmlFor="searchWord" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label htmlFor="searchWord" className="block text-sm font-medium text-gray-700 mb-2">
                           Search for Word to Improve <span className="text-red-500">*</span>
                         </label>
                         <div className="flex space-x-2">
@@ -661,7 +716,7 @@ const Contribute = () => {
                             id="searchWord"
                             value={searchWord}
                             onChange={(e) => setSearchWord(e.target.value)}
-                            className={`flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.searchWord ? 'border-red-500' : 'border-gray-300'
+                            className={`flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${errors.searchWord ? 'border-red-500' : 'border-gray-300'
                               }`}
                             placeholder="Enter the word you want to improve"
                           />
@@ -673,7 +728,7 @@ const Contribute = () => {
                           </button>
                         </div>
                         {errors.searchWord && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
+                          <p className="mt-1 text-sm text-red-600 flex items-center">
                             <ExclamationCircleIcon className="h-4 w-4 mr-1" />
                             {errors.searchWord}
                           </p>
@@ -682,11 +737,11 @@ const Contribute = () => {
 
                       {/* Current Definition (placeholder) */}
                       {searchWord && (
-                        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                          <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <h3 className="font-semibold text-gray-900 mb-2">
                             Current Definition:
                           </h3>
-                          <p className="text-gray-600 dark:text-gray-300 text-sm italic">
+                          <p className="text-gray-600 text-sm italic">
                             Search for a word to see its current definition...
                           </p>
                         </div>
@@ -694,7 +749,7 @@ const Contribute = () => {
 
                       {/* Improved Definition */}
                       <div>
-                        <label htmlFor="englishTranslation" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label htmlFor="englishTranslation" className="block text-sm font-medium text-gray-700 mb-2">
                           Improved Definition <span className="text-red-500">*</span>
                         </label>
                         <textarea
@@ -703,12 +758,12 @@ const Contribute = () => {
                           value={formData.englishTranslation}
                           onChange={handleInputChange}
                           rows="4"
-                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.englishTranslation ? 'border-red-500' : 'border-gray-300'
+                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${errors.englishTranslation ? 'border-red-500' : 'border-gray-300'
                             }`}
                           placeholder="Enter your improved definition"
                         />
                         {errors.englishTranslation && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
+                          <p className="mt-1 text-sm text-red-600 flex items-center">
                             <ExclamationCircleIcon className="h-4 w-4 mr-1" />
                             {errors.englishTranslation}
                           </p>
@@ -717,7 +772,7 @@ const Contribute = () => {
 
                       {/* Reason for Improvement */}
                       <div>
-                        <label htmlFor="source" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label htmlFor="source" className="block text-sm font-medium text-gray-700 mb-2">
                           Reason for Improvement (Optional)
                         </label>
                         <textarea
@@ -726,7 +781,7 @@ const Contribute = () => {
                           value={formData.source}
                           onChange={handleInputChange}
                           rows="2"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                           placeholder="Why do you think this is a better definition?"
                         />
                       </div>
@@ -738,7 +793,7 @@ const Contribute = () => {
                     <>
                       {/* Search for Word */}
                       <div>
-                        <label htmlFor="searchWord" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label htmlFor="searchWord" className="block text-sm font-medium text-gray-700 mb-2">
                           Search for Word <span className="text-red-500">*</span>
                         </label>
                         <div className="flex space-x-2">
@@ -747,7 +802,7 @@ const Contribute = () => {
                             id="searchWord"
                             value={searchWord}
                             onChange={(e) => setSearchWord(e.target.value)}
-                            className={`flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.searchWord ? 'border-red-500' : 'border-gray-300'
+                            className={`flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${errors.searchWord ? 'border-red-500' : 'border-gray-300'
                               }`}
                             placeholder="Enter the word to add audio"
                           />
@@ -759,7 +814,7 @@ const Contribute = () => {
                           </button>
                         </div>
                         {errors.searchWord && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
+                          <p className="mt-1 text-sm text-red-600 flex items-center">
                             <ExclamationCircleIcon className="h-4 w-4 mr-1" />
                             {errors.searchWord}
                           </p>
@@ -768,11 +823,11 @@ const Contribute = () => {
 
                       {/* Word Info (placeholder) */}
                       {searchWord && (
-                        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                          <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                            Word: <span className="text-teal-600 dark:text-teal-400">{searchWord}</span>
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <h3 className="font-semibold text-gray-900 mb-2">
+                            Word: <span className="text-teal-600">{searchWord}</span>
                           </h3>
-                          <p className="text-gray-600 dark:text-gray-300 text-sm">
+                          <p className="text-gray-600 text-sm">
                             Search for a word to see its details...
                           </p>
                         </div>
@@ -780,11 +835,11 @@ const Contribute = () => {
 
                       {/* Audio Upload */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           Pronunciation Audio <span className="text-red-500">*</span>
                         </label>
-                        <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
-                          <MicrophoneIcon className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                          <MicrophoneIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                           <label className="cursor-pointer">
                             <span className="inline-flex items-center px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
                               <CloudArrowUpIcon className="h-5 w-5 mr-2" />
@@ -798,28 +853,28 @@ const Contribute = () => {
                             />
                           </label>
                           {formData.audioFile && (
-                            <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                            <p className="mt-3 text-sm text-gray-600">
                               Selected: <span className="font-medium">{formData.audioFile.name}</span>
                             </p>
                           )}
                           {errors.audioFile && (
-                            <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center justify-center">
+                            <p className="mt-2 text-sm text-red-600 flex items-center justify-center">
                               <ExclamationCircleIcon className="h-4 w-4 mr-1" />
                               {errors.audioFile}
                             </p>
                           )}
                         </div>
-                        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        <p className="mt-2 text-xs text-gray-500">
                           Supported formats: MP3, WAV, OGG (Max 10MB)
                         </p>
                       </div>
 
                       {/* Recording Tips */}
-                      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                        <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h3 className="font-semibold text-blue-900 mb-2">
                           Recording Tips:
                         </h3>
-                        <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-disc list-inside">
+                        <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
                           <li>Record in a quiet environment</li>
                           <li>Speak clearly and at a normal pace</li>
                           <li>Pronounce the word 2-3 times with a brief pause between</li>
@@ -832,11 +887,11 @@ const Contribute = () => {
                   {/* Moderator Application Form */}
                   {activeTab === 'moderator' && (
                     <>
-                      <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-6 mb-6">
-                        <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-3">
+                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 mb-6">
+                        <h3 className="font-semibold text-purple-900 mb-3">
                           Moderator Responsibilities:
                         </h3>
-                        <ul className="text-sm text-purple-800 dark:text-purple-200 space-y-2 list-disc list-inside">
+                        <ul className="text-sm text-purple-800 space-y-2 list-disc list-inside">
                           <li>Review and approve word submissions</li>
                           <li>Monitor discussion forums for guideline violations</li>
                           <li>Help new users understand contribution guidelines</li>
@@ -846,7 +901,7 @@ const Contribute = () => {
                       </div>
 
                       <div>
-                        <label htmlFor="englishTranslation" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label htmlFor="englishTranslation" className="block text-sm font-medium text-gray-700 mb-2">
                           Why do you want to be a moderator? <span className="text-red-500">*</span>
                         </label>
                         <textarea
@@ -855,12 +910,12 @@ const Contribute = () => {
                           value={formData.englishTranslation}
                           onChange={handleInputChange}
                           rows="4"
-                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.englishTranslation ? 'border-red-500' : 'border-gray-300'
+                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${errors.englishTranslation ? 'border-red-500' : 'border-gray-300'
                             }`}
                           placeholder="Tell us about your experience and motivation..."
                         />
                         {errors.englishTranslation && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
+                          <p className="mt-1 text-sm text-red-600 flex items-center">
                             <ExclamationCircleIcon className="h-4 w-4 mr-1" />
                             {errors.englishTranslation}
                           </p>
@@ -868,7 +923,7 @@ const Contribute = () => {
                       </div>
 
                       <div>
-                        <label htmlFor="source" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label htmlFor="source" className="block text-sm font-medium text-gray-700 mb-2">
                           Relevant Experience (Optional)
                         </label>
                         <textarea
@@ -877,13 +932,13 @@ const Contribute = () => {
                           value={formData.source}
                           onChange={handleInputChange}
                           rows="3"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                           placeholder="Previous moderation experience, language expertise, etc."
                         />
                       </div>
 
                       <div>
-                        <label htmlFor="exampleSentenceLisu" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label htmlFor="exampleSentenceLisu" className="block text-sm font-medium text-gray-700 mb-2">
                           Time Availability
                         </label>
                         <input
@@ -892,7 +947,7 @@ const Contribute = () => {
                           name="exampleSentenceLisu"
                           value={formData.exampleSentenceLisu}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                           placeholder="e.g., Weekdays 6-9pm, Weekends mornings"
                         />
                       </div>
@@ -900,16 +955,27 @@ const Contribute = () => {
                   )}
 
                   {/* Submit Button */}
-                  <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      <span className="text-red-500">*</span> Required fields
-                    </p>
+                  <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+                    <div className="flex items-center gap-4">
+                      <p className="text-sm text-gray-500">
+                        <span className="text-red-500">*</span> Required fields
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleReset}
+                        className="text-sm text-gray-600 hover:text-gray-900:text-gray-200 underline"
+                        title="Reset form (R)"
+                      >
+                        Reset
+                      </button>
+                    </div>
                     <button
                       type="submit"
-                      disabled={submitted}
-                      className="px-8 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold rounded-lg hover:from-teal-700 hover:to-cyan-700 focus:outline-none focus:ring-4 focus:ring-teal-300 dark:focus:ring-teal-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={submitted || isLoading}
+                      className="px-8 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold rounded-lg hover:from-teal-700 hover:to-cyan-700 focus:outline-none focus:ring-4 focus:ring-teal-300:ring-teal-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
-                      {submitted ? 'Submitted!' : 'Submit Contribution'}
+                      {isLoading && <ArrowPathIcon className="w-5 h-5 animate-spin" />}
+                      {submitted ? 'Submitted!' : isLoading ? 'Submitting...' : 'Submit Contribution'}
                     </button>
                   </div>
                 </form>
@@ -918,7 +984,7 @@ const Contribute = () => {
           </div>
         </div>
       </div>
-    </>
+    </PageLayout>
   );
 };
 

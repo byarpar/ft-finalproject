@@ -1,11 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import {
   DocumentTextIcon,
   ChevronUpIcon,
   ScaleIcon
 } from '@heroicons/react/24/outline';
+import PageLayout from '../components/Layout/PageLayout';
+
+/**
+ * TermsOfService Component
+ * 
+ * Displays the terms of service for using the Lisu Dictionary platform.
+ */
 
 const TermsOfService = () => {
   const [activeSection, setActiveSection] = useState('');
@@ -61,7 +67,7 @@ const TermsOfService = () => {
   }, []);
 
   // Smooth scroll to section
-  const scrollToSection = (sectionId) => {
+  const scrollToSection = useCallback((sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
       const offset = 100;
@@ -73,27 +79,22 @@ const TermsOfService = () => {
         behavior: 'smooth'
       });
     }
-  };
+  }, []);
 
   // Scroll to top
-  const scrollToTop = () => {
+  const scrollToTop = useCallback(() => {
     window.scrollTo({
       top: 0,
       behavior: 'smooth'
     });
-  };
+  }, []);
 
   return (
-    <>
-      <Helmet>
-        <title>Terms of Service - Lisu Dictionary</title>
-        <meta
-          name="description"
-          content="Read the Terms of Service for Lisu Dictionary. Understand your rights and responsibilities when using our platform."
-        />
-      </Helmet>
-
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <PageLayout
+      title="Terms of Service - Lisu Dictionary"
+      description="Read the Terms of Service for Lisu Dictionary. Understand your rights and responsibilities when using our platform."
+    >
+      <div className="min-h-screen bg-gray-50">
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-teal-600 to-cyan-600 text-white overflow-hidden">
           <div className="absolute inset-0 bg-black/10"></div>
@@ -115,9 +116,9 @@ const TermsOfService = () => {
           <div className="lg:grid lg:grid-cols-12 lg:gap-8">
             {/* Table of Contents - Sticky Sidebar */}
             <aside className="hidden lg:block lg:col-span-3">
-              <div className="sticky top-24 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <DocumentTextIcon className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+              <div className="sticky top-24 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <DocumentTextIcon className="w-5 h-5 text-teal-600" />
                   Table of Contents
                 </h2>
                 <nav className="space-y-1">
@@ -126,8 +127,8 @@ const TermsOfService = () => {
                       key={section.id}
                       onClick={() => scrollToSection(section.id)}
                       className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${activeSection === section.id
-                        ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 font-semibold'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                        ? 'bg-teal-50 text-teal-700 font-semibold'
+                        : 'text-gray-700 hover:bg-gray-100:bg-gray-700'
                         }`}
                     >
                       <span className="font-medium">{section.number}.</span> {section.title}
@@ -140,8 +141,8 @@ const TermsOfService = () => {
             {/* Main Content - Terms Document */}
             <main className="lg:col-span-9">
               {/* Mobile Table of Contents */}
-              <div className="lg:hidden mb-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+              <div className="lg:hidden mb-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h2 className="text-lg font-bold text-gray-900 mb-4">
                   Table of Contents
                 </h2>
                 <nav className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -149,7 +150,7 @@ const TermsOfService = () => {
                     <button
                       key={section.id}
                       onClick={() => scrollToSection(section.id)}
-                      className="text-left px-3 py-2 rounded-lg text-sm text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors"
+                      className="text-left px-3 py-2 rounded-lg text-sm text-teal-600 hover:bg-teal-50:bg-teal-900/20 transition-colors"
                     >
                       {section.number}. {section.title}
                     </button>
@@ -158,19 +159,19 @@ const TermsOfService = () => {
               </div>
 
               {/* Terms Document */}
-              <article className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 lg:p-12">
-                <header className="mb-8 pb-6 border-b border-gray-200 dark:border-gray-700">
-                  <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <article className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 lg:p-12">
+                <header className="mb-8 pb-6 border-b border-gray-200">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">
                     Website Terms of Service
                   </h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-gray-600">
                     Last Updated: {lastUpdated}
                   </p>
                 </header>
 
                 {/* Introduction */}
-                <div className="prose prose-lg dark:prose-invert max-w-none mb-8">
-                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                <div className="prose prose-lg max-w-none mb-8">
+                  <p className="text-gray-700 leading-relaxed">
                     Welcome to Lisu Dictionary. By accessing or using our website, mobile application,
                     or any related services (collectively, the "Service"), you agree to be bound by
                     these Terms of Service ("Terms"). If you do not agree to these Terms, please do
@@ -180,15 +181,15 @@ const TermsOfService = () => {
 
                 {/* Section 1: Acceptance of Terms */}
                 <section id="acceptance" className="mb-12 scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">1.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">1.</span>
                     Acceptance of Terms
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
                     <p>
                       By accessing and using Lisu Dictionary, you acknowledge that you have read,
                       understood, and agree to be bound by these Terms of Service and our{' '}
-                      <Link to="/privacy" className="text-teal-600 dark:text-teal-400 hover:underline font-medium">
+                      <Link to="/privacy" className="text-teal-600 hover:underline font-medium">
                         Privacy Policy
                       </Link>.
                     </p>
@@ -206,12 +207,12 @@ const TermsOfService = () => {
 
                 {/* Section 2: User Accounts */}
                 <section id="accounts" className="mb-12 scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">2.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">2.</span>
                     User Accounts
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
+                    <h4 className="text-lg font-semibold text-gray-900">
                       2.1 Account Registration
                     </h4>
                     <p>
@@ -226,7 +227,7 @@ const TermsOfService = () => {
                       <li>Notify us immediately of any unauthorized use of your account</li>
                     </ul>
 
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mt-6">
                       2.2 Account Security
                     </h4>
                     <p>
@@ -236,7 +237,7 @@ const TermsOfService = () => {
                       breach of security.
                     </p>
 
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mt-6">
                       2.3 Account Termination
                     </h4>
                     <p>
@@ -250,11 +251,11 @@ const TermsOfService = () => {
 
                 {/* Section 3: User Conduct */}
                 <section id="conduct" className="mb-12 scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">3.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">3.</span>
                     User Conduct
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
                     <p>
                       You agree to use the Service in compliance with all applicable laws and regulations.
                       You further agree NOT to:
@@ -276,8 +277,8 @@ const TermsOfService = () => {
                         the Service without our prior written permission</li>
                       <li>Violate our <strong>Community Guidelines</strong></li>
                     </ul>
-                    <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 rounded-r-lg mt-4">
-                      <p className="text-amber-900 dark:text-amber-100 font-medium">
+                    <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg mt-4">
+                      <p className="text-amber-900 font-medium">
                         ⚠️ Violation of these conduct rules may result in immediate account suspension
                         or termination, and we may report illegal activities to appropriate authorities.
                       </p>
@@ -287,12 +288,12 @@ const TermsOfService = () => {
 
                 {/* Section 4: Content Ownership & Licensing */}
                 <section id="content" className="mb-12 scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">4.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">4.</span>
                     Content Ownership & Licensing
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
+                    <h4 className="text-lg font-semibold text-gray-900">
                       4.1 Your Content
                     </h4>
                     <p>
@@ -303,7 +304,7 @@ const TermsOfService = () => {
                       and perform your User Content in connection with the Service.
                     </p>
 
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mt-6">
                       4.2 Content Representations
                     </h4>
                     <p>
@@ -317,7 +318,7 @@ const TermsOfService = () => {
                       <li>You have obtained all necessary permissions and consents</li>
                     </ul>
 
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mt-6">
                       4.3 Content Moderation
                     </h4>
                     <p>
@@ -326,7 +327,7 @@ const TermsOfService = () => {
                       any time, without notice to you.
                     </p>
 
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mt-6">
                       4.4 Contributions to Dictionary
                     </h4>
                     <p>
@@ -344,11 +345,11 @@ const TermsOfService = () => {
 
                 {/* Section 5: Intellectual Property */}
                 <section id="intellectual" className="mb-12 scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">5.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">5.</span>
                     Intellectual Property
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
                     <p>
                       The Service and its original content (excluding User Content), features, and
                       functionality are and will remain the exclusive property of Lisu Dictionary and
@@ -376,12 +377,12 @@ const TermsOfService = () => {
 
                 {/* Section 6: Disclaimer of Warranties */}
                 <section id="disclaimer" className="mb-12 scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">6.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">6.</span>
                     Disclaimer of Warranties
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
-                    <div className="bg-gray-100 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg p-6">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
+                    <div className="bg-gray-100 border border-gray-300 rounded-lg p-6">
                       <p className="font-medium uppercase text-sm mb-3">
                         THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND
                       </p>
@@ -413,12 +414,12 @@ const TermsOfService = () => {
 
                 {/* Section 7: Limitation of Liability */}
                 <section id="limitation" className="mb-12 scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">7.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">7.</span>
                     Limitation of Liability
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
-                    <div className="bg-gray-100 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg p-6">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
+                    <div className="bg-gray-100 border border-gray-300 rounded-lg p-6">
                       <p className="font-medium uppercase text-sm mb-3">
                         LIMITATION OF DAMAGES
                       </p>
@@ -450,11 +451,11 @@ const TermsOfService = () => {
 
                 {/* Section 8: Indemnification */}
                 <section id="indemnification" className="mb-12 scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">8.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">8.</span>
                     Indemnification
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
                     <p>
                       You agree to <strong>defend, indemnify, and hold harmless</strong> Lisu Dictionary,
                       its parent company, officers, directors, employees, agents, licensors, and suppliers
@@ -478,11 +479,11 @@ const TermsOfService = () => {
 
                 {/* Section 9: Governing Law */}
                 <section id="governing" className="mb-12 scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">9.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">9.</span>
                     Governing Law
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
                     <p>
                       These Terms shall be governed by and construed in accordance with the laws of
                       <strong> [Your State/Country]</strong>, without regard to its conflict of law
@@ -502,11 +503,11 @@ const TermsOfService = () => {
 
                 {/* Section 10: Termination */}
                 <section id="termination" className="mb-12 scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">10.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">10.</span>
                     Termination
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
                     <p>
                       We may <strong>terminate or suspend your account and access to the Service
                         immediately, without prior notice or liability</strong>, for any reason whatsoever,
@@ -527,7 +528,7 @@ const TermsOfService = () => {
                       If you wish to terminate your account, you may do so by discontinuing your use
                       of the Service or by requesting account deletion through your account settings
                       or by contacting us at{' '}
-                      <a href="mailto:support@lisudictionary.com" className="text-teal-600 dark:text-teal-400 hover:underline font-medium">
+                      <a href="mailto:support@lisudictionary.com" className="text-teal-600 hover:underline font-medium">
                         support@lisudictionary.com
                       </a>.
                     </p>
@@ -536,11 +537,11 @@ const TermsOfService = () => {
 
                 {/* Section 11: Changes to Terms */}
                 <section id="changes" className="mb-12 scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">11.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">11.</span>
                     Changes to Terms
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
                     <p>
                       We reserve the right, at our sole discretion, to <strong>modify or replace these
                         Terms at any time</strong>. If a revision is material, we will provide at least
@@ -569,35 +570,35 @@ const TermsOfService = () => {
 
                 {/* Section 12: Contact Information */}
                 <section id="contact" className="scroll-mt-24">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-start gap-3">
-                    <span className="text-teal-600 dark:text-teal-400">12.</span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-start gap-3">
+                    <span className="text-teal-600">12.</span>
                     Contact Information
                   </h3>
-                  <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
                     <p>
                       If you have any questions, concerns, or feedback regarding these Terms of Service,
                       please contact us:
                     </p>
-                    <div className="bg-teal-50 dark:bg-teal-900/20 rounded-lg p-6 border border-teal-200 dark:border-teal-800">
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+                    <div className="bg-teal-50 rounded-lg p-6 border border-teal-200">
+                      <h4 className="font-semibold text-gray-900 mb-3">
                         Lisu Dictionary Legal Team
                       </h4>
                       <div className="space-y-2 text-sm">
                         <p>
                           <strong>Email:</strong>{' '}
-                          <a href="mailto:legal@lisudictionary.com" className="text-teal-600 dark:text-teal-400 hover:underline">
+                          <a href="mailto:legal@lisudictionary.com" className="text-teal-600 hover:underline">
                             legal@lisudictionary.com
                           </a>
                         </p>
                         <p>
                           <strong>General Support:</strong>{' '}
-                          <a href="mailto:support@lisudictionary.com" className="text-teal-600 dark:text-teal-400 hover:underline">
+                          <a href="mailto:support@lisudictionary.com" className="text-teal-600 hover:underline">
                             support@lisudictionary.com
                           </a>
                         </p>
                         <p>
                           <strong>Contact Form:</strong>{' '}
-                          <Link to="/contact" className="text-teal-600 dark:text-teal-400 hover:underline">
+                          <Link to="/contact" className="text-teal-600 hover:underline">
                             Contact Page
                           </Link>
                         </p>
@@ -605,7 +606,7 @@ const TermsOfService = () => {
                     </div>
                     <p className="text-sm italic">
                       For general help and support questions, please visit our{' '}
-                      <Link to="/help" className="text-teal-600 dark:text-teal-400 hover:underline font-medium">
+                      <Link to="/help" className="text-teal-600 hover:underline font-medium">
                         Help Center
                       </Link>.
                     </p>
@@ -613,11 +614,11 @@ const TermsOfService = () => {
                 </section>
 
                 {/* Additional Legal Provisions */}
-                <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                <div className="mt-12 pt-8 border-t border-gray-200">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">
                     Additional Provisions
                   </h3>
-                  <div className="space-y-4 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                  <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
                     <p>
                       <strong>Entire Agreement:</strong> These Terms, together with our Privacy Policy
                       and any other legal notices published by us on the Service, constitute the entire
@@ -646,29 +647,29 @@ const TermsOfService = () => {
                 </div>
 
                 {/* Acknowledgment Footer */}
-                <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700 text-center">
-                  <p className="text-gray-700 dark:text-gray-300 font-medium mb-4">
+                <div className="mt-12 pt-8 border-t border-gray-200 text-center">
+                  <p className="text-gray-700 font-medium mb-4">
                     By using Lisu Dictionary, you acknowledge that you have read, understood, and agree
                     to be bound by these Terms of Service.
                   </p>
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <Link
                       to="/privacy"
-                      className="text-teal-600 dark:text-teal-400 hover:underline font-medium"
+                      className="text-teal-600 hover:underline font-medium"
                     >
                       View Privacy Policy
                     </Link>
                     <span className="hidden sm:inline text-gray-400">•</span>
                     <Link
                       to="/help"
-                      className="text-teal-600 dark:text-teal-400 hover:underline font-medium"
+                      className="text-teal-600 hover:underline font-medium"
                     >
                       Help Center
                     </Link>
                     <span className="hidden sm:inline text-gray-400">•</span>
                     <Link
                       to="/contact"
-                      className="text-teal-600 dark:text-teal-400 hover:underline font-medium"
+                      className="text-teal-600 hover:underline font-medium"
                     >
                       Contact Us
                     </Link>
@@ -690,7 +691,7 @@ const TermsOfService = () => {
           </button>
         )}
       </div>
-    </>
+    </PageLayout>
   );
 };
 

@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   MagnifyingGlassIcon,
@@ -8,6 +7,13 @@ import {
   QuestionMarkCircleIcon,
   ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline';
+import PageLayout from '../components/Layout/PageLayout';
+
+/**
+ * FAQ Component
+ * 
+ * Frequently Asked Questions page with search and categorized Q&A.
+ */
 
 const FAQ = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -30,7 +36,7 @@ const FAQ = () => {
           question: 'I forgot my password. What should I do?',
           answer: (
             <>
-              Visit the <Link to="/forgot-password" className="text-teal-600 dark:text-teal-400 hover:underline">Forgot Password page</Link>, enter your registered email address, and we'll send you a password reset link. The link will be valid for 24 hours. If you don't receive the email, check your spam folder or contact support.
+              Visit the <Link to="/forgot-password" className="text-teal-600 hover:underline">Forgot Password page</Link>, enter your registered email address, and we'll send you a password reset link. The link will be valid for 24 hours. If you don't receive the email, check your spam folder or contact support.
             </>
           )
         },
@@ -52,7 +58,7 @@ const FAQ = () => {
                 <li>Try a different browser or device</li>
                 <li>Check if your account has been suspended (you'll receive an email)</li>
               </ul>
-              <p className="mt-2">If none of these work, <Link to="/contact" className="text-teal-600 dark:text-teal-400 hover:underline">contact our support team</Link>.</p>
+              <p className="mt-2">If none of these work, <Link to="/contact" className="text-teal-600 hover:underline">contact our support team</Link>.</p>
             </>
           )
         }
@@ -82,7 +88,7 @@ const FAQ = () => {
           question: 'What if I can\'t find a word?',
           answer: (
             <>
-              If you can't find a word, you can help expand our dictionary! Visit the <Link to="/contribute" className="text-teal-600 dark:text-teal-400 hover:underline">Contribute page</Link> and use the "Suggest a New Word" form. Provide the Lisu word, English translation, part of speech, and example sentences. Our team will review and add it to the dictionary.
+              If you can't find a word, you can help expand our dictionary! Visit the <Link to="/contribute" className="text-teal-600 hover:underline">Contribute page</Link> and use the "Suggest a New Word" form. Provide the Lisu word, English translation, part of speech, and example sentences. Our team will review and add it to the dictionary.
             </>
           )
         },
@@ -120,7 +126,7 @@ const FAQ = () => {
                 <li>Display your contribution count publicly</li>
                 <li>Show/hide your activity history</li>
               </ul>
-              <p className="mt-2">See our <Link to="/privacy" className="text-teal-600 dark:text-teal-400 hover:underline">Privacy Policy</Link> for more details.</p>
+              <p className="mt-2">See our <Link to="/privacy" className="text-teal-600 hover:underline">Privacy Policy</Link> for more details.</p>
             </>
           )
         },
@@ -145,7 +151,7 @@ const FAQ = () => {
           question: 'How can I contribute new words?',
           answer: (
             <>
-              Visit the <Link to="/contribute" className="text-teal-600 dark:text-teal-400 hover:underline">Contribute page</Link> and select "Suggest a New Word." Fill in the required fields: Lisu word, English translation, and part of speech. Optional but helpful: example sentences, pronunciation notes, and audio recording. All contributions are reviewed by our team before being published.
+              Visit the <Link to="/contribute" className="text-teal-600 hover:underline">Contribute page</Link> and select "Suggest a New Word." Fill in the required fields: Lisu word, English translation, and part of speech. Optional but helpful: example sentences, pronunciation notes, and audio recording. All contributions are reviewed by our team before being published.
             </>
           )
         },
@@ -159,7 +165,7 @@ const FAQ = () => {
           question: 'Where can I find help with pronunciation recording?',
           answer: (
             <>
-              Visit the <Link to="/help/article/audio-recording" className="text-teal-600 dark:text-teal-400 hover:underline">Audio Recording Guide</Link> in our Help Center for detailed instructions. Use a quiet environment, speak clearly at normal pace, and pronounce the word 2-3 times with brief pauses. Supported formats: MP3, WAV, OGG (max 10MB). Your recordings help thousands of learners!
+              Visit the <Link to="/help/article/audio-recording" className="text-teal-600 hover:underline">Audio Recording Guide</Link> in our Help Center for detailed instructions. Use a quiet environment, speak clearly at normal pace, and pronounce the word 2-3 times with brief pauses. Supported formats: MP3, WAV, OGG (max 10MB). Your recordings help thousands of learners!
             </>
           )
         },
@@ -181,7 +187,7 @@ const FAQ = () => {
                 <li><strong>Review Existing Entries:</strong> Avoid duplicates</li>
                 <li><strong>Cite Sources:</strong> When possible, mention where you learned the word</li>
               </ul>
-              <p className="mt-2">Read the full <Link to="/help/article/contribution-guidelines" className="text-teal-600 dark:text-teal-400 hover:underline">Contribution Guidelines</Link> for detailed information.</p>
+              <p className="mt-2">Read the full <Link to="/help/article/contribution-guidelines" className="text-teal-600 hover:underline">Contribution Guidelines</Link> for detailed information.</p>
             </>
           )
         },
@@ -190,7 +196,7 @@ const FAQ = () => {
           question: 'How can I become a moderator?',
           answer: (
             <>
-              We're always looking for dedicated community members to help moderate! Requirements: active account for 6+ months, 50+ approved contributions, good standing in the community, and ability to commit 3-5 hours per week. Apply via the <Link to="/contribute" className="text-teal-600 dark:text-teal-400 hover:underline">Contribute page</Link> under "Join Our Moderators."
+              We're always looking for dedicated community members to help moderate! Requirements: active account for 6+ months, 50+ approved contributions, good standing in the community, and ability to commit 3-5 hours per week. Apply via the <Link to="/contribute" className="text-teal-600 hover:underline">Contribute page</Link> under "Join Our Moderators."
             </>
           )
         }
@@ -219,7 +225,7 @@ const FAQ = () => {
                 <li>Respect privacy - don't share personal information</li>
                 <li>Use appropriate language and content</li>
               </ul>
-              <p className="mt-2">See our full <Link to="/help/article/community-guidelines" className="text-teal-600 dark:text-teal-400 hover:underline">Community Guidelines</Link> for details.</p>
+              <p className="mt-2">See our full <Link to="/help/article/community-guidelines" className="text-teal-600 hover:underline">Community Guidelines</Link> for details.</p>
             </>
           )
         },
@@ -263,7 +269,7 @@ const FAQ = () => {
                 <li>Reduce the number of open tabs</li>
                 <li>Check if your device has sufficient memory</li>
               </ul>
-              <p className="mt-2">If problems persist, <Link to="/contact" className="text-teal-600 dark:text-teal-400 hover:underline">contact support</Link> with details about your browser, device, and the specific page causing issues.</p>
+              <p className="mt-2">If problems persist, <Link to="/contact" className="text-teal-600 hover:underline">contact support</Link> with details about your browser, device, and the specific page causing issues.</p>
             </>
           )
         },
@@ -287,7 +293,7 @@ const FAQ = () => {
           question: 'I found a bug. How do I report it?',
           answer: (
             <>
-              Thank you for helping us improve! <Link to="/contact" className="text-teal-600 dark:text-teal-400 hover:underline">Contact our support team</Link> with these details:
+              Thank you for helping us improve! <Link to="/contact" className="text-teal-600 hover:underline">Contact our support team</Link> with these details:
               <ul className="list-disc list-inside mt-2 space-y-1">
                 <li>What you were trying to do</li>
                 <li>What happened instead (error message if any)</li>
@@ -368,15 +374,15 @@ const FAQ = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
-  const toggleQuestion = (categoryId, questionId) => {
+  const toggleQuestion = useCallback((categoryId, questionId) => {
     const key = `${categoryId}-${questionId}`;
     setActiveQuestions(prev => ({
       ...prev,
       [key]: !prev[key]
     }));
-  };
+  }, []);
 
-  const scrollToCategory = (categoryId) => {
+  const scrollToCategory = useCallback((categoryId) => {
     const element = document.getElementById(categoryId);
     if (element) {
       const offset = 100;
@@ -386,26 +392,21 @@ const FAQ = () => {
         top: offsetPosition
       });
     }
-  };
+  }, []);
 
-  const isQuestionActive = (categoryId, questionId) => {
+  const isQuestionActive = useCallback((categoryId, questionId) => {
     const key = `${categoryId}-${questionId}`;
     return activeQuestions[key] || false;
-  };
+  }, [activeQuestions]);
 
   return (
-    <>
-      <Helmet>
-        <title>Frequently Asked Questions - Lisu Dictionary</title>
-        <meta
-          name="description"
-          content="Find quick answers to common questions about the Lisu Dictionary, including how to search, contribute, and learn about the Lisu language and culture."
-        />
-      </Helmet>
-
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <PageLayout
+      title="Frequently Asked Questions - Lisu Dictionary"
+      description="Find quick answers to common questions about the Lisu Dictionary, including how to search, contribute, and learn about the Lisu language and culture."
+    >
+      <div className="min-h-screen bg-gray-50">
         {/* Hero Section */}
-        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-700 dark:to-cyan-700">
+        <div className="bg-gradient-to-r from-teal-600 to-cyan-600">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
             <div className="text-center">
               <div className="flex justify-center mb-4">
@@ -427,7 +428,7 @@ const FAQ = () => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search for answers..."
-                    className="w-full pl-12 pr-4 py-4 rounded-lg text-lg border-2 border-transparent focus:border-teal-300 focus:ring-4 focus:ring-teal-200 focus:outline-none dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                    className="w-full pl-12 pr-4 py-4 rounded-lg text-lg border-2 border-transparent focus:border-teal-300 focus:ring-4 focus:ring-teal-200 focus:outline-none"
                   />
                 </div>
                 {searchQuery && (
@@ -445,8 +446,8 @@ const FAQ = () => {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Left Sidebar - Category Navigation */}
             <div className="lg:col-span-1">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 lg:sticky lg:top-24">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+              <div className="bg-white rounded-lg shadow-md p-6 lg:sticky lg:top-24">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">
                   Browse by Category
                 </h2>
                 <nav className="space-y-2">
@@ -458,7 +459,7 @@ const FAQ = () => {
                       <button
                         key={category.id}
                         onClick={() => scrollToCategory(category.id)}
-                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium"
+                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100:bg-gray-700 text-gray-700 font-medium"
                       >
                         {category.title}
                       </button>
@@ -467,14 +468,14 @@ const FAQ = () => {
                 </nav>
 
                 {/* Quick Stats */}
-                <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    <strong className="text-gray-900 dark:text-white">
+                <div className="mt-8 pt-6 border-t border-gray-200">
+                  <p className="text-sm text-gray-600 mb-2">
+                    <strong className="text-gray-900">
                       {faqCategories.reduce((acc, cat) => acc + cat.questions.length, 0)}
                     </strong> questions answered
                   </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    <strong className="text-gray-900 dark:text-white">
+                  <p className="text-sm text-gray-600">
+                    <strong className="text-gray-900">
                       {faqCategories.length}
                     </strong> categories
                   </p>
@@ -485,12 +486,12 @@ const FAQ = () => {
             {/* Right Content - Questions & Answers */}
             <div className="lg:col-span-3">
               {filteredFaqs.length === 0 ? (
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
+                <div className="bg-white rounded-lg shadow-md p-12 text-center">
                   <QuestionMarkCircleIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
                     No results found
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  <p className="text-gray-600 mb-6">
                     We couldn't find any questions matching "{searchQuery}"
                   </p>
                   <button
@@ -506,7 +507,7 @@ const FAQ = () => {
                     <div
                       key={category.id}
                       id={category.id}
-                      className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden"
+                      className="bg-white rounded-lg shadow-md overflow-hidden"
                     >
                       {/* Category Header */}
                       <div className="bg-gradient-to-r from-teal-500 to-cyan-500 px-6 py-4">
@@ -516,7 +517,7 @@ const FAQ = () => {
                       </div>
 
                       {/* Questions */}
-                      <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                      <div className="divide-y divide-gray-200">
                         {category.questions.map((question) => {
                           const isActive = isQuestionActive(category.id, question.id);
 
@@ -527,12 +528,12 @@ const FAQ = () => {
                                 onClick={() => toggleQuestion(category.id, question.id)}
                                 className="w-full flex items-start justify-between text-left group"
                               >
-                                <span className="flex-1 text-lg font-semibold text-gray-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 pr-4">
+                                <span className="flex-1 text-lg font-semibold text-gray-900 group-hover:text-teal-600:text-teal-400 pr-4">
                                   {question.question}
                                 </span>
                                 <span className="flex-shrink-0 ml-2">
                                   {isActive ? (
-                                    <ChevronUpIcon className="h-6 w-6 text-teal-600 dark:text-teal-400" />
+                                    <ChevronUpIcon className="h-6 w-6 text-teal-600" />
                                   ) : (
                                     <ChevronDownIcon className="h-6 w-6 text-gray-400" />
                                   )}
@@ -541,7 +542,7 @@ const FAQ = () => {
 
                               {/* Answer */}
                               {isActive && (
-                                <div className="mt-4 text-gray-600 dark:text-gray-300 leading-relaxed">
+                                <div className="mt-4 text-gray-600 leading-relaxed">
                                   {question.answer}
                                 </div>
                               )}
@@ -555,12 +556,12 @@ const FAQ = () => {
               )}
 
               {/* Still Need Help Section */}
-              <div className="mt-12 bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 border-2 border-teal-200 dark:border-teal-800 rounded-lg p-8 text-center">
-                <ChatBubbleLeftRightIcon className="h-12 w-12 text-teal-600 dark:text-teal-400 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              <div className="mt-12 bg-gradient-to-r from-teal-50 to-cyan-50 border-2 border-teal-200 rounded-lg p-8 text-center">
+                <ChatBubbleLeftRightIcon className="h-12 w-12 text-teal-600 mx-auto mb-4" />
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
                   Still Need Help?
                 </h2>
-                <p className="text-gray-600 dark:text-gray-300 mb-6 max-w-2xl mx-auto">
+                <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
                   Can't find what you're looking for? Our support team is here to help you with any questions or issues.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -573,7 +574,7 @@ const FAQ = () => {
                   </Link>
                   <Link
                     to="/help"
-                    className="inline-flex items-center justify-center px-8 py-3 bg-white dark:bg-gray-700 text-teal-600 dark:text-teal-400 font-semibold rounded-lg border-2 border-teal-600 dark:border-teal-400 hover:bg-teal-50 dark:hover:bg-gray-600"
+                    className="inline-flex items-center justify-center px-8 py-3 bg-white text-teal-600 font-semibold rounded-lg border-2 border-teal-600 hover:bg-teal-50:bg-gray-600"
                   >
                     <QuestionMarkCircleIcon className="h-5 w-5 mr-2" />
                     Visit Help Center
@@ -584,7 +585,7 @@ const FAQ = () => {
           </div>
         </div>
       </div>
-    </>
+    </PageLayout>
   );
 };
 

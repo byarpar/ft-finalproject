@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import PageLayout from '../components/Layout/PageLayout';
 import {
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -14,6 +14,12 @@ import {
   ArrowLeftIcon
 } from '@heroicons/react/24/outline';
 
+/**
+ * HelpSearch Component
+ * 
+ * Provides search functionality for the Help Center with category filtering,
+ * result highlighting, and comprehensive search across all help articles.
+ */
 const HelpSearch = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
@@ -188,15 +194,11 @@ const HelpSearch = () => {
   };
 
   return (
-    <>
-      <Helmet>
-        <title>
-          {searchQuery ? `Search: "${searchQuery}" - Help Center` : 'Search Help Center'} - Lisu Dictionary
-        </title>
-        <meta name="description" content="Search the Lisu Dictionary Help Center for answers to your questions" />
-      </Helmet>
-
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <PageLayout
+      title={searchQuery ? `Search: "${searchQuery}" - Help Center - Lisu Dictionary` : 'Search Help Center - Lisu Dictionary'}
+      description="Search the Lisu Dictionary Help Center for answers to your questions"
+    >
+      <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <div className="bg-gradient-to-br from-teal-600 to-cyan-600 text-white">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -218,7 +220,7 @@ const HelpSearch = () => {
                 placeholder="What do you need help with?"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 rounded-lg focus:ring-2 focus:ring-white focus:outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-lg"
+                className="w-full pl-12 pr-4 py-4 rounded-lg focus:ring-2 focus:ring-white focus:outline-none bg-white text-gray-900 placeholder-gray-500 text-lg"
                 autoFocus
               />
             </form>
@@ -230,8 +232,8 @@ const HelpSearch = () => {
           {/* Category Filter */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
-              <FunnelIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <FunnelIcon className="w-5 h-5 text-gray-600" />
+              <h2 className="text-lg font-semibold text-gray-900">
                 Filter by Category
               </h2>
             </div>
@@ -244,7 +246,7 @@ const HelpSearch = () => {
                     onClick={() => handleCategoryChange(category.id)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${selectedCategory === category.id
                       ? 'bg-teal-600 text-white'
-                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:border-teal-500 dark:hover:border-teal-400'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:border-teal-500:border-teal-400'
                       }`}
                   >
                     {IconComponent && <IconComponent className="w-4 h-4" />}
@@ -258,7 +260,7 @@ const HelpSearch = () => {
           {/* Results */}
           <div>
             {searchQuery && (
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
                 {isSearching
                   ? 'Searching...'
                   : searchResults.length > 0
@@ -272,11 +274,11 @@ const HelpSearch = () => {
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 animate-pulse"
+                    className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse"
                   >
-                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-3"></div>
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2"></div>
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+                    <div className="h-6 bg-gray-200 rounded w-3/4 mb-3"></div>
+                    <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
                   </div>
                 ))}
               </div>
@@ -288,26 +290,26 @@ const HelpSearch = () => {
                     <Link
                       key={article.slug}
                       to={`/help/article/${article.slug}`}
-                      className="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:border-teal-500 dark:hover:border-teal-400 hover:shadow-md transition-all group"
+                      className="block bg-white rounded-lg border border-gray-200 p-6 hover:border-teal-500:border-teal-400 hover:shadow-md transition-all group"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             {CategoryIcon && (
-                              <CategoryIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                              <CategoryIcon className="w-4 h-4 text-teal-600" />
                             )}
-                            <span className="text-sm text-teal-600 dark:text-teal-400 font-medium">
+                            <span className="text-sm text-teal-600 font-medium">
                               {article.category.name}
                             </span>
                           </div>
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-teal-600:text-teal-400 transition-colors">
                             {article.title}
                           </h3>
-                          <p className="text-gray-600 dark:text-gray-400 text-sm">
+                          <p className="text-gray-600 text-sm">
                             {article.description}
                           </p>
                         </div>
-                        <ChevronRightIcon className="w-5 h-5 text-gray-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 group-hover:translate-x-1 transition-all flex-shrink-0" />
+                        <ChevronRightIcon className="w-5 h-5 text-gray-400 group-hover:text-teal-600:text-teal-400 group-hover:translate-x-1 transition-all flex-shrink-0" />
                       </div>
                     </Link>
                   );
@@ -316,10 +318,10 @@ const HelpSearch = () => {
             ) : searchQuery && !isSearching ? (
               <div className="text-center py-12">
                 <MagnifyingGlassIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   No Results Found
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
+                <p className="text-gray-600 mb-8 max-w-md mx-auto">
                   We couldn't find any articles matching "{searchQuery}". Try different keywords or browse by category.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -331,7 +333,7 @@ const HelpSearch = () => {
                   </Link>
                   <Link
                     to="/contact"
-                    className="px-6 py-3 bg-white dark:bg-gray-800 text-teal-600 dark:text-teal-400 font-semibold rounded-lg border border-teal-600 dark:border-teal-400 hover:bg-teal-50 dark:hover:bg-gray-700 transition-colors"
+                    className="px-6 py-3 bg-white text-teal-600 font-semibold rounded-lg border border-teal-600 hover:bg-teal-50:bg-gray-700 transition-colors"
                   >
                     Contact Support
                   </Link>
@@ -339,7 +341,7 @@ const HelpSearch = () => {
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-gray-600">
                   Enter a search query to find help articles
                 </p>
               </div>
@@ -347,7 +349,7 @@ const HelpSearch = () => {
           </div>
         </div>
       </div>
-    </>
+    </PageLayout>
   );
 };
 

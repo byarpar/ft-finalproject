@@ -9,9 +9,9 @@ const LoadingSpinner = ({ size = 'md', color = 'teal' }) => {
   };
 
   const colorClasses = {
-    teal: 'border-teal-600 dark:border-teal-400',
-    blue: 'border-blue-600 dark:border-blue-400',
-    gray: 'border-gray-600 dark:border-gray-400',
+    teal: 'border-teal-600',
+    blue: 'border-blue-600',
+    gray: 'border-gray-600',
     white: 'border-white'
   };
 

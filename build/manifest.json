@@ -1,21 +1,43 @@
 {
   "short_name": "Lisu Dictionary",
-  "name": "English-Lisu Dictionary",
-  "description": "Bilingual dictionary with etymology for English and Lisu languages",
+  "name": "English-Lisu Dictionary - Learn Lisu Language",
+  "description": "Comprehensive English-Lisu bilingual dictionary with detailed etymology, pronunciation guides, and cultural context. Master the Lisu language with interactive learning tools.",
   "icons": [
     {
       "src": "favicon.ico",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
     }
   ],
   "start_url": ".",
+  "scope": "/",
   "display": "standalone",
-  "theme_color": "#1f2937",
+  "orientation": "portrait-primary",
+  "theme_color": "#0d9488",
   "background_color": "#ffffff",
   "categories": [
     "education",
     "reference",
-    "productivity"
-  ]
+    "productivity",
+    "books"
+  ],
+  "lang": "en",
+  "dir": "ltr"
 }

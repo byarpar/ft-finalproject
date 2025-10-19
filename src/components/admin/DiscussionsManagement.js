@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Pagination from '../UI/Pagination';
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -520,15 +521,15 @@ const DiscussionsManagement = () => {
 
   const getStatusBadge = (thread) => {
     if (thread.isHidden) {
-      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Hidden</span>;
+      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Hidden</span>;
     }
     if (thread.isLocked) {
-      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">Locked</span>;
+      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">Locked</span>;
     }
     if (thread.isArchived) {
-      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400">Archived</span>;
+      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">Archived</span>;
     }
-    return <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Active</span>;
+    return <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Active</span>;
   };
 
   const getReportStatusBadge = (status) => {
@@ -541,7 +542,7 @@ const DiscussionsManagement = () => {
     const Icon = config.icon;
 
     return (
-      <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-${config.color}-100 text-${config.color}-800 dark:bg-${config.color}-900/30 dark:text-${config.color}-400`}>
+      <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-${config.color}-100 text-${config.color}-800${config.color}-900/30${config.color}-400`}>
         <Icon className="w-3 h-3 mr-1" />
         {config.label}
       </span>
@@ -556,8 +557,8 @@ const DiscussionsManagement = () => {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Discussions Management</h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
+        <h1 className="text-3xl font-bold text-gray-900">Discussions Management</h1>
+        <p className="mt-2 text-gray-600">
           Monitor and moderate discussions, resolve user reports, and maintain healthy community interactions.
         </p>
       </div>
@@ -583,54 +584,54 @@ const DiscussionsManagement = () => {
         </button>
 
         {/* New Threads (24h) */}
-        <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
+        <div className="p-6 bg-white rounded-xl shadow-md border border-gray-200">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center space-x-2">
-                <ChatBubbleLeftRightIcon className="w-6 h-6 text-teal-600 dark:text-teal-400" />
-                <span className="text-3xl font-bold text-gray-900 dark:text-white">{stats.newThreads24h}</span>
+                <ChatBubbleLeftRightIcon className="w-6 h-6 text-teal-600" />
+                <span className="text-3xl font-bold text-gray-900">{stats.newThreads24h}</span>
               </div>
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">New Threads (24h)</p>
+              <p className="mt-2 text-sm text-gray-600">New Threads (24h)</p>
             </div>
           </div>
         </div>
 
         {/* New Threads (7d) */}
-        <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
+        <div className="p-6 bg-white rounded-xl shadow-md border border-gray-200">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center space-x-2">
-                <CalendarIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                <span className="text-3xl font-bold text-gray-900 dark:text-white">{stats.newThreads7d}</span>
+                <CalendarIcon className="w-6 h-6 text-blue-600" />
+                <span className="text-3xl font-bold text-gray-900">{stats.newThreads7d}</span>
               </div>
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">New Threads (7d)</p>
+              <p className="mt-2 text-sm text-gray-600">New Threads (7d)</p>
             </div>
           </div>
         </div>
 
         {/* Most Active Thread */}
-        <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
+        <div className="p-6 bg-white rounded-xl shadow-md border border-gray-200">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center space-x-2">
-                <ChatBubbleLeftRightIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                <span className="text-lg font-semibold text-gray-900 dark:text-white">{stats.mostActiveThread || 'N/A'}</span>
+                <ChatBubbleLeftRightIcon className="w-6 h-6 text-purple-600" />
+                <span className="text-lg font-semibold text-gray-900">{stats.mostActiveThread || 'N/A'}</span>
               </div>
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Most Active Thread</p>
-              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">This week</p>
+              <p className="mt-2 text-sm text-gray-600">Most Active Thread</p>
+              <p className="text-xs text-gray-500 mt-1">This week</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Sub-Navigation Tabs */}
-      <div className="border-b border-gray-200 dark:border-gray-700">
+      <div className="border-b border-gray-200">
         <nav className="flex space-x-8">
           <button
             onClick={() => setActiveTab('all-threads')}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'all-threads'
-              ? 'border-teal-500 text-teal-600 dark:text-teal-400'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+              ? 'border-teal-500 text-teal-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300:text-gray-300'
               }`}
           >
             All Threads
@@ -638,8 +639,8 @@ const DiscussionsManagement = () => {
           <button
             onClick={() => setActiveTab('reported-content')}
             className={`relative py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'reported-content'
-              ? 'border-teal-500 text-teal-600 dark:text-teal-400'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+              ? 'border-teal-500 text-teal-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300:text-gray-300'
               }`}
           >
             Reported Content
@@ -652,8 +653,8 @@ const DiscussionsManagement = () => {
           <button
             onClick={() => setActiveTab('moderation-history')}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'moderation-history'
-              ? 'border-teal-500 text-teal-600 dark:text-teal-400'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+              ? 'border-teal-500 text-teal-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300:text-gray-300'
               }`}
           >
             Moderation History
@@ -661,8 +662,8 @@ const DiscussionsManagement = () => {
           <button
             onClick={() => setActiveTab('categories-tags')}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'categories-tags'
-              ? 'border-teal-500 text-teal-600 dark:text-teal-400'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+              ? 'border-teal-500 text-teal-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300:text-gray-300'
               }`}
           >
             Categories & Tags
@@ -674,7 +675,7 @@ const DiscussionsManagement = () => {
       {activeTab === 'all-threads' && (
         <div className="space-y-4">
           {/* Action Bar */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-4">
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-6 gap-4">
               {/* Search */}
               <div className="xl:col-span-2">
@@ -685,7 +686,7 @@ const DiscussionsManagement = () => {
                     placeholder="Search by thread title, content, or author..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -698,7 +699,7 @@ const DiscussionsManagement = () => {
                     setFilters({ ...filters, category: e.target.value });
                     setPagination(prev => ({ ...prev, page: 1 }));
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 >
                   <option value="all">All Categories</option>
                   {categories.filter(cat => cat && cat.name).map((cat) => (
@@ -717,7 +718,7 @@ const DiscussionsManagement = () => {
                     setFilters({ ...filters, status: e.target.value });
                     setPagination(prev => ({ ...prev, page: 1 }));
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 >
                   <option value="all">All Statuses</option>
                   <option value="active">Active</option>
@@ -735,7 +736,7 @@ const DiscussionsManagement = () => {
                     setFilters({ ...filters, dateRange: e.target.value });
                     setPagination(prev => ({ ...prev, page: 1 }));
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 >
                   <option value="all">All Time</option>
                   <option value="today">Today</option>
@@ -761,9 +762,9 @@ const DiscussionsManagement = () => {
 
           {/* Bulk Actions Bar */}
           {showBulkActions && (
-            <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-lg p-4">
+            <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-teal-900 dark:text-teal-100">
+                <span className="text-sm font-medium text-teal-900">
                   {selectedThreads.length} thread{selectedThreads.length !== 1 ? 's' : ''} selected
                 </span>
                 <div className="flex items-center space-x-2">
@@ -774,7 +775,7 @@ const DiscussionsManagement = () => {
                         e.target.value = '';
                       }
                     }}
-                    className="px-3 py-2 border border-teal-300 dark:border-teal-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-teal-500"
+                    className="px-3 py-2 border border-teal-300 rounded-lg bg-white text-gray-900 text-sm focus:ring-2 focus:ring-teal-500"
                   >
                     <option value="">Select Action...</option>
                     <option value="change-category">Change Category</option>
@@ -786,7 +787,7 @@ const DiscussionsManagement = () => {
                   </select>
                   <button
                     onClick={() => setSelectedThreads([])}
-                    className="px-4 py-2 text-sm text-teal-700 dark:text-teal-300 hover:text-teal-900 dark:hover:text-teal-100"
+                    className="px-4 py-2 text-sm text-teal-700 hover:text-teal-900:text-teal-100"
                   >
                     Clear Selection
                   </button>
@@ -796,10 +797,10 @@ const DiscussionsManagement = () => {
           )}
 
           {/* Discussion Thread List Table */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-900">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left">
                       <input
@@ -809,42 +810,42 @@ const DiscussionsManagement = () => {
                         className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                       />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700:text-gray-300">
                       Thread Title
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700:text-gray-300">
                       Author
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700:text-gray-300">
                       Category
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700:text-gray-300">
                       Replies
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700:text-gray-300">
                       Last Activity
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="bg-white divide-y divide-gray-200">
                   {loading ? (
                     <tr>
-                      <td colSpan="7" className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                      <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
                         Loading threads...
                       </td>
                     </tr>
                   ) : threads.length === 0 ? (
                     <tr>
-                      <td colSpan="7" className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                      <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
                         No threads found
                       </td>
                     </tr>
                   ) : (
                     threads.filter(thread => thread && thread.id).map((thread) => (
-                      <tr key={thread.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                      <tr key={thread.id} className="hover:bg-gray-50:bg-gray-700/50 transition-colors">
                         <td className="px-6 py-4">
                           <input
                             type="checkbox"
@@ -857,7 +858,7 @@ const DiscussionsManagement = () => {
                           <div className="flex items-center space-x-2">
                             <div>
                               <div className="flex items-center space-x-2">
-                                <button className="text-sm font-medium text-gray-900 dark:text-white hover:text-teal-600 dark:hover:text-teal-400 text-left">
+                                <button className="text-sm font-medium text-gray-900 hover:text-teal-600:text-teal-400 text-left">
                                   {thread.title || 'Untitled'}
                                 </button>
                                 {getStatusBadge(thread)}
@@ -865,7 +866,7 @@ const DiscussionsManagement = () => {
                               {thread.tags && thread.tags.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-1">
                                   {thread.tags.filter(tag => tag).map((tag, idx) => (
-                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-700">
                                       {tag}
                                     </span>
                                   ))}
@@ -876,57 +877,57 @@ const DiscussionsManagement = () => {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
-                              <UserCircleIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                            <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                              <UserCircleIcon className="w-5 h-5 text-gray-600" />
                             </div>
-                            <span className="text-sm text-gray-900 dark:text-white">{thread.author?.name || 'Unknown'}</span>
+                            <span className="text-sm text-gray-900">{thread.author?.name || 'Unknown'}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                        <td className="px-6 py-4 text-sm text-gray-500">
                           {thread.category || 'General'}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium">
+                        <td className="px-6 py-4 text-sm text-gray-900 font-medium">
                           {thread.replies || 0}
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm">
-                            <div className="text-gray-900 dark:text-white">{thread.lastActivity?.date || 'N/A'}</div>
-                            <div className="text-gray-500 dark:text-gray-400">{thread.lastActivity?.user || 'Unknown'}</div>
+                            <div className="text-gray-900">{thread.lastActivity?.date || 'N/A'}</div>
+                            <div className="text-gray-500">{thread.lastActivity?.user || 'Unknown'}</div>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-end space-x-2">
                             <button
                               onClick={() => handleThreadAction(thread.id, 'edit')}
-                              className="p-2 text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                              className="p-2 text-gray-600 hover:text-teal-600:text-teal-400 hover:bg-gray-100:bg-gray-700 rounded-lg transition-colors"
                               title="Edit Thread"
                             >
                               <PencilIcon className="w-5 h-5" />
                             </button>
                             <button
                               onClick={() => window.open(`/discussions/${thread.id}`, '_blank')}
-                              className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                              className="p-2 text-gray-600 hover:text-blue-600:text-blue-400 hover:bg-gray-100:bg-gray-700 rounded-lg transition-colors"
                               title="View on Site"
                             >
                               <LinkIcon className="w-5 h-5" />
                             </button>
                             <button
                               onClick={() => handleThreadAction(thread.id, thread.isLocked ? 'unlock' : 'lock')}
-                              className="p-2 text-gray-600 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                              className="p-2 text-gray-600 hover:text-yellow-600:text-yellow-400 hover:bg-gray-100:bg-gray-700 rounded-lg transition-colors"
                               title={thread.isLocked ? 'Unlock Thread' : 'Lock Thread'}
                             >
                               {thread.isLocked ? <LockOpenIcon className="w-5 h-5" /> : <LockClosedIcon className="w-5 h-5" />}
                             </button>
                             <button
                               onClick={() => handleThreadAction(thread.id, thread.isHidden ? 'unhide' : 'hide')}
-                              className="p-2 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                              className="p-2 text-gray-600 hover:text-purple-600:text-purple-400 hover:bg-gray-100:bg-gray-700 rounded-lg transition-colors"
                               title={thread.isHidden ? 'Unhide Thread' : 'Hide Thread'}
                             >
                               {thread.isHidden ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
                             </button>
                             <button
                               onClick={() => handleThreadAction(thread.id, 'archive')}
-                              className="p-2 text-gray-600 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                              className="p-2 text-gray-600 hover:text-orange-600:text-orange-400 hover:bg-gray-100:bg-gray-700 rounded-lg transition-colors"
                               title="Archive Thread"
                             >
                               <ArchiveBoxIcon className="w-5 h-5" />
@@ -937,7 +938,7 @@ const DiscussionsManagement = () => {
                                   handleThreadAction(thread.id, 'delete');
                                 }
                               }}
-                              className="p-2 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                              className="p-2 text-gray-600 hover:text-red-600:text-red-400 hover:bg-gray-100:bg-gray-700 rounded-lg transition-colors"
                               title="Delete Thread"
                             >
                               <TrashIcon className="w-5 h-5" />
@@ -952,86 +953,12 @@ const DiscussionsManagement = () => {
             </div>
 
             {/* Pagination */}
-            <div className="bg-gray-50 dark:bg-gray-900 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-center">
-                {pagination.totalPages > 1 && (
-                  <div className="flex items-center justify-center gap-2">
-                    {/* Page Number Buttons */}
-                    {(() => {
-                      const pageNumbers = [];
-                      const maxVisible = 5;
-                      const totalPages = pagination.totalPages;
-                      const currentPage = pagination.page;
-
-                      if (totalPages <= maxVisible + 2) {
-                        // Show all pages if total is small
-                        for (let i = 1; i <= totalPages; i++) {
-                          pageNumbers.push(i);
-                        }
-                      } else {
-                        // Always show first page
-                        pageNumbers.push(1);
-
-                        if (currentPage > 3) {
-                          pageNumbers.push('...');
-                        }
-
-                        // Show pages around current page
-                        const start = Math.max(2, currentPage - 1);
-                        const end = Math.min(totalPages - 1, currentPage + 1);
-
-                        for (let i = start; i <= end; i++) {
-                          pageNumbers.push(i);
-                        }
-
-                        if (currentPage < totalPages - 2) {
-                          pageNumbers.push('...');
-                        }
-
-                        // Always show last page
-                        if (totalPages > 1) {
-                          pageNumbers.push(totalPages);
-                        }
-                      }
-
-                      return pageNumbers.map((page, index) => {
-                        if (page === '...') {
-                          return (
-                            <span
-                              key={`ellipsis-${index}`}
-                              className="px-3 py-2 text-gray-500 dark:text-gray-400"
-                            >
-                              ...
-                            </span>
-                          );
-                        }
-
-                        return (
-                          <button
-                            key={page}
-                            onClick={() => setPagination(prev => ({ ...prev, page }))}
-                            className={`min-w-[40px] px-3 py-2 rounded-lg font-medium transition-colors ${currentPage === page
-                              ? 'bg-orange-500 text-white'
-                              : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
-                              }`}
-                          >
-                            {page}
-                          </button>
-                        );
-                      });
-                    })()}
-
-                    {/* Next Button */}
-                    <button
-                      onClick={() => setPagination(prev => ({ ...prev, page: Math.min(pagination.totalPages, prev.page + 1) }))}
-                      disabled={pagination.page === pagination.totalPages}
-                      className="px-4 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Next
-                    </button>
-                  </div>
-                )}
-              </div>
+            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+              <Pagination
+                currentPage={pagination.page}
+                totalPages={pagination.totalPages}
+                onPageChange={(page) => setPagination(prev => ({ ...prev, page }))}
+              />
             </div>
           </div>
         </div>
@@ -1041,12 +968,12 @@ const DiscussionsManagement = () => {
       {activeTab === 'reported-content' && (
         <div className="space-y-4">
           {/* Filter Bar */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-4">
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <select
                 value={reportFilters.status}
                 onChange={(e) => setReportFilters({ ...reportFilters, status: e.target.value })}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500"
+                className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-teal-500"
               >
                 <option value="all">All Statuses</option>
                 <option value="new">New</option>
@@ -1057,7 +984,7 @@ const DiscussionsManagement = () => {
               <select
                 value={reportFilters.type}
                 onChange={(e) => setReportFilters({ ...reportFilters, type: e.target.value })}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500"
+                className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-teal-500"
               >
                 <option value="all">All Types</option>
                 <option value="thread">Thread</option>
@@ -1069,47 +996,47 @@ const DiscussionsManagement = () => {
                 placeholder="Filter by reported user..."
                 value={reportFilters.reportedUser}
                 onChange={(e) => setReportFilters({ ...reportFilters, reportedUser: e.target.value })}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500"
+                className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-teal-500"
               />
             </div>
           </div>
 
           {/* Reports Queue Table */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-900">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left">
                       <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Content
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Reason
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Reported By
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Reported User
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Date Filed
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="bg-white divide-y divide-gray-200">
                   {reports.length === 0 ? (
                     <tr>
-                      <td colSpan="8" className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                      <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
                         <CheckCircleIcon className="w-12 h-12 mx-auto mb-4 text-green-500" />
                         <p className="text-lg font-medium">No pending reports</p>
                         <p className="text-sm mt-1">Great job keeping the community safe!</p>
@@ -1117,42 +1044,42 @@ const DiscussionsManagement = () => {
                     </tr>
                   ) : (
                     reports.filter(report => report && report.id).map((report) => (
-                      <tr key={report.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                      <tr key={report.id} className="hover:bg-gray-50:bg-gray-700/50 transition-colors">
                         <td className="px-6 py-4">
                           <input type="checkbox" className="rounded border-gray-300 text-teal-600 focus:ring-teal-500" />
                         </td>
                         <td className="px-6 py-4">
                           <div className="max-w-md">
                             <div className="flex items-center space-x-2 mb-1">
-                              <span className="px-2 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 uppercase">
+                              <span className="px-2 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-700 uppercase">
                                 {report.contentType}
                               </span>
-                              <button className="text-sm font-medium text-teal-600 dark:text-teal-400 hover:underline">
+                              <button className="text-sm font-medium text-teal-600 hover:underline">
                                 {report.threadTitle}
                               </button>
                             </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                            <p className="text-sm text-gray-600 line-clamp-2">
                               "{report.contentSnippet}"
                             </p>
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                          <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
                             <ExclamationTriangleIcon className="w-3 h-3 mr-1" />
                             {report.reason}
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <button className="text-sm text-gray-900 dark:text-white hover:text-teal-600 dark:hover:text-teal-400">
+                          <button className="text-sm text-gray-900 hover:text-teal-600:text-teal-400">
                             {report.reporter?.name || report.reportedBy?.name || 'Unknown'}
                           </button>
                         </td>
                         <td className="px-6 py-4">
-                          <button className="text-sm text-gray-900 dark:text-white hover:text-teal-600 dark:hover:text-teal-400 font-medium">
+                          <button className="text-sm text-gray-900 hover:text-teal-600:text-teal-400 font-medium">
                             {report.discussion_author?.name || report.reportedUser?.name || 'Unknown'}
                           </button>
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                        <td className="px-6 py-4 text-sm text-gray-500">
                           {report.dateFiled}
                         </td>
                         <td className="px-6 py-4">
@@ -1168,7 +1095,7 @@ const DiscussionsManagement = () => {
                             </button>
                             <button
                               onClick={() => handleReportAction(report.id, 'dismiss')}
-                              className="p-2 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                              className="p-2 text-gray-600 hover:text-red-600:text-red-400 hover:bg-gray-100:bg-gray-700 rounded-lg transition-colors"
                               title="Dismiss Report"
                             >
                               <XCircleIcon className="w-5 h-5" />
@@ -1189,19 +1116,19 @@ const DiscussionsManagement = () => {
       {activeTab === 'moderation-history' && (
         <div className="space-y-4">
           {/* Search & Filter */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-4">
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <input
                 type="text"
                 placeholder="Search by admin, user, or action..."
                 value={moderationFilters.search}
                 onChange={(e) => setModerationFilters({ ...moderationFilters, search: e.target.value })}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500"
+                className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-teal-500"
               />
               <select
                 value={moderationFilters.action}
                 onChange={(e) => setModerationFilters({ ...moderationFilters, action: e.target.value })}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500"
+                className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-teal-500"
               >
                 <option value="all">All Actions</option>
                 <option value="hide">Thread Hidden</option>
@@ -1214,7 +1141,7 @@ const DiscussionsManagement = () => {
               <select
                 value={moderationFilters.timeRange}
                 onChange={(e) => setModerationFilters({ ...moderationFilters, timeRange: e.target.value })}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500"
+                className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-teal-500"
               >
                 <option value="all">All Time</option>
                 <option value="today">Today</option>
@@ -1225,32 +1152,32 @@ const DiscussionsManagement = () => {
           </div>
 
           {/* History Log */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-900">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Timestamp
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Admin
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Action
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Target
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Reason
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="bg-white divide-y divide-gray-200">
                   {loading ? (
                     <tr>
-                      <td colSpan="5" className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                      <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
                         <div className="flex items-center justify-center">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
                           <span className="ml-3">Loading moderation history...</span>
@@ -1259,30 +1186,30 @@ const DiscussionsManagement = () => {
                     </tr>
                   ) : moderationHistory.length === 0 ? (
                     <tr>
-                      <td colSpan="5" className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                      <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
                         No moderation history found
                       </td>
                     </tr>
                   ) : (
                     moderationHistory.filter(log => log && log.id).map((log) => (
-                      <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                        <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                      <tr key={log.id} className="hover:bg-gray-50:bg-gray-700/50 transition-colors">
+                        <td className="px-6 py-4 text-sm text-gray-500">
                           {new Date(log.timestamp || log.created_at).toLocaleString()}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium">
+                        <td className="px-6 py-4 text-sm text-gray-900 font-medium">
                           {log.moderator?.name || log.admin || '—'}
                         </td>
                         <td className="px-6 py-4">
-                          <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                          <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
                             {log.action || '—'}
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <button className="text-sm text-teal-600 dark:text-teal-400 hover:underline">
+                          <button className="text-sm text-teal-600 hover:underline">
                             {log.target?.title || log.target?.name || `Item #${log.target?.id}` || '—'}
                           </button>
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                        <td className="px-6 py-4 text-sm text-gray-600">
                           {log.reason || log.details?.reason || '—'}
                         </td>
                       </tr>
@@ -1299,46 +1226,46 @@ const DiscussionsManagement = () => {
       {activeTab === 'categories-tags' && (
         <div className="space-y-6">
           {/* Discussion Categories */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6">
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Discussion Categories</h2>
+              <h2 className="text-xl font-bold text-gray-900">Discussion Categories</h2>
               <button className="flex items-center px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-colors">
                 <PlusIcon className="w-5 h-5 mr-2" />
                 Add Category
               </button>
             </div>
             {loading ? (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-8 text-gray-500">
                 Loading categories...
               </div>
             ) : categories.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-8 text-gray-500">
                 No categories found
               </div>
             ) : (
               <div className="space-y-3">
                 {categories.filter(category => category && category.name).map((category) => (
-                  <div key={category.id} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                  <div key={category.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50:bg-gray-700/50 transition-colors">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                        <ChatBubbleLeftRightIcon className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                      <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                        <ChatBubbleLeftRightIcon className="w-6 h-6 text-gray-600" />
                       </div>
                       <div>
-                        <h3 className="font-medium text-gray-900 dark:text-white">{category.name}</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <h3 className="font-medium text-gray-900">{category.name}</h3>
+                        <p className="text-sm text-gray-500">
                           {category.count || 0} thread{category.count !== 1 ? 's' : ''}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
                       <button
-                        className="p-2 text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                        className="p-2 text-gray-600 hover:text-teal-600:text-teal-400 hover:bg-gray-100:bg-gray-700 rounded-lg transition-colors"
                         title="Edit category"
                       >
                         <PencilIcon className="w-5 h-5" />
                       </button>
                       <button
-                        className="p-2 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                        className="p-2 text-gray-600 hover:text-red-600:text-red-400 hover:bg-gray-100:bg-gray-700 rounded-lg transition-colors"
                         title="Delete category"
                       >
                         <TrashIcon className="w-5 h-5" />
@@ -1351,11 +1278,11 @@ const DiscussionsManagement = () => {
           </div>
 
           {/* Discussion Tags */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6">
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Discussion Tags</h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <h2 className="text-xl font-bold text-gray-900">Discussion Tags</h2>
+                <p className="text-sm text-gray-600 mt-1">
                   {tags.length} tag{tags.length !== 1 ? 's' : ''} in use
                 </p>
               </div>
@@ -1365,26 +1292,26 @@ const DiscussionsManagement = () => {
               </button>
             </div>
             {loading ? (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-8 text-gray-500">
                 Loading tags...
               </div>
             ) : tags.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-8 text-gray-500">
                 No tags found. Tags are created automatically when used in discussions.
               </div>
             ) : (
               <div className="flex flex-wrap gap-3">
                 {tags.filter(tag => tag && (tag.name || tag.tag_name)).map((tag, idx) => (
-                  <div key={idx} className="group flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-teal-100 dark:hover:bg-teal-900/30 transition-colors">
-                    <TagIcon className="w-4 h-4 text-gray-600 dark:text-gray-400 group-hover:text-teal-600 dark:group-hover:text-teal-400" />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-teal-700 dark:group-hover:text-teal-300">
+                  <div key={idx} className="group flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-full hover:bg-teal-100:bg-teal-900/30 transition-colors">
+                    <TagIcon className="w-4 h-4 text-gray-600 group-hover:text-teal-600:text-teal-400" />
+                    <span className="text-sm font-medium text-gray-700 group-hover:text-teal-700:text-teal-300">
                       {tag.name || tag.tag_name}
                     </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-500">
+                    <span className="text-xs text-gray-500">
                       ({tag.count || 0})
                     </span>
                     <button
-                      className="ml-2 p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="ml-2 p-1 text-gray-400 hover:text-red-600:text-red-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                       title="Remove tag"
                       onClick={() => {
                         if (window.confirm(`Remove tag "${tag.name}"? This will remove it from all discussions.`)) {

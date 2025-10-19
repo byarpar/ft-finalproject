@@ -40,61 +40,45 @@ adminAPI.interceptors.response.use(
 export const admin = {
   // Dashboard Stats
   getDashboardStats: () => adminAPI.get('/admin/dashboard').then(res => res.data),
-  getAnalytics: (params = {}) => adminAPI.get('/admin/analytics', { params }).then(res => res.data),
 
   // Users Management
   getAllUsers: (params = {}) => adminAPI.get('/admin/users', { params }).then(res => res.data),
-  getUserById: (id) => adminAPI.get(`/admin/users/${id}`).then(res => res.data),
-  updateUser: (id, data) => adminAPI.put(`/admin/users/${id}`, data).then(res => res.data),
+  updateUserRole: (userId, role) => adminAPI.put(`/admin/users/${userId}/role`, { role }).then(res => res.data),
+  updateUserStatus: (userId, isActive) => adminAPI.put(`/admin/users/${userId}/status`, { is_active: isActive }).then(res => res.data),
   deleteUser: (id) => adminAPI.delete(`/admin/users/${id}`).then(res => res.data),
-  suspendUser: (id, data) => adminAPI.post(`/admin/users/${id}/suspend`, data).then(res => res.data),
-  unsuspendUser: (id) => adminAPI.post(`/admin/users/${id}/unsuspend`).then(res => res.data),
 
   // Words Management
-  getAllWords: (params = {}) => adminAPI.get('/admin/words', { params }).then(res => res.data),
+  getWords: (params = {}) => adminAPI.get('/admin/words', { params }).then(res => res.data),
+  createWord: (data) => adminAPI.post('/admin/words', data).then(res => res.data),
   updateWord: (id, data) => adminAPI.put(`/admin/words/${id}`, data).then(res => res.data),
-  deleteWord: (id) => adminAPI.delete(`/admin/words/${id}`).then(res => res.data),
-  approveWord: (id) => adminAPI.post(`/admin/words/${id}/approve`).then(res => res.data),
+  bulkWords: (action, wordIds) => adminAPI.post('/admin/words/bulk', { action, wordIds }).then(res => res.data),
 
   // Discussions Management
   getAllDiscussions: (params = {}) => adminAPI.get('/discussions', { params }).then(res => res.data),
-  getDiscussion: (id) => adminAPI.get(`/discussions/${id}`).then(res => res.data),
-  updateDiscussion: (id, data) => adminAPI.put(`/discussions/${id}`, data).then(res => res.data),
   deleteDiscussion: (id) => adminAPI.delete(`/discussions/${id}`).then(res => res.data),
-  pinDiscussion: (id) => adminAPI.post(`/discussions/${id}/pin`).then(res => res.data),
-  unpinDiscussion: (id) => adminAPI.post(`/discussions/${id}/unpin`).then(res => res.data),
-  lockDiscussion: (id) => adminAPI.post(`/discussions/${id}/lock`).then(res => res.data),
-  unlockDiscussion: (id) => adminAPI.post(`/discussions/${id}/unlock`).then(res => res.data),
-
-  // Answers Management
-  getAllAnswers: (params = {}) => adminAPI.get('/answers', { params }).then(res => res.data),
-  getAnswer: (id) => adminAPI.get(`/answers/${id}`).then(res => res.data),
-  updateAnswer: (id, data) => adminAPI.put(`/answers/${id}`, data).then(res => res.data),
-  deleteAnswer: (id) => adminAPI.delete(`/answers/${id}`).then(res => res.data),
+  pinDiscussion: (id) => adminAPI.put(`/discussions/${id}/pin`).then(res => res.data),
+  unpinDiscussion: (id) => adminAPI.delete(`/discussions/${id}/pin`).then(res => res.data),
+  lockDiscussion: (id) => adminAPI.put(`/discussions/${id}/lock`).then(res => res.data),
+  unlockDiscussion: (id) => adminAPI.delete(`/discussions/${id}/lock`).then(res => res.data),
 
   // Reports & Moderation
   getReports: (params = {}) => adminAPI.get('/admin/reports', { params }).then(res => res.data),
-  getReport: (id) => adminAPI.get(`/admin/reports/${id}`).then(res => res.data),
   resolveReport: (id, data) => adminAPI.post(`/admin/reports/${id}/resolve`, data).then(res => res.data),
-  dismissReport: (id, note) => adminAPI.post(`/admin/reports/${id}/dismiss`, { note }).then(res => res.data),
+  dismissReport: (id) => adminAPI.post(`/admin/reports/${id}/dismiss`, {}).then(res => res.data),
 
   // Moderation History
   getModerationHistory: (params = {}) => adminAPI.get('/admin/moderation-history', { params }).then(res => res.data),
 
-  // Bulk Actions
-  bulkDiscussionActions: (action, discussionIds) => adminAPI.post('/admin/discussions/bulk', { action, discussionIds }).then(res => res.data),
-
-  // Audit Logs
-  getAuditLogs: (params = {}) => adminAPI.get('/admin/audit-logs', { params }).then(res => res.data),
-
-  // Import/Export
-  importData: (formData) => adminAPI.post('/admin/import', formData, {
+  // Words Import/Export
+  importWords: (formData) => adminAPI.post('/admin/words/import', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }).then(res => res.data),
-  exportData: (params = {}) => adminAPI.get('/admin/export', {
-    params,
+  exportWords: (params = {}) => adminAPI.post('/admin/words/export', params, {
     responseType: 'blob'
-  }).then(res => res.data),
+  }),
+  downloadImportTemplate: () => adminAPI.get('/admin/words/template', {
+    responseType: 'blob'
+  }),
 };
 
 export default admin;

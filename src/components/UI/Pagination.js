@@ -1,142 +1,148 @@
 import React from 'react';
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import PropTypes from 'prop-types';
 
+/**
+ * Reusable Pagination Component
+ * Displays page navigation with smart ellipsis for large page counts
+ * 
+ * @component
+ * @param {number} currentPage - Current active page (1-indexed)
+ * @param {number} totalPages - Total number of pages
+ * @param {Function} onPageChange - Callback when page changes
+ * @param {number} [maxVisible=5] - Maximum number of page buttons to show
+ * @param {string} [className] - Additional CSS classes
+ * 
+ * @example
+ * <Pagination
+ *   currentPage={currentPage}
+ *   totalPages={totalPages}
+ *   onPageChange={(page) => setCurrentPage(page)}
+ * />
+ */
 const Pagination = ({
-  currentPage = 1,
-  totalPages = 1,
+  currentPage,
+  totalPages,
   onPageChange,
-  showFirstLast = true,
-  maxPageButtons = 5,
-  className = ''
+  maxVisible = 5,
+  className = '',
 }) => {
-  if (totalPages <= 1) return null;
+  // Don't render if only one page or no pages
+  if (totalPages <= 1) {
+    return null;
+  }
 
-  const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages && page !== currentPage) {
-      onPageChange(page);
+  /**
+   * Generate array of page numbers to display
+   * Uses ellipsis (...) for large page counts
+   */
+  const generatePageNumbers = () => {
+    const pageNumbers = [];
+
+    if (totalPages <= maxVisible + 2) {
+      // Show all pages if total is small
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      // Always show first page
+      pageNumbers.push(1);
+
+      // Add ellipsis if current page is far from start
+      if (currentPage > 3) {
+        pageNumbers.push('...');
+      }
+
+      // Show pages around current page
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+
+      for (let i = start; i <= end; i++) {
+        pageNumbers.push(i);
+      }
+
+      // Add ellipsis if current page is far from end
+      if (currentPage < totalPages - 2) {
+        pageNumbers.push('...');
+      }
+
+      // Always show last page
+      if (totalPages > 1) {
+        pageNumbers.push(totalPages);
+      }
     }
+
+    return pageNumbers;
   };
 
-  // Calculate which page numbers to show
-  const getPageNumbers = () => {
-    const pages = [];
-    const halfButtons = Math.floor(maxPageButtons / 2);
-
-    let startPage = Math.max(1, currentPage - halfButtons);
-    let endPage = Math.min(totalPages, currentPage + halfButtons);
-
-    // Adjust if we're near the start or end
-    if (currentPage <= halfButtons) {
-      endPage = Math.min(totalPages, maxPageButtons);
-    } else if (currentPage >= totalPages - halfButtons) {
-      startPage = Math.max(1, totalPages - maxPageButtons + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
-    return pages;
-  };
-
-  const pageNumbers = getPageNumbers();
+  const pageNumbers = generatePageNumbers();
 
   return (
     <div className={`flex items-center justify-center gap-2 ${className}`}>
-      {/* First Page Button */}
-      {showFirstLast && currentPage > 1 && (
-        <button
-          onClick={() => handlePageChange(1)}
-          className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-          aria-label="First page"
-        >
-          First
-        </button>
-      )}
-
       {/* Previous Button */}
       <button
-        onClick={() => handlePageChange(currentPage - 1)}
+        onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-gray-800 transition-colors"
+        className={`px-3 py-2 rounded-lg font-medium transition-colors ${currentPage === 1
+            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50:bg-gray-600'
+          }`}
         aria-label="Previous page"
       >
-        <ChevronLeftIcon className="w-4 h-4" />
-        <span className="hidden sm:inline">Previous</span>
+        Previous
       </button>
 
-      {/* Page Numbers */}
-      <div className="flex items-center gap-1">
-        {/* Show ellipsis if there are pages before the first shown page */}
-        {pageNumbers[0] > 1 && (
-          <>
-            <button
-              onClick={() => handlePageChange(1)}
-              className="hidden sm:flex items-center justify-center w-10 h-10 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+      {/* Page Number Buttons */}
+      {pageNumbers.map((page, index) => {
+        if (page === '...') {
+          return (
+            <span
+              key={`ellipsis-${index}`}
+              className="px-3 py-2 text-gray-500"
+              aria-hidden="true"
             >
-              1
-            </button>
-            {pageNumbers[0] > 2 && (
-              <span className="px-2 text-gray-500 dark:text-gray-400">...</span>
-            )}
-          </>
-        )}
+              ...
+            </span>
+          );
+        }
 
-        {/* Page Number Buttons */}
-        {pageNumbers.map((page) => (
+        return (
           <button
             key={page}
-            onClick={() => handlePageChange(page)}
-            className={`flex items-center justify-center w-10 h-10 text-sm font-medium rounded-lg transition-colors ${currentPage === page
-                ? 'bg-teal-600 text-white border-teal-600 hover:bg-teal-700'
-                : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+            onClick={() => onPageChange(page)}
+            className={`min-w-[40px] px-3 py-2 rounded-lg font-medium transition-colors ${currentPage === page
+                ? 'bg-orange-500 text-white'
+                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50:bg-gray-600'
               }`}
-            aria-label={`Page ${page}`}
+            aria-label={`Go to page ${page}`}
             aria-current={currentPage === page ? 'page' : undefined}
           >
             {page}
           </button>
-        ))}
-
-        {/* Show ellipsis if there are pages after the last shown page */}
-        {pageNumbers[pageNumbers.length - 1] < totalPages && (
-          <>
-            {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
-              <span className="px-2 text-gray-500 dark:text-gray-400">...</span>
-            )}
-            <button
-              onClick={() => handlePageChange(totalPages)}
-              className="hidden sm:flex items-center justify-center w-10 h-10 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            >
-              {totalPages}
-            </button>
-          </>
-        )}
-      </div>
+        );
+      })}
 
       {/* Next Button */}
       <button
-        onClick={() => handlePageChange(currentPage + 1)}
+        onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-gray-800 transition-colors"
+        className={`px-3 py-2 rounded-lg font-medium transition-colors ${currentPage === totalPages
+            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50:bg-gray-600'
+          }`}
         aria-label="Next page"
       >
-        <span className="hidden sm:inline">Next</span>
-        <ChevronRightIcon className="w-4 h-4" />
+        Next
       </button>
-
-      {/* Last Page Button */}
-      {showFirstLast && currentPage < totalPages && (
-        <button
-          onClick={() => handlePageChange(totalPages)}
-          className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-          aria-label="Last page"
-        >
-          Last
-        </button>
-      )}
     </div>
   );
+};
+
+Pagination.propTypes = {
+  currentPage: PropTypes.number.isRequired,
+  totalPages: PropTypes.number.isRequired,
+  onPageChange: PropTypes.func.isRequired,
+  maxVisible: PropTypes.number,
+  className: PropTypes.string,
 };
 
 export default Pagination;

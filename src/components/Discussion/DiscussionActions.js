@@ -20,25 +20,26 @@ const DiscussionActions = ({
   isAdmin,
   onToggleSolved,
   onTogglePinned,
-  onToggleLocked
+  onToggleLocked,
+  showSolved = true // New prop to control solved button visibility
 }) => {
   if (!discussion) return null;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
       {/* Solved Badge/Button */}
-      {discussion.is_solved && (
-        <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm font-medium">
+      {showSolved && discussion.is_solved && (
+        <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
           <CheckCircleIcon className="w-4 h-4" />
           Solved
         </span>
       )}
 
       {/* Mark as Solved Button (Only for discussion author) */}
-      {isAuthor && !discussion.is_solved && onToggleSolved && (
+      {showSolved && isAuthor && !discussion.is_solved && onToggleSolved && (
         <button
           onClick={onToggleSolved}
-          className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-green-100 dark:hover:bg-green-900/30 hover:text-green-700 dark:hover:text-green-400 rounded-full text-sm font-medium transition-colors"
+          className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 hover:bg-green-100:bg-green-900/30 hover:text-green-700:text-green-400 rounded-full text-sm font-medium transition-colors"
           title="Mark this discussion as solved"
         >
           <CheckCircleOutlineIcon className="w-4 h-4" />
@@ -48,7 +49,7 @@ const DiscussionActions = ({
 
       {/* Pinned Badge */}
       {discussion.is_pinned && (
-        <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-sm font-medium">
+        <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
           <MapPinIcon className="w-4 h-4" />
           Pinned
         </span>
@@ -59,8 +60,8 @@ const DiscussionActions = ({
         <button
           onClick={onTogglePinned}
           className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium transition-colors ${discussion.is_pinned
-            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50'
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-400'
+            ? 'bg-blue-100 text-blue-700 hover:bg-blue-200:bg-blue-900/50'
+            : 'bg-gray-100 text-gray-700 hover:bg-blue-100:bg-blue-900/30 hover:text-blue-700:text-blue-400'
             }`}
           title={discussion.is_pinned ? 'Unpin discussion' : 'Pin discussion to top'}
         >
@@ -75,7 +76,7 @@ const DiscussionActions = ({
 
       {/* Locked Badge */}
       {discussion.is_locked && (
-        <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-sm font-medium">
+        <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
           <LockClosedIcon className="w-4 h-4" />
           Locked
         </span>
@@ -86,8 +87,8 @@ const DiscussionActions = ({
         <button
           onClick={onToggleLocked}
           className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium transition-colors ${discussion.is_locked
-            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50'
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-400'
+            ? 'bg-red-100 text-red-700 hover:bg-red-200:bg-red-900/50'
+            : 'bg-gray-100 text-gray-700 hover:bg-red-100:bg-red-900/30 hover:text-red-700:text-red-400'
             }`}
           title={discussion.is_locked ? 'Unlock discussion to allow replies' : 'Lock discussion to prevent new replies'}
         >

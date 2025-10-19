@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import PageLayout from '../components/Layout/PageLayout';
 import {
   ChevronRightIcon,
   ArrowLeftIcon,
@@ -14,7 +14,14 @@ import {
   HandThumbUpIcon as HandThumbUpIconSolid,
   HandThumbDownIcon as HandThumbDownIconSolid
 } from '@heroicons/react/24/solid';
+import { formatLongDate } from '../utils/dateUtils';
 
+/**
+ * HelpArticle Component
+ * 
+ * Displays a detailed help article with navigation, content sections, 
+ * helpful feedback, and related articles.
+ */
 const HelpArticle = () => {
   const { articleId } = useParams();
   const [helpful, setHelpful] = useState(null); // null, 'yes', or 'no'
@@ -260,14 +267,14 @@ const HelpArticle = () => {
 
   if (!article) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
             Article Not Found
           </h1>
           <Link
             to="/help"
-            className="text-teal-600 dark:text-teal-400 hover:underline"
+            className="text-teal-600 hover:underline"
           >
             Return to Help Center
           </Link>
@@ -283,32 +290,23 @@ const HelpArticle = () => {
     console.log(`Article feedback: ${value}`);
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
   const renderContent = (item) => {
     switch (item.type) {
       case 'paragraph':
-        return <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{item.text}</p>;
+        return <p className="text-gray-700 leading-relaxed">{item.text}</p>;
 
       case 'heading':
-        return <h2 className="text-2xl font-bold text-gray-900 dark:text-white mt-8 mb-4">{item.text}</h2>;
+        return <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">{item.text}</h2>;
 
       case 'subheading':
-        return <h3 className="text-xl font-semibold text-gray-900 dark:text-white mt-6 mb-3">{item.text}</h3>;
+        return <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">{item.text}</h3>;
 
       case 'list':
         return (
           <ul className="space-y-2 ml-6">
             {item.items.map((listItem, idx) => (
-              <li key={idx} className="text-gray-700 dark:text-gray-300 flex items-start">
-                <span className="text-teal-600 dark:text-teal-400 mr-2">•</span>
+              <li key={idx} className="text-gray-700 flex items-start">
+                <span className="text-teal-600 mr-2">•</span>
                 <span>{listItem}</span>
               </li>
             ))}
@@ -319,22 +317,22 @@ const HelpArticle = () => {
         return (
           <ol className="space-y-2 ml-6 list-decimal">
             {item.items.map((listItem, idx) => (
-              <li key={idx} className="text-gray-700 dark:text-gray-300">{listItem}</li>
+              <li key={idx} className="text-gray-700">{listItem}</li>
             ))}
           </ol>
         );
 
       case 'code':
         return (
-          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 font-mono text-sm text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
+          <div className="bg-gray-100 rounded-lg p-4 font-mono text-sm text-gray-800 border border-gray-200">
             {item.text}
           </div>
         );
 
       case 'tip':
         return (
-          <div className="bg-teal-50 dark:bg-teal-900/20 border-l-4 border-teal-500 p-4 rounded-r-lg">
-            <p className="text-teal-900 dark:text-teal-100 font-medium">
+          <div className="bg-teal-50 border-l-4 border-teal-500 p-4 rounded-r-lg">
+            <p className="text-teal-900 font-medium">
               💡 {item.text}
             </p>
           </div>
@@ -342,8 +340,8 @@ const HelpArticle = () => {
 
       case 'warning':
         return (
-          <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 rounded-r-lg">
-            <p className="text-amber-900 dark:text-amber-100 font-medium">
+          <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
+            <p className="text-amber-900 font-medium">
               ⚠️ {item.text}
             </p>
           </div>
@@ -355,58 +353,56 @@ const HelpArticle = () => {
   };
 
   return (
-    <>
-      <Helmet>
-        <title>{article.title} - Help Center - Lisu Dictionary</title>
-        <meta name="description" content={article.content[0]?.text || article.title} />
-      </Helmet>
-
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <PageLayout
+      title={`${article.title} - Help Center - Lisu Dictionary`}
+      description={article.content[0]?.text || article.title}
+    >
+      <div className="min-h-screen bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Breadcrumbs */}
-          <nav className="flex items-center gap-2 text-sm mb-6 text-gray-600 dark:text-gray-400">
-            <Link to="/help" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
+          <nav className="flex items-center gap-2 text-sm mb-6 text-gray-600">
+            <Link to="/help" className="hover:text-teal-600:text-teal-400 transition-colors">
               Help Center
             </Link>
             <ChevronRightIcon className="w-4 h-4" />
             <Link
               to={`/help/category/${article.category.id}`}
-              className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+              className="hover:text-teal-600:text-teal-400 transition-colors"
             >
               {article.category.name}
             </Link>
             <ChevronRightIcon className="w-4 h-4" />
-            <span className="text-gray-900 dark:text-white font-medium">{article.title}</span>
+            <span className="text-gray-900 font-medium">{article.title}</span>
           </nav>
 
           {/* Back Button */}
           <Link
             to={`/help/category/${article.category.id}`}
-            className="inline-flex items-center gap-2 text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-medium mb-8 transition-colors"
+            className="inline-flex items-center gap-2 text-teal-600 hover:text-teal-700:text-teal-300 font-medium mb-8 transition-colors"
           >
             <ArrowLeftIcon className="w-4 h-4" />
             Back to {article.category.name}
           </Link>
 
           {/* Article Header */}
-          <article className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          <article className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
               {article.title}
             </h1>
 
-            <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-8 pb-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-4 text-sm text-gray-600 mb-8 pb-6 border-b border-gray-200">
               <div className="flex items-center gap-2">
                 <ClockIcon className="w-4 h-4" />
                 <span>{article.readTime} read</span>
               </div>
               <div className="flex items-center gap-2">
                 <BookOpenIcon className="w-4 h-4" />
-                <span>Updated {formatDate(article.lastUpdated)}</span>
+                <span>Updated {formatLongDate(article.lastUpdated)}</span>
               </div>
             </div>
 
             {/* Article Content */}
-            <div className="prose prose-lg dark:prose-invert max-w-none space-y-6">
+            <div className="prose prose-lg max-w-none space-y-6">
               {article.content.map((item, index) => (
                 <div key={index}>
                   {renderContent(item)}
@@ -415,9 +411,9 @@ const HelpArticle = () => {
             </div>
 
             {/* Was This Helpful? */}
-            <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+            <div className="mt-12 pt-8 border-t border-gray-200">
               <div className="text-center">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Was this article helpful?
                 </h3>
 
@@ -427,7 +423,7 @@ const HelpArticle = () => {
                       onClick={() => handleFeedback('yes')}
                       className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${helpful === 'yes'
                         ? 'bg-teal-600 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200:bg-gray-600'
                         }`}
                     >
                       {helpful === 'yes' ? (
@@ -441,7 +437,7 @@ const HelpArticle = () => {
                       onClick={() => handleFeedback('no')}
                       className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${helpful === 'no'
                         ? 'bg-red-600 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200:bg-gray-600'
                         }`}
                     >
                       {helpful === 'no' ? (
@@ -453,8 +449,8 @@ const HelpArticle = () => {
                     </button>
                   </div>
                 ) : (
-                  <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-lg p-6">
-                    <p className="text-teal-900 dark:text-teal-100 font-medium">
+                  <div className="bg-teal-50 border border-teal-200 rounded-lg p-6">
+                    <p className="text-teal-900 font-medium">
                       Thank you for your feedback!
                       {helpful === 'no' && ' We\'re sorry this didn\'t help. Please contact support for more assistance.'}
                     </p>
@@ -467,7 +463,7 @@ const HelpArticle = () => {
           {/* Related Articles */}
           {article.relatedArticles && article.relatedArticles.length > 0 && (
             <div className="mt-12">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 Related Articles
               </h2>
               <div className="grid sm:grid-cols-2 gap-4">
@@ -478,13 +474,13 @@ const HelpArticle = () => {
                     <Link
                       key={relatedSlug}
                       to={`/help/article/${relatedSlug}`}
-                      className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 hover:border-teal-500 dark:hover:border-teal-400 hover:shadow-md transition-all group"
+                      className="bg-white rounded-lg border border-gray-200 p-5 hover:border-teal-500:border-teal-400 hover:shadow-md transition-all group"
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                        <h3 className="font-semibold text-gray-900 group-hover:text-teal-600:text-teal-400 transition-colors">
                           {related.title}
                         </h3>
-                        <ChevronRightIcon className="w-5 h-5 text-gray-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 group-hover:translate-x-1 transition-all flex-shrink-0" />
+                        <ChevronRightIcon className="w-5 h-5 text-gray-400 group-hover:text-teal-600:text-teal-400 group-hover:translate-x-1 transition-all flex-shrink-0" />
                       </div>
                     </Link>
                   );
@@ -509,7 +505,7 @@ const HelpArticle = () => {
           </div>
         </div>
       </div>
-    </>
+    </PageLayout>
   );
 };
 
