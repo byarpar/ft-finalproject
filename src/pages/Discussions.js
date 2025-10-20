@@ -234,6 +234,8 @@ const Discussions = () => {
     <PageLayout
       title="Community Discussions - Lisu Dictionary"
       description="Join discussions about Lisu language, culture, and translations. Share knowledge and connect with the community."
+      fullWidth={true}
+      background=""
     >
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-teal-50 transition-colors duration-200">
         {/* Header Section - Oxford Dictionary Style */}

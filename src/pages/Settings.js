@@ -518,6 +518,8 @@ const Settings = () => {
     <PageLayout
       title="Account Settings"
       description="Manage your profile, security, notifications, and privacy settings"
+      fullWidth={true}
+      background=""
     >
       <div className="min-h-screen bg-gray-50">
         <HeroNavbar />

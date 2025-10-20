@@ -93,6 +93,8 @@ const TermsOfService = () => {
     <PageLayout
       title="Terms of Service - Lisu Dictionary"
       description="Read the Terms of Service for Lisu Dictionary. Understand your rights and responsibilities when using our platform."
+      fullWidth={true}
+      background=""
     >
       <div className="min-h-screen bg-gray-50">
         {/* Hero Section */}

@@ -121,6 +121,8 @@ const Contact = () => {
     <PageLayout
       title="Contact Us - Lisu Dictionary"
       description="Have questions or feedback? Get in touch with the Lisu Dictionary team. We're here to help."
+      fullWidth={true}
+      background=""
     >
       <div className="min-h-screen bg-white transition-colors duration-200">
         {/* Hero Section */}

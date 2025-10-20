@@ -290,6 +290,8 @@ const Contribute = () => {
     <PageLayout
       title="Contribute - Lisu Dictionary"
       description="Contribute to the Lisu Dictionary. Share your knowledge, add new words, improve definitions, and help preserve the Lisu language for future generations."
+      fullWidth={true}
+      background=""
     >
       <div className="min-h-screen bg-gray-50">
         {/* Hero Section */}

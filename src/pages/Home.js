@@ -31,8 +31,8 @@ const Home = () => {
   const fetchFeaturedWords = useCallback(async () => {
     try {
       setIsLoadingWords(true);
-      // Get top words by frequency score for featured section (limit to 4 for better display)
-      const response = await wordsAPI.getWords({ limit: 4, sort: 'frequency_score', order: 'DESC' });
+      // Get recently added words for featured section (limit to 4 for better display)
+      const response = await wordsAPI.getWords({ limit: 4, sort: 'created_at', order: 'DESC' });
       const words = response.data?.words || response.words || [];
       console.log('Fetched featured words:', words);
       setFeaturedWords(words);
@@ -77,6 +77,8 @@ const Home = () => {
     <PageLayout
       title="Lisu English Dictionary - Learn, Explore, Connect"
       description="Your comprehensive Lisu-English dictionary. Discover meanings, pronunciations, and cultural insights. Join our vibrant community of language learners and native speakers."
+      fullWidth={true}
+      background=""
     >
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-teal-50 transition-colors duration-200">
         {/* Hero Section - Modern Minimalist Design */}

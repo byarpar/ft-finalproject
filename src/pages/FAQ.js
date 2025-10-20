@@ -403,6 +403,8 @@ const FAQ = () => {
     <PageLayout
       title="Frequently Asked Questions - Lisu Dictionary"
       description="Find quick answers to common questions about the Lisu Dictionary, including how to search, contribute, and learn about the Lisu language and culture."
+      fullWidth={true}
+      background=""
     >
       <div className="min-h-screen bg-gray-50">
         {/* Hero Section */}

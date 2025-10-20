@@ -591,10 +591,6 @@ const Login = () => {
                     'Log In'
                   )}
                 </button>
-                {/* Keyboard hint */}
-                <p className="mt-2 text-xs text-gray-500 text-center">
-                  Press <kbd className="px-2 py-1 bg-gray-200 rounded text-xs font-mono">Enter</kbd> to submit or <kbd className="px-2 py-1 bg-gray-200 rounded text-xs font-mono">Esc</kbd> to clear
-                </p>
               </div>
 
               {/* Divider */}

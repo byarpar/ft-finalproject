@@ -104,6 +104,8 @@ const Members = () => {
     <PageLayout
       title="Community Members - Lisu Dictionary"
       description="Connect with the Lisu Dictionary community. Meet fellow learners, native speakers, and language enthusiasts passionate about preserving the Lisu language."
+      fullWidth={true}
+      background=""
     >
       <div className="min-h-screen bg-gray-50">
         {/* Header Section - Oxford Dictionary Style */}

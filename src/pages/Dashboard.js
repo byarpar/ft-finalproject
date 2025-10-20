@@ -325,6 +325,8 @@ const Dashboard = () => {
     <PageLayout
       title={`Dashboard - ${displayUser.full_name || displayUser.username}`}
       description="View your personalized activity, stats, saved items, and recommendations"
+      fullWidth={true}
+      background=""
     >
       <div className="min-h-screen bg-gray-50">
         {/* Welcome Section */}

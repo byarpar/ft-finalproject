@@ -433,6 +433,8 @@ const Chat = () => {
     <PageLayout
       title="Chat - Lisu Dictionary"
       description="Real-time messaging and communication platform"
+      fullWidth={true}
+      background=""
     >
       {/* Main Container */}
       <div className="h-screen flex flex-col">

@@ -262,8 +262,8 @@ const VerifyEmail = () => {
     <PageLayout
       title="Verify Email - Lisu Dictionary"
       description="Verify your email address to activate your Lisu Dictionary account and access all features."
-      background="bg-gradient-to-br from-gray-50 to-teal-50"
-      fullWidth
+      fullWidth={true}
+      background=""
     >
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-teal-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full">

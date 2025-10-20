@@ -377,6 +377,8 @@ const WordDetail = () => {
     <PageLayout
       title={word ? `${word.word_lisu || word.word} - Lisu Dictionary` : 'Word Detail - Lisu Dictionary'}
       description={word ? `Definition and usage of ${word.word_lisu || word.word} in the Lisu Dictionary` : 'View word details'}
+      fullWidth={true}
+      background=""
     >
       <div className="min-h-screen bg-gray-50">
         {/* Oxford-Style Header Navigation */}

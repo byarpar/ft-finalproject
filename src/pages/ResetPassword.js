@@ -276,8 +276,8 @@ const ResetPassword = () => {
     <PageLayout
       title="Reset Password - Lisu Dictionary"
       description="Set a new password for your Lisu Dictionary account."
-      background="bg-gradient-to-br from-gray-50 to-teal-50"
-      fullWidth
+      fullWidth={true}
+      background=""
     >
       <div className="min-h-screen flex flex-col">
         {/* Hero Section - Very Minimal */}

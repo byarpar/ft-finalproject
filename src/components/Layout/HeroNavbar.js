@@ -2,16 +2,20 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   BellIcon,
-  UserCircleIcon,
-  ArrowRightCircleIcon,
-  UserPlusIcon,
   UserIcon,
   ArrowRightOnRectangleIcon,
   ChartPieIcon,
   Cog6ToothIcon,
   ShieldCheckIcon,
-  QuestionMarkCircleIcon,
-  ChatBubbleLeftRightIcon
+  ChatBubbleLeftRightIcon,
+  Bars3Icon,
+  XMarkIcon,
+  HomeIcon,
+  ChatBubbleBottomCenterTextIcon,
+  InformationCircleIcon,
+  BookOpenIcon,
+  PlusCircleIcon,
+  EnvelopeIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
 import { notificationsAPI } from '../../services/notificationsAPI';
@@ -26,13 +30,12 @@ const HeroNavbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [userProfileDropdownOpen, setUserProfileDropdownOpen] = useState(false);
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
 
-  const dropdownRef = useRef(null);
   const userDropdownRef = useRef(null);
   const notificationDropdownRef = useRef(null);
 
@@ -46,7 +49,6 @@ const HeroNavbar = () => {
   };
 
   // Close dropdowns when clicking outside
-  useClickOutside(dropdownRef, () => setProfileDropdownOpen(false));
   useClickOutside(userDropdownRef, () => setUserProfileDropdownOpen(false));
   useClickOutside(notificationDropdownRef, () => setNotificationDropdownOpen(false));
 
@@ -155,8 +157,9 @@ const HeroNavbar = () => {
               className="w-14 h-14 object-contain"
             />
           </div>
-          <div className="text-white font-light text-2xl tracking-[0.3em] uppercase">
-            LISU DICT
+          <div className="text-white">
+            <h1 className="text-xl font-bold tracking-wide uppercase">LISU</h1>
+            <p className="text-xs font-light tracking-widest uppercase -mt-1">DICTIONARY</p>
           </div>
         </Link>
 
@@ -166,7 +169,7 @@ const HeroNavbar = () => {
             <Link
               to="/"
               className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/')
-                ? 'bg-white/10 text-white border-b-2 border-white'
+                ? 'bg-white/10 text-white'
                 : 'text-white hover:text-teal-100 hover:bg-white/5'
                 }`}
             >
@@ -175,7 +178,7 @@ const HeroNavbar = () => {
             <Link
               to="/discussions"
               className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/discussions')
-                ? 'bg-white/10 text-white border-b-2 border-white'
+                ? 'bg-white/10 text-white'
                 : 'text-white hover:text-teal-100 hover:bg-white/5'
                 }`}
             >
@@ -184,7 +187,7 @@ const HeroNavbar = () => {
             <Link
               to="/about"
               className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/about')
-                ? 'bg-white/10 text-white border-b-2 border-white'
+                ? 'bg-white/10 text-white'
                 : 'text-white hover:text-teal-100 hover:bg-white/5'
                 }`}
             >
@@ -195,71 +198,50 @@ const HeroNavbar = () => {
 
         {/* Top Right Icons */}
         <div className="flex items-center gap-3">
-          {/* Help Icon - Only visible when not logged in */}
-          {!user && (
-            <Link
-              to="/help"
-              className="p-3 rounded-lg transition-all duration-200"
-              aria-label="Help Center"
-              title="Help Center"
-            >
-              <QuestionMarkCircleIcon className="w-6 h-6 text-white" />
-            </Link>
-          )}
-
           {!user ? (
             <>
-              {/* Desktop: Show profile dropdown */}
-              <div className="hidden md:block relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="p-3 rounded-lg transition-all duration-200"
-                  aria-label="Profile menu"
-                >
-                  <UserCircleIcon className="w-6 h-6 text-white" />
-                </button>
-
-                {profileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50">
-                    <Link
-                      to="/login"
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-teal-50:bg-gray-700 transition-colors"
-                      onClick={() => setProfileDropdownOpen(false)}
-                    >
-                      <ArrowRightCircleIcon className="w-4 h-4 text-teal-600" />
-                      Log In
-                    </Link>
-                    <Link
-                      to="/register"
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-teal-50:bg-gray-700 transition-colors"
-                      onClick={() => setProfileDropdownOpen(false)}
-                    >
-                      <UserPlusIcon className="w-4 h-4 text-teal-600" />
-                      Sign Up
-                    </Link>
-                  </div>
-                )}
-              </div>
-
-              {/* Mobile: Show login/register buttons */}
-              <div className="md:hidden flex items-center gap-3">
+              {/* Desktop: Login/Sign Up buttons */}
+              <div className="hidden md:flex items-center gap-3">
                 <Link
                   to="/login"
-                  className="p-2 text-white transition-colors"
-                  title="Log In"
-                  aria-label="Log In"
+                  className="px-6 py-2.5 text-sm font-medium text-white bg-white/20 hover:bg-white/30 rounded-full transition-all duration-200 backdrop-blur-sm"
                 >
-                  <ArrowRightOnRectangleIcon className="w-6 h-6" />
+                  Log In
                 </Link>
                 <Link
                   to="/register"
-                  className="p-2 text-white transition-colors"
-                  title="Sign Up"
-                  aria-label="Sign Up"
+                  className="px-6 py-2.5 text-sm font-medium text-teal-700 bg-white hover:bg-gray-50 rounded-full transition-all duration-200 shadow-lg"
                 >
-                  <UserPlusIcon className="w-6 h-6" />
+                  Sign Up
                 </Link>
               </div>
+
+              {/* Mobile Menu Button - Show only when not logged in */}
+              <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="md:hidden relative p-2.5 text-white bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 backdrop-blur-sm border border-white/20 shadow-lg group"
+                aria-label="Toggle menu"
+              >
+                <div className="relative w-6 h-6 flex items-center justify-center">
+                  {/* Animated Hamburger/Close Icon */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Bars3Icon
+                      className={`w-6 h-6 transition-all duration-300 ${isOpen
+                        ? 'opacity-0 rotate-180 scale-0'
+                        : 'opacity-100 rotate-0 scale-100'
+                        }`}
+                    />
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <XMarkIcon
+                      className={`w-6 h-6 transition-all duration-300 ${isOpen
+                        ? 'opacity-100 rotate-0 scale-100'
+                        : 'opacity-0 -rotate-180 scale-0'
+                        }`}
+                    />
+                  </div>
+                </div>
+              </button>
             </>
           ) : (
             <>
@@ -430,15 +412,6 @@ const HeroNavbar = () => {
                       onClick={() => setUserProfileDropdownOpen(false)}
                     />
                     <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
-                      <div className="px-4 py-3 border-b border-gray-200">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {user.full_name || user.username}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate">
-                          {user.email}
-                        </p>
-                      </div>
-
                       <div className="py-1">
                         <Link
                           to={`/users/${user.id}`}
@@ -499,8 +472,220 @@ const HeroNavbar = () => {
               </div>
             </>
           )}
+
+          {/* Mobile Menu Button - Animated Professional Design (for logged in users) */}
+          {user && (
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="md:hidden relative p-2.5 text-white bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 ml-2 backdrop-blur-sm border border-white/20 shadow-lg group"
+              aria-label="Toggle menu"
+            >
+              <div className="relative w-6 h-6 flex items-center justify-center">
+                {/* Animated Hamburger/Close Icon */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Bars3Icon
+                    className={`w-6 h-6 transition-all duration-300 ${isOpen
+                      ? 'opacity-0 rotate-180 scale-0'
+                      : 'opacity-100 rotate-0 scale-100'
+                      }`}
+                  />
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <XMarkIcon
+                    className={`w-6 h-6 transition-all duration-300 ${isOpen
+                      ? 'opacity-100 rotate-0 scale-100'
+                      : 'opacity-0 -rotate-180 scale-0'
+                      }`}
+                  />
+                </div>
+              </div>
+
+              {/* Notification badge on menu button if user has unread notifications */}
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 ring-2 ring-teal-600 animate-pulse">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      {isOpen && (
+        <div className="md:hidden bg-white/95 backdrop-blur-sm border-t border-white/20">
+          {/* Only show navigation links when logged in */}
+          {user && (
+            <>
+              {/* Navigation Links - Always show these main links when logged in */}
+              <div className="px-4 pt-4 pb-2 space-y-1">
+                <Link
+                  to="/"
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/')
+                    ? 'bg-teal-50 text-teal-700'
+                    : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                  <HomeIcon className="w-5 h-5 mr-3 text-gray-500" />
+                  Home
+                </Link>
+                <Link
+                  to="/discussions"
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/discussions')
+                    ? 'bg-teal-50 text-teal-700'
+                    : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                  <ChatBubbleBottomCenterTextIcon className="w-5 h-5 mr-3 text-gray-500" />
+                  Discussions
+                </Link>
+                <Link
+                  to="/about"
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/about')
+                    ? 'bg-teal-50 text-teal-700'
+                    : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                  <InformationCircleIcon className="w-5 h-5 mr-3 text-gray-500" />
+                  About Us
+                </Link>
+              </div>
+
+              {/* Additional links */}
+              <div className="px-4 pb-4 space-y-1">
+                <Link
+                  to="/dictionary"
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/dictionary')
+                    ? 'bg-teal-50 text-teal-700'
+                    : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                  <BookOpenIcon className="w-5 h-5 mr-3 text-gray-500" />
+                  Dictionary
+                </Link>
+                <Link
+                  to="/contribute"
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/contribute')
+                    ? 'bg-teal-50 text-teal-700'
+                    : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                  <PlusCircleIcon className="w-5 h-5 mr-3 text-gray-500" />
+                  Contribute
+                </Link>
+                <Link
+                  to="/contact"
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/contact')
+                    ? 'bg-teal-50 text-teal-700'
+                    : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                  <EnvelopeIcon className="w-5 h-5 mr-3 text-gray-500" />
+                  Contact
+                </Link>
+              </div>
+            </>
+          )}
+
+          {/* User Section for Mobile */}
+          {user ? (
+            <div className="px-4 py-4 border-t border-gray-200">
+              <div className="space-y-1">
+                <Link
+                  to={`/users/${user.id}`}
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                >
+                  <UserIcon className="w-5 h-5 mr-3 text-gray-400" />
+                  My Profile
+                </Link>
+                <Link
+                  to="/chat"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                >
+                  <ChatBubbleLeftRightIcon className="w-5 h-5 mr-3 text-gray-400" />
+                  Messages
+                </Link>
+                <Link
+                  to="/notifications"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                >
+                  <BellIcon className="w-5 h-5 mr-3 text-gray-400" />
+                  Notifications
+                  {unreadCount > 0 && (
+                    <span className="ml-auto px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full">
+                      {unreadCount}
+                    </span>
+                  )}
+                </Link>
+                <Link
+                  to="/dashboard"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                >
+                  <ChartPieIcon className="w-5 h-5 mr-3 text-gray-400" />
+                  Dashboard
+                </Link>
+                <Link
+                  to="/settings"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                >
+                  <Cog6ToothIcon className="w-5 h-5 mr-3 text-gray-400" />
+                  Settings
+                </Link>
+                {user.role === 'admin' && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                  >
+                    <ShieldCheckIcon className="w-5 h-5 mr-3 text-teal-600" />
+                    Admin Panel
+                  </Link>
+                )}
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsOpen(false);
+                  }}
+                  className="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-md"
+                >
+                  <ArrowRightOnRectangleIcon className="w-5 h-5 mr-3" />
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="px-4 py-4">
+              <div className="space-y-3">
+                <Link
+                  to="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center justify-center w-full px-6 py-3 text-base font-medium text-gray-700 bg-white border-2 border-teal-600 rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-sm"
+                >
+                  Log In
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center justify-center w-full px-6 py-3 text-base font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-all duration-200 shadow-md"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

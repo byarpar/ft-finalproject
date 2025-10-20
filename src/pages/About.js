@@ -96,6 +96,8 @@ const About = () => {
     <PageLayout
       title="About Us - Preserving the Lisu Language | Lisu Dictionary"
       description="Learn about the Lisu Dictionary project, our mission to preserve and promote the Lisu language, the Lisu people, and where this vibrant culture thrives across Asia."
+      fullWidth={true}
+      background=""
     >
       <div className="min-h-screen bg-gray-50">
         {/* Header Section - Oxford Dictionary Style */}

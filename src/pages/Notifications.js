@@ -440,6 +440,8 @@ const Notifications = () => {
     <PageLayout
       title="Your Notifications - Lisu Dictionary"
       description="View and manage your notifications from the Lisu Dictionary community"
+      fullWidth={true}
+      background=""
     >
       <div className="min-h-screen bg-gray-50">
         {/* Mobile-Optimized Header - Sticky */}

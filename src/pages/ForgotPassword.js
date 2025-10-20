@@ -215,8 +215,8 @@ const ForgotPassword = () => {
     <PageLayout
       title="Forgot Password - Lisu Dictionary"
       description="Reset your Lisu Dictionary password. Enter your email address to receive a password reset link."
-      background="bg-gradient-to-br from-gray-50 to-teal-50"
-      fullWidth
+      fullWidth={true}
+      background=""
     >
       <div className="min-h-screen flex flex-col">
         {/* Hero Section - Very Minimal */}

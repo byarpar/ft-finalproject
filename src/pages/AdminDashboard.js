@@ -85,6 +85,8 @@ const AdminDashboard = () => {
       <PageLayout
         title="Admin Dashboard - Loading"
         description="Loading admin dashboard..."
+        fullWidth={true}
+        background=""
       >
         <div className="flex h-screen bg-gray-100">
           {/* Sidebar Skeleton */}
@@ -190,8 +192,8 @@ const AdminDashboard = () => {
     <PageLayout
       title="Admin Dashboard - Lisu Dictionary"
       description="Administrative interface for managing Lisu Dictionary users, content, and system settings"
-      background="bg-gray-100"
-      fullWidth
+      fullWidth={true}
+      background=""
     >
       <div className="flex h-screen bg-gray-100">
         {/* Sidebar */}

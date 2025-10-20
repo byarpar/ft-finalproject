@@ -150,6 +150,8 @@ const Dictionary = () => {
     <PageLayout
       title={query ? `Search Results for "${query}" - Lisu Dictionary` : 'Dictionary Search - Lisu Dictionary'}
       description={query ? `Search results for ${query} in the Lisu Dictionary` : 'Browse and search the Lisu Dictionary'}
+      fullWidth={true}
+      background=""
     >
       <div className="min-h-screen bg-gray-50">
         {/* Hero Navigation Bar */}

@@ -92,6 +92,8 @@ const PrivacyPolicy = () => {
     <PageLayout
       title="Privacy Policy - Lisu Dictionary"
       description="Learn how Lisu Dictionary collects, uses, and protects your personal data. Your privacy matters to us."
+      fullWidth={true}
+      background=""
     >
       <div className="min-h-screen bg-gray-50">
         {/* Hero Section */}

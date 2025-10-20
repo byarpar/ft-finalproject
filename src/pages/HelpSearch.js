@@ -197,6 +197,8 @@ const HelpSearch = () => {
     <PageLayout
       title={searchQuery ? `Search: "${searchQuery}" - Help Center - Lisu Dictionary` : 'Search Help Center - Lisu Dictionary'}
       description="Search the Lisu Dictionary Help Center for answers to your questions"
+      fullWidth={true}
+      background=""
     >
       <div className="min-h-screen bg-gray-50">
         {/* Header */}

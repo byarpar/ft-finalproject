@@ -368,6 +368,8 @@ const HelpCategory = () => {
     <PageLayout
       title={`${category.name} - Help Center - Lisu Dictionary`}
       description={category.description}
+      fullWidth={true}
+      background=""
     >
       <div className="min-h-screen bg-gray-50">
         {/* Hero Section */}
