@@ -120,7 +120,7 @@ const Home = () => {
         </section>
 
         {/* Search Section */}
-        <section className="py-12 -mt-8 relative z-10">
+        <section className="py-8 sm:py-12 -mt-8 relative z-10">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <SearchBar
               placeholder="Search Lisu or English words..."

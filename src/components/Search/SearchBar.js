@@ -243,20 +243,20 @@ const SearchBar = ({
   const sizeClasses = {
     small: 'h-10 text-sm',
     medium: 'h-12 text-base',
-    large: 'h-14 text-base',
+    large: 'h-14 sm:h-16 text-base sm:text-lg',
   };
 
   const iconSizeClasses = {
     small: 'w-4 h-4',
     medium: 'w-5 h-5',
-    large: 'w-5 h-5',
+    large: 'w-5 h-5 sm:w-6 sm:h-6',
   };
 
   return (
     <div className={`relative ${className}`}>
       <form onSubmit={handleSubmit} className="relative flex items-center bg-white rounded-full shadow-lg overflow-hidden">
         {/* Search Icon */}
-        <div className="pl-3 sm:pl-4 pr-2 pointer-events-none flex-shrink-0">
+        <div className="pl-4 sm:pl-5 pr-2 sm:pr-3 pointer-events-none flex-shrink-0">
           <MagnifyingGlassIcon
             className={`${iconSizeClasses[size]} text-gray-400`}
           />
@@ -280,29 +280,30 @@ const SearchBar = ({
             text-gray-700
             placeholder-gray-400
             disabled:opacity-50 disabled:cursor-not-allowed
-            pr-2
+            pr-2 sm:pr-3
             font-normal
-            text-sm sm:text-base
+            text-base sm:text-lg
+            min-w-0
           `}
           aria-label="Search"
         />
 
         {/* Right Side Icons - Inside the input area */}
-        <div className="flex items-center gap-1 pr-1 sm:pr-1.5 flex-shrink-0">
+        <div className="flex items-center gap-1 sm:gap-2 pr-2 sm:pr-3 flex-shrink-0">
           {/* Voice Search */}
           {showEnhancedFeatures && (
             <button
               type="button"
               onClick={handleVoiceSearch}
               disabled={isListening}
-              className={`p-1.5 sm:p-2 rounded-full transition-colors ${isListening
+              className={`p-2 sm:p-2.5 rounded-full transition-colors ${isListening
                 ? 'bg-red-100 text-red-600 animate-pulse'
-                : 'hover:bg-gray-100:bg-gray-700 text-teal-600'
+                : 'hover:bg-gray-100 text-teal-600'
                 }`}
               title="Voice Search"
               aria-label="Voice search"
             >
-              <MicrophoneIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+              <MicrophoneIcon className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           )}
 
@@ -311,7 +312,7 @@ const SearchBar = ({
             <button
               type="button"
               onClick={handleImageSearch}
-              className="p-1.5 rounded-full hover:bg-gray-100:bg-gray-700 text-teal-600 transition-colors"
+              className="p-1.5 rounded-full hover:bg-gray-100 text-teal-600 transition-colors"
               title="Search by Image"
               aria-label="Image search"
             >
@@ -320,17 +321,17 @@ const SearchBar = ({
           )} */}
 
           {/* Vertical Divider */}
-          <div className="h-5 w-px bg-gray-300 mx-0.5 sm:mx-1"></div>
+          <div className="h-6 sm:h-7 w-px bg-gray-300 mx-1 sm:mx-2"></div>
 
           {/* Search Button */}
           <button
             type="submit"
             disabled={disabled}
-            className="px-3 sm:px-5 py-1.5 sm:py-2 bg-teal-600 hover:bg-teal-700:bg-teal-700 text-white font-semibold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-xs sm:text-sm"
+            className="px-4 sm:px-6 py-2 sm:py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm sm:text-base whitespace-nowrap"
             aria-label="Search"
           >
-            <span className="hidden sm:inline">Search</span>
-            <MagnifyingGlassIcon className="w-4 h-4 sm:hidden" />
+            <span className="hidden xs:inline sm:inline">Search</span>
+            <MagnifyingGlassIcon className="w-5 h-5 xs:hidden sm:hidden" />
           </button>
         </div>
       </form>
