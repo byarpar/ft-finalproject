@@ -147,12 +147,12 @@ const HeroNavbar = () => {
     <div className="relative z-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
         {/* Logo/Brand */}
-        <Link to="/" className="group flex items-center gap-3">
-          <div className="relative w-14 h-14 rounded-xl flex items-center justify-center transition-all">
+        <Link to="/" className="flex items-center gap-3">
+          <div className="relative w-14 h-14 rounded-xl flex items-center justify-center">
             <img
               src="/favicon.svg"
               alt="Lisu Dictionary Logo"
-              className="w-14 h-14 object-contain transition-transform group-hover:scale-105"
+              className="w-14 h-14 object-contain"
             />
           </div>
           <div className="text-white font-light text-2xl tracking-[0.3em] uppercase">

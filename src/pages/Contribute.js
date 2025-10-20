@@ -378,17 +378,6 @@ const Contribute = () => {
                 );
               })}
             </div>
-
-            {/* Keyboard Shortcuts Hint */}
-            <div className="mt-6 hidden sm:block">
-              <p className="text-sm text-teal-100 text-center">
-                Keyboard shortcuts:
-                <kbd className="mx-1 px-2 py-1 text-xs font-semibold bg-white/20 border border-white/30 rounded">N</kbd> New word •
-                <kbd className="mx-1 px-2 py-1 text-xs font-semibold bg-white/20 border border-white/30 rounded">I</kbd> Improve •
-                <kbd className="mx-1 px-2 py-1 text-xs font-semibold bg-white/20 border border-white/30 rounded">A</kbd> Audio •
-                <kbd className="mx-1 px-2 py-1 text-xs font-semibold bg-white/20 border border-white/30 rounded">R</kbd> Reset
-              </p>
-            </div>
           </div>
         </div>
 

@@ -52,9 +52,11 @@ export const notificationsAPI = {
 
   /**
    * Get count of unread notifications
+   * DISABLED: This endpoint has been removed
    */
   getUnreadCount: () => {
-    return api.get('/users/notifications/unread-count').then(res => res.data);
+    // return api.get('/users/notifications/unread-count').then(res => res.data);
+    return Promise.resolve({ count: 0 }); // Return 0 unread notifications
   },
 
   /**

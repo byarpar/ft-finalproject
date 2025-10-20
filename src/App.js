@@ -7,7 +7,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './contexts/AuthContext';
 
 // Components
-import Navbar from './components/Layout/Navbar';
+// import Navbar from './components/Layout/Navbar';
 import Footer from './components/Layout/Footer';
 import PrivateRoute from './components/Auth/PrivateRoute';
 import AdminRoute from './components/Auth/AdminRoute';
@@ -55,6 +55,7 @@ const queryClient = new QueryClient({
 });
 
 // Create a component to handle conditional navbar rendering
+/*
 const ConditionalNavbar = () => {
   const location = useLocation();
   const isAdminPage = location.pathname.startsWith('/admin');
@@ -77,6 +78,7 @@ const ConditionalNavbar = () => {
 
   return <Navbar />;
 };
+*/
 
 // Create a component to handle conditional footer rendering
 const ConditionalFooter = () => {
@@ -102,7 +104,7 @@ function App() {
           <AuthProvider>
             <Router>
               <div className="min-h-screen bg-gray-50 flex flex-col">
-                <ConditionalNavbar />
+                {/* <ConditionalNavbar /> */}
                 <main className="flex-grow">
                   <Routes>
                     <Route path="/" element={<Home />} />
