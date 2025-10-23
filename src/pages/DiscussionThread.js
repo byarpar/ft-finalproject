@@ -85,7 +85,7 @@ const DiscussionThreadEnhanced = () => {
 
   // Nested replies
   const [expandedReplies, setExpandedReplies] = useState(new Set());
-  const [nestedReplies, setNestedReplies] = useState({});
+  // Note: nestedReplies state removed - backend returns replies in answer.replies array
 
   // Image lightbox state
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -139,8 +139,8 @@ const DiscussionThreadEnhanced = () => {
       const response = await answersAPI.getAnswersForDiscussion(id);
       const answersData = response.data?.answers || response.answers || [];
 
-      // Normalize images data for each answer
-      const normalizedAnswers = answersData.map(answer => {
+      // Normalize images data for each answer (including nested replies)
+      const normalizeAnswerImages = (answer) => {
         let images = [];
 
         // Handle different image formats
@@ -160,16 +160,23 @@ const DiscussionThreadEnhanced = () => {
         // Ensure images is an array
         images = Array.isArray(images) ? images : [];
 
+        // Recursively normalize nested replies
+        const replies = answer.replies && Array.isArray(answer.replies)
+          ? answer.replies.map(reply => normalizeAnswerImages(reply))
+          : [];
+
         return {
           ...answer,
-          images
+          images,
+          replies
         };
-      });
+      };
 
-      // Organize nested replies
-      const organized = organizeNestedReplies(normalizedAnswers);
-      setAnswers(organized.topLevel);
-      setNestedReplies(organized.nested);
+      const normalizedAnswers = answersData.map(answer => normalizeAnswerImages(answer));
+
+      // Backend already returns nested structure - only show top-level answers
+      const topLevelAnswers = normalizedAnswers.filter(answer => !answer.parent_answer_id);
+      setAnswers(topLevelAnswers);
     } catch (err) {
       console.error('Error fetching answers:', err);
     }
@@ -203,23 +210,8 @@ const DiscussionThreadEnhanced = () => {
   }, [fetchRelatedDiscussions]);
 
   // Organize nested replies
-  const organizeNestedReplies = (answersArray) => {
-    const topLevel = [];
-    const nested = {};
-
-    answersArray.forEach(answer => {
-      if (answer.parent_answer_id) {
-        if (!nested[answer.parent_answer_id]) {
-          nested[answer.parent_answer_id] = [];
-        }
-        nested[answer.parent_answer_id].push(answer);
-      } else {
-        topLevel.push(answer);
-      }
-    });
-
-    return { topLevel, nested };
-  };
+  // Backend already returns nested replies in answer.replies array
+  // No need for client-side organization
 
   // Sort replies
   const sortReplies = (replies) => {
@@ -389,6 +381,11 @@ const DiscussionThreadEnhanced = () => {
       return;
     }
 
+    if (replyContent.trim().length < 10) {
+      toast.error('Reply must be at least 10 characters long');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
 
@@ -433,6 +430,16 @@ const DiscussionThreadEnhanced = () => {
 
   // Handle save edit
   const handleSaveEdit = async (answerId) => {
+    if (!editContent.trim()) {
+      toast.error('Content is required');
+      return;
+    }
+
+    if (editContent.trim().length < 10) {
+      toast.error('Content must be at least 10 characters long');
+      return;
+    }
+
     try {
       await answersAPI.updateAnswer(answerId, { content: editContent });
       toast.success('Reply updated successfully');
@@ -490,6 +497,11 @@ const DiscussionThreadEnhanced = () => {
 
     if (!editedContent.trim()) {
       toast.error('Content is required');
+      return;
+    }
+
+    if (editedContent.trim().length < 10) {
+      toast.error('Content must be at least 10 characters long');
       return;
     }
 
@@ -946,23 +958,24 @@ const DiscussionThreadEnhanced = () => {
                       >
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 via-cyan-500 to-blue-500 p-0.5 hover:scale-110 transition-transform duration-300">
                           <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-teal-50 to-cyan-50 flex items-center justify-center">
-                            {discussion.author_profile_photo ? (
+                            {discussion.user_data?.display_picture && (
                               <img
-                                src={discussion.author_profile_photo}
-                                alt={discussion.author_name || 'User'}
+                                src={discussion.user_data.display_picture}
+                                alt={discussion.user_data?.username || 'User'}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
                                   e.target.style.display = 'none';
-                                  e.target.nextElementSibling.style.display = 'flex';
                                 }}
                               />
-                            ) : null}
-                            <span className={`text-sm font-bold text-teal-600 ${discussion.author_profile_photo ? 'hidden' : ''}`}>
-                              {(discussion.author_name || 'A').charAt(0).toUpperCase()}
-                            </span>
+                            )}
+                            {!discussion.user_data?.display_picture && (
+                              <span className="text-sm font-bold text-teal-600">
+                                {(discussion.user_data?.username || 'A').charAt(0).toUpperCase()}
+                              </span>
+                            )}
                           </div>
                         </div>
-                        {discussion.author_role === 'admin' && (
+                        {discussion.user_data?.role === 'admin' && (
                           <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center">
                             <CheckBadgeIcon className="w-3.5 h-3.5 text-red-500" />
                           </div>
@@ -973,7 +986,7 @@ const DiscussionThreadEnhanced = () => {
                           to={`/users/${discussion.author_id}`}
                           className="font-semibold text-sm text-gray-900 hover:text-teal-600:text-teal-400 transition-colors"
                         >
-                          {discussion.author_name || 'Anonymous'}
+                          {discussion.user_data?.username || 'Anonymous'}
                         </Link>
                         <div className="flex items-center gap-1 text-xs text-gray-500">
                           <ClockIcon className="w-3.5 h-3.5" />
@@ -1556,7 +1569,7 @@ const DiscussionThreadEnhanced = () => {
                               <ChatBubbleLeftRightIcon className="w-4 h-4" />
                               <span className="text-xs sm:text-sm">Reply</span>
                             </button>
-                            {nestedReplies[answer.id] && nestedReplies[answer.id].length > 0 && (
+                            {answer.replies && answer.replies.length > 0 && (
                               <button
                                 onClick={() => toggleNestedReplies(answer.id)}
                                 className="min-h-[44px] flex items-center gap-1 px-3 sm:px-0 text-gray-600 hover:text-gray-800:text-gray-200 transition-colors active:scale-95 touch-manipulation"
@@ -1564,12 +1577,12 @@ const DiscussionThreadEnhanced = () => {
                                 {expandedReplies.has(answer.id) ? (
                                   <>
                                     <ChevronUpIcon className="w-4 h-4" />
-                                    <span className="text-xs sm:text-sm">Hide {nestedReplies[answer.id].length} {nestedReplies[answer.id].length === 1 ? 'reply' : 'replies'}</span>
+                                    <span className="text-xs sm:text-sm">Hide {answer.replies.length} {answer.replies.length === 1 ? 'reply' : 'replies'}</span>
                                   </>
                                 ) : (
                                   <>
                                     <ChevronDownIcon className="w-4 h-4" />
-                                    <span className="text-xs sm:text-sm">View {nestedReplies[answer.id].length} {nestedReplies[answer.id].length === 1 ? 'reply' : 'replies'}</span>
+                                    <span className="text-xs sm:text-sm">View {answer.replies.length} {answer.replies.length === 1 ? 'reply' : 'replies'}</span>
                                   </>
                                 )}
                               </button>
@@ -1577,9 +1590,9 @@ const DiscussionThreadEnhanced = () => {
                           </div>
 
                           {/* Nested Replies */}
-                          {expandedReplies.has(answer.id) && nestedReplies[answer.id] && (
+                          {expandedReplies.has(answer.id) && answer.replies && answer.replies.length > 0 && (
                             <div className="mt-3 sm:mt-4 ml-4 sm:ml-8 space-y-3 sm:space-y-4 border-l-2 border-gray-300 pl-3 sm:pl-4">
-                              {nestedReplies[answer.id].map((nestedReply) => (
+                              {answer.replies.map((nestedReply) => (
                                 <div key={nestedReply.id} className="bg-gray-50 rounded-lg p-3 sm:p-4">
                                   <div className="flex items-start justify-between mb-2 gap-2">
                                     <Link

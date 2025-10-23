@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { notificationsAPI } from '../../services/notificationsAPI';
 import socketClient from '../../services/socketClient';
 import toast from 'react-hot-toast';
+import useMobileDetect from '../../hooks/useMobileDetect';
 import {
   Bars3Icon,
   XMarkIcon,
@@ -23,24 +24,14 @@ const Navbar = () => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [profileImageLoaded, setProfileImageLoaded] = useState(false);
+  const [profileImageError, setProfileImageError] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Detect mobile viewport
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768); // md breakpoint in Tailwind
-    };
-
-    // Initial check
-    checkMobile();
-
-    // Listen for window resize
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  // Use shared mobile detection hook
+  const isMobile = useMobileDetect();
 
   // Fetch notifications when user is logged in
   useEffect(() => {
@@ -50,14 +41,16 @@ const Navbar = () => {
     }
   }, [user]);
 
+  // Reset profile image state when user changes (e.g., after login)
+  useEffect(() => {
+    setProfileImageLoaded(false);
+    setProfileImageError(false);
+  }, [user?.profile_photo_url]);
+
   // Listen for real-time notifications via Socket.IO
   useEffect(() => {
     if (user && socketClient.isConnected()) {
-      console.log('Setting up notification listener in Navbar');
-
       socketClient.onNewNotification((notificationData) => {
-        console.log('🔔 New notification received in Navbar:', notificationData);
-
         // Increment unread count
         setUnreadCount(prev => prev + 1);
 
@@ -99,7 +92,7 @@ const Navbar = () => {
     setLoadingNotifications(true);
     try {
       const response = await notificationsAPI.getNotifications({ limit: 3 });
-      setNotifications(response.data || []);
+      setNotifications(response.data?.notifications || []);
     } catch (error) {
       console.error('Error fetching notifications:', error);
       setNotifications([]);
@@ -386,26 +379,26 @@ const Navbar = () => {
                     className="flex items-center space-x-2 p-2 hover:bg-gray-100:bg-gray-700 rounded-full transition-all duration-200"
                     aria-label="User menu"
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-teal-600 to-teal-500 rounded-full flex items-center justify-center shadow-sm overflow-hidden">
-                      {user.profile_photo_url ? (
+                    <div className="w-8 h-8 bg-gradient-to-br from-teal-600 to-teal-500 rounded-full flex items-center justify-center shadow-sm overflow-hidden relative">
+                      {user.profile_photo_url && !profileImageError ? (
                         <img
                           src={user.profile_photo_url}
                           alt={user.full_name || 'User'}
-                          className="w-full h-full object-cover"
+                          className={`w-full h-full object-cover transition-opacity duration-300 ${profileImageLoaded ? 'opacity-100' : 'opacity-0'
+                            }`}
                           crossOrigin="anonymous"
                           referrerPolicy="no-referrer"
-                          onLoad={(e) => {
-                            console.log('Navbar image loaded successfully:', user.username || user.email);
-                            e.target.style.display = 'block';
-                          }}
-                          onError={(e) => {
-                            console.log('Navbar image failed to load:', user.username || user.email, user.profile_photo_url);
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'flex';
+                          onLoad={() => setProfileImageLoaded(true)}
+                          onError={() => {
+                            setProfileImageError(true);
+                            setProfileImageLoaded(false);
                           }}
                         />
                       ) : null}
-                      <UserIcon className={`w-5 h-5 text-white ${user.profile_photo_url ? 'hidden' : ''}`} />
+                      <UserIcon
+                        className={`w-5 h-5 text-white transition-opacity duration-300 ${user.profile_photo_url && profileImageLoaded && !profileImageError ? 'opacity-0 absolute' : 'opacity-100'
+                          }`}
+                      />
                     </div>
                   </button>
 
@@ -536,19 +529,24 @@ const Navbar = () => {
           {user ? (
             <div className="px-4 py-4 border-t border-gray-200">
               <div className="flex items-center mb-4 p-3 bg-gray-50 rounded-lg">
-                <div className="w-10 h-10 bg-gradient-to-br from-teal-600 to-teal-500 rounded-full flex items-center justify-center shadow-sm overflow-hidden">
-                  {user.profile_photo_url ? (
+                <div className="w-10 h-10 bg-gradient-to-br from-teal-600 to-teal-500 rounded-full flex items-center justify-center shadow-sm overflow-hidden relative">
+                  {user.profile_photo_url && !profileImageError ? (
                     <img
                       src={user.profile_photo_url}
                       alt={user.full_name || 'User'}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
+                      className={`w-full h-full object-cover transition-opacity duration-300 ${profileImageLoaded ? 'opacity-100' : 'opacity-0'
+                        }`}
+                      onLoad={() => setProfileImageLoaded(true)}
+                      onError={() => {
+                        setProfileImageError(true);
+                        setProfileImageLoaded(false);
                       }}
                     />
                   ) : null}
-                  <UserIcon className={`w-5 h-5 text-white ${user.profile_photo_url ? 'hidden' : ''}`} />
+                  <UserIcon
+                    className={`w-5 h-5 text-white transition-opacity duration-300 ${user.profile_photo_url && profileImageLoaded && !profileImageError ? 'opacity-0 absolute' : 'opacity-100'
+                      }`}
+                  />
                 </div>
               </div>
 

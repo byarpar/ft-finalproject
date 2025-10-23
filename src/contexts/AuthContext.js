@@ -44,33 +44,42 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await authAPI.login(email, password);
+
+      // authAPI.login already extracts .data, so response is the actual data object
       const { user: userData, token: authToken } = response.data;
 
       setUser(userData);
       setToken(authToken);
       localStorage.setItem('token', authToken);
 
-      return { success: true };
+      return { success: true, user: userData };
     } catch (error) {
-      const errorData = error.response?.data?.error || error.response?.data;
-      const errorMessage = errorData?.message || errorData || 'Login failed';
-      const errorDetails = errorData?.details || null;
+      // The error.response.data is the full error object from backend
+      const fullErrorResponse = error.response?.data;
+
+      // Extract error details from the backend response structure
+      const errorInfo = fullErrorResponse?.error || {};
+      const errorMessage = errorInfo.message || fullErrorResponse?.message || 'Login failed';
+      const errorDetails = errorInfo.details || null;
+      const errorData = errorInfo.data || {};
 
       return {
         success: false,
         error: {
           message: errorMessage,
-          details: errorDetails
+          details: errorDetails,
+          data: errorData
         }
       };
     }
   };
 
-  const register = async (email, password, username = null) => {
+  const register = async (email, password, full_name, username = null) => {
     try {
       const userData = {
         email,
         password,
+        full_name,
         ...(username && { username })
       };
 
@@ -103,6 +112,34 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
   };
 
+  const loginWithToken = async (authToken) => {
+    try {
+      setToken(authToken);
+      localStorage.setItem('token', authToken);
+
+      // Verify token and get user data
+      const response = await authAPI.verifyToken(authToken);
+      setUser(response.data.user);
+
+      return { success: true };
+    } catch (error) {
+      // Token is invalid, remove it
+      localStorage.removeItem('token');
+      setToken(null);
+      setUser(null);
+
+      const errorData = error.response?.data?.error || error.response?.data;
+      const errorMessage = errorData?.message || errorData || 'Token verification failed';
+
+      return {
+        success: false,
+        error: {
+          message: errorMessage
+        }
+      };
+    }
+  };
+
   const updateUser = (userData) => {
     setUser(prev => ({ ...prev, ...userData }));
   };
@@ -120,6 +157,7 @@ export const AuthProvider = ({ children }) => {
     token,
     loading,
     login,
+    loginWithToken,
     register,
     logout,
     updateUser,

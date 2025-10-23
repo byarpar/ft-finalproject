@@ -35,7 +35,7 @@ const SearchBar = ({
 
   // Fetch suggestions when user types (debounced)
   useEffect(() => {
-    if (!showSuggestions || !value || value.length < 2) {
+    if (!showSuggestions || !value || value.length < 1) {
       setSuggestions([]);
       setShowSuggestionsList(false);
       return;
@@ -357,22 +357,54 @@ const SearchBar = ({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    {/* Lisu Word */}
-                    <div className="text-sm font-bold text-gray-800 mb-0.5 leading-tight">
-                      {word.lisu_word || 'ꓡꓴ'}
-                    </div>
+                    {/* Detect if search is in Lisu script */}
+                    {(() => {
+                      const isLisuSearch = value && value.charCodeAt(0) >= 42192 && value.charCodeAt(0) <= 42239;
 
-                    {/* English Word and Part of Speech Row */}
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <span className="text-xs font-semibold text-teal-600">
-                        {word.english_word}
-                      </span>
-                      {word.part_of_speech && (
-                        <span className="px-1.5 py-0.5 bg-gray-100 text-[10px] font-medium text-gray-500 uppercase tracking-wide rounded">
-                          {typeof word.part_of_speech === 'object' ? word.part_of_speech?.name : word.part_of_speech}
-                        </span>
-                      )}
-                    </div>
+                      if (isLisuSearch) {
+                        // Show Lisu word first for Lisu searches
+                        return (
+                          <>
+                            {/* Lisu Word */}
+                            <div className="text-sm font-bold text-gray-800 mb-0.5 leading-tight">
+                              {word.lisu_word || 'ꓡꓴ'}
+                            </div>
+
+                            {/* English Word and Part of Speech Row */}
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className="text-xs font-semibold text-teal-600">
+                                {word.english_word}
+                              </span>
+                              {word.part_of_speech && (
+                                <span className="px-1.5 py-0.5 bg-gray-100 text-[10px] font-medium text-gray-500 uppercase tracking-wide rounded">
+                                  {typeof word.part_of_speech === 'object' ? word.part_of_speech?.name : word.part_of_speech}
+                                </span>
+                              )}
+                            </div>
+                          </>
+                        );
+                      } else {
+                        // Show English word first for English searches
+                        return (
+                          <>
+                            {/* English Word */}
+                            <div className="text-sm font-bold text-gray-800 mb-0.5 leading-tight flex items-center gap-1.5">
+                              <span>{word.english_word}</span>
+                              {word.part_of_speech && (
+                                <span className="px-1.5 py-0.5 bg-gray-100 text-[10px] font-medium text-gray-500 uppercase tracking-wide rounded">
+                                  {typeof word.part_of_speech === 'object' ? word.part_of_speech?.name : word.part_of_speech}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Lisu Word */}
+                            <div className="text-xs font-semibold text-teal-600 mb-0.5">
+                              {word.lisu_word || 'ꓡꓴ'}
+                            </div>
+                          </>
+                        );
+                      }
+                    })()}
 
                     {/* Definition */}
                     <p className="text-[11px] text-gray-600 leading-relaxed line-clamp-1">

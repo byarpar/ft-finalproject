@@ -29,10 +29,17 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Only redirect on 401 if it's a token issue (not login failure)
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      const isLoginEndpoint = error.config?.url?.includes('/auth/login');
+      const isRegisterEndpoint = error.config?.url?.includes('/auth/register');
+
+      // Don't redirect if it's a login or register attempt failure
+      if (!isLoginEndpoint && !isRegisterEndpoint) {
+        // Token expired or invalid - redirect to login
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -45,11 +52,11 @@ export const authAPI = {
   verifyToken: (token) => api.get('/auth/verify', {
     headers: { Authorization: `Bearer ${token}` }
   }).then(res => res.data),
-  getProfile: () => api.get('/auth/profile').then(res => res.data),
-  updateProfile: (data) => api.put('/auth/profile', data).then(res => res.data),
-  changePassword: (data) => api.put('/auth/change-password', data).then(res => res.data),
-  updatePreferences: (data) => api.put('/auth/preferences', data),
-  deleteAccount: (confirmation) => api.delete('/auth/account', { data: { confirmation } }).then(res => res.data),
+  getProfile: () => api.get('/auth/me').then(res => res.data),
+  updateProfile: (data) => api.put('/users/me/profile', data).then(res => res.data),
+  changePassword: (data) => api.post('/auth/change-password', data).then(res => res.data),
+  updatePreferences: (data) => api.put('/users/me/profile', data).then(res => res.data),
+  deleteAccount: (confirmation) => api.delete('/users/me/account', { data: { confirmation } }).then(res => res.data),
 };
 
 // Words API
@@ -152,7 +159,7 @@ export const answersAPI = {
 export const usersAPI = {
   getAllUsers: (params = {}) => api.get('/users', { params }).then(res => res.data),
   getUserProfile: (userId) => api.get(`/users/${userId}`).then(res => res.data),
-  getUserStats: (userId) => api.get(`/users/${userId}/stats`).then(res => res.data),
+  getUserStats: (userId) => api.get(`/users/${userId}/statistics`).then(res => res.data),
 };
 
 // Search API

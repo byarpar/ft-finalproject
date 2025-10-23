@@ -405,13 +405,6 @@ const VerifyEmail = () => {
                   'Verify Account'
                 )}
               </button>
-
-              {/* Keyboard hints */}
-              {!success && (
-                <p className="mt-2 text-xs text-gray-500 text-center">
-                  Use <kbd className="px-1.5 py-0.5 bg-gray-200 rounded text-xs font-mono">←</kbd> <kbd className="px-1.5 py-0.5 bg-gray-200 rounded text-xs font-mono">→</kbd> to navigate · <kbd className="px-1.5 py-0.5 bg-gray-200 rounded text-xs font-mono">Esc</kbd> to clear
-                </p>
-              )}
             </form>
 
             {/* Helper Links */}

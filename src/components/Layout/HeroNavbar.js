@@ -35,6 +35,8 @@ const HeroNavbar = () => {
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
+  const [profileImageLoaded, setProfileImageLoaded] = useState(false);
+  const [profileImageError, setProfileImageError] = useState(false);
 
   const userDropdownRef = useRef(null);
   const notificationDropdownRef = useRef(null);
@@ -52,6 +54,12 @@ const HeroNavbar = () => {
   useClickOutside(userDropdownRef, () => setUserProfileDropdownOpen(false));
   useClickOutside(notificationDropdownRef, () => setNotificationDropdownOpen(false));
 
+  // Reset profile image state when user changes (e.g., after login)
+  useEffect(() => {
+    setProfileImageLoaded(false);
+    setProfileImageError(false);
+  }, [user?.profile_photo_url]);
+
   // Fetch notifications (top 3 for dropdown)
   const fetchNotifications = async () => {
     if (loadingNotifications) return;
@@ -59,7 +67,7 @@ const HeroNavbar = () => {
     setLoadingNotifications(true);
     try {
       const response = await notificationsAPI.getNotifications({ limit: 3 });
-      setNotifications(response.data || []);
+      setNotifications(response.data?.notifications || []);
     } catch (error) {
       console.error('Error fetching notifications:', error);
       setNotifications([]);
@@ -100,14 +108,10 @@ const HeroNavbar = () => {
   }, [user, notificationDropdownOpen]);
 
   // Handle logout
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/');
-      toast.success('Logged out successfully');
-    } catch (error) {
-      toast.error('Error logging out');
-    }
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+    toast.success('Logged out successfully');
   };
 
   // Handle mark all notifications as read
@@ -306,24 +310,39 @@ const HeroNavbar = () => {
                           notifications.map((notification) => {
                             const actorName = notification.actor_full_name || notification.actor_username || notification.actor_name || 'Someone';
                             const actorInitial = actorName[0]?.toUpperCase() || 'U';
-                            const actorAvatar = notification.actor_profile_photo || notification.actor_avatar;
+                            const actorAvatar = notification.actor_profile_photo || notification.actor_avatar || notification.actor_profile_photo_url;
 
                             return (
                               <button
                                 key={notification.id}
                                 onClick={() => handleNotificationClick(notification)}
-                                className={`w-full text-left px-3 py-2 hover:bg-gray-50:bg-gray-700/50 transition-colors border-b border-gray-100 last:border-b-0 ${!notification.is_read ? 'bg-teal-50/50' : ''
+                                className={`w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${!notification.is_read ? 'bg-teal-50/50' : ''
                                   }`}
                               >
                                 <div className="flex gap-2">
                                   {/* User Avatar or Icon */}
                                   <div className="flex-shrink-0">
                                     {actorAvatar ? (
-                                      <img
-                                        src={actorAvatar}
-                                        alt={actorName}
-                                        className="w-8 h-8 rounded-full object-cover"
-                                      />
+                                      <div className="relative w-8 h-8">
+                                        <img
+                                          src={actorAvatar}
+                                          alt={actorName}
+                                          className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                                          crossOrigin="anonymous"
+                                          referrerPolicy="no-referrer"
+                                          onError={(e) => {
+                                            // Hide broken image and show fallback
+                                            e.target.style.display = 'none';
+                                            const fallback = e.target.nextElementSibling;
+                                            if (fallback) fallback.style.display = 'flex';
+                                          }}
+                                        />
+                                        <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-blue-500 rounded-full items-center justify-center hidden">
+                                          <span className="text-white font-semibold text-xs">
+                                            {actorInitial}
+                                          </span>
+                                        </div>
+                                      </div>
                                     ) : (
                                       <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-blue-500 rounded-full flex items-center justify-center">
                                         <span className="text-white font-semibold text-xs">
@@ -387,20 +406,26 @@ const HeroNavbar = () => {
                   onClick={() => setUserProfileDropdownOpen(!userProfileDropdownOpen)}
                   className="flex items-center gap-2 px-2 py-1.5 text-white font-medium rounded-lg transition-all duration-200"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-teal-600 to-teal-500 rounded-full flex items-center justify-center shadow-sm overflow-hidden">
-                    {user.profile_photo_url ? (
+                  <div className="w-8 h-8 bg-gradient-to-br from-teal-600 to-teal-500 rounded-full flex items-center justify-center shadow-sm overflow-hidden relative">
+                    {user.profile_photo_url && !profileImageError ? (
                       <img
                         src={user.profile_photo_url}
                         alt={user.full_name || user.username || 'User'}
-                        className="w-full h-full object-cover"
+                        className={`w-full h-full object-cover transition-opacity duration-300 ${profileImageLoaded ? 'opacity-100' : 'opacity-0'
+                          }`}
                         crossOrigin="anonymous"
                         referrerPolicy="no-referrer"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
+                        onLoad={() => setProfileImageLoaded(true)}
+                        onError={() => {
+                          setProfileImageError(true);
+                          setProfileImageLoaded(false);
                         }}
                       />
                     ) : null}
-                    <UserIcon className={`w-5 h-5 text-white ${user.profile_photo_url ? 'hidden' : ''}`} />
+                    <UserIcon
+                      className={`w-5 h-5 text-white transition-opacity duration-300 ${user.profile_photo_url && profileImageLoaded && !profileImageError ? 'opacity-0 absolute' : 'opacity-100'
+                        }`}
+                    />
                   </div>
                 </button>
 

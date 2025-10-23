@@ -20,24 +20,35 @@ import PageLayout from '../components/Layout/PageLayout';
 const AuthCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { loginWithToken } = useAuth();
   const [timeoutError, setTimeoutError] = useState(false);
   const [processing, setProcessing] = useState(true);
 
   /**
    * Process authentication callback
    */
-  const processAuth = useCallback(() => {
+  const processAuth = useCallback(async () => {
     const token = searchParams.get('token');
     const error = searchParams.get('error');
 
     if (error) {
+      const email = searchParams.get('email');
+
+      // Handle restorable deleted accounts
+      if (error === 'account_deleted_restorable') {
+        const message = searchParams.get('message') || 'This account has been deleted. You can restore it within 30 days.';
+        navigate('/restore-account', { state: { email, message } });
+        return;
+      }
+
       // Redirect to login with error message
       const errorMessages = {
         authentication_failed: 'Google authentication failed. Please try again.',
         oauth_failed: 'OAuth login failed. Please try again.',
         access_denied: 'Access was denied. Please try again.',
         invalid_request: 'Invalid authentication request.',
+        account_deleted_permanent: searchParams.get('message') || 'This account has been permanently deleted. Please create a new account.',
+        account_deleted: searchParams.get('message') || 'This account has been deleted. If you wish to use this service again, please create a new account.',
       };
       const message = errorMessages[error] || 'An error occurred during authentication.';
       navigate('/login', { state: { error: message } });
@@ -46,12 +57,16 @@ const AuthCallback = () => {
 
     if (token) {
       try {
-        // Store token and redirect to home
-        localStorage.setItem('token', token);
-        login(token);
-        navigate('/');
+        // Use the new loginWithToken method
+        const result = await loginWithToken(token);
+
+        if (result.success) {
+          navigate('/');
+        } else {
+          navigate('/login', { state: { error: result.error.message } });
+        }
       } catch (err) {
-        console.error('Token storage error:', err);
+        console.error('Token processing error:', err);
         navigate('/login', { state: { error: 'Failed to complete authentication. Please try again.' } });
       }
     } else {
@@ -59,7 +74,7 @@ const AuthCallback = () => {
       setTimeoutError(true);
       setProcessing(false);
     }
-  }, [searchParams, navigate, login]);
+  }, [searchParams, navigate, loginWithToken]);
 
   /**
    * Handle keyboard shortcuts
@@ -99,7 +114,7 @@ const AuthCallback = () => {
       window.removeEventListener('keydown', handleKeyDown);
       clearTimeout(timeoutId);
     };
-  }, [searchParams, navigate, login, handleKeyDown, processAuth, processing]);
+  }, [searchParams, navigate, loginWithToken, handleKeyDown, processAuth, processing]);
 
   return (
     <PageLayout

@@ -7,11 +7,26 @@ import {
   LightBulbIcon,
   UserGroupIcon,
   ExclamationCircleIcon,
-  CheckCircleIcon,
-  EyeIcon,
-  EyeSlashIcon
+  CheckCircleIcon
 } from '@heroicons/react/24/outline';
 import PageLayout from '../components/Layout/PageLayout';
+
+// Shared utilities
+import { validateEmail, validateLoginPassword } from '../utils/validation';
+import { usePasswordToggle, useFieldTouch, useFormValidation, useFormKeyboard, useClearForm } from '../hooks/useAuthForm';
+import {
+  createHandleChange,
+  createHandleBlur,
+  focusFirstError,
+  preloadProfileImage,
+  checkAccountDeletionStatus,
+  handleGoogleAuth
+} from '../utils/formHandlers';
+
+// Shared components
+import PasswordToggleButton from '../components/Auth/PasswordToggleButton';
+import FieldError from '../components/Auth/FieldError';
+import GoogleOAuthButton from '../components/Auth/GoogleOAuthButton';
 
 /**
  * Login Page - User authentication with email/password or Google OAuth
@@ -37,17 +52,19 @@ const Login = () => {
     rememberMe: false
   });
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false);
-  const [touched, setTouched] = useState({
+  const [loginSuccess, setLoginSuccess] = useState(false);
+
+  // Custom hooks for form management
+  const { showPassword, togglePasswordVisibility } = usePasswordToggle();
+  const { touched, markTouched, markAllTouched, resetTouched } = useFieldTouch({
     email: false,
     password: false
   });
+  const { errors, setErrors, clearAllErrors } = useFormValidation();
 
   // Refs for focus management
   const emailInputRef = useRef(null);
   const passwordInputRef = useRef(null);
-  const submitButtonRef = useRef(null);
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -61,6 +78,15 @@ const Login = () => {
   useEffect(() => {
     emailInputRef.current?.focus();
   }, []);
+
+  // Handle OAuth error messages from state (redirect from AuthCallback)
+  useEffect(() => {
+    if (location.state?.error) {
+      setErrors({ general: location.state.error, accountDeleted: location.state.error.includes('deleted') });
+      // Clear the state to prevent error from persisting on page refresh
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, location.pathname, navigate, setErrors]);
 
   // Handle OAuth error messages from URL parameters
   useEffect(() => {
@@ -96,82 +122,39 @@ const Login = () => {
       // Clean up URL parameters
       navigate(location.pathname, { replace: true });
     }
-  }, [location.search, location.pathname, navigate]);
+  }, [location.search, location.pathname, navigate, setErrors]);
 
   /**
-   * Real-time validation as user types (only after field is touched)
+   * Field validator - uses shared validation utilities
    */
   const validateField = useCallback((name, value) => {
-    switch (name) {
-      case 'email':
-        if (!value.trim()) {
-          return 'Email is required';
-        } else if (!/\S+@\S+\.\S+/.test(value)) {
-          return 'Please enter a valid email address';
-        }
-        return '';
-
-      case 'password':
-        if (!value) {
-          return 'Password is required';
-        } else if (value.length < 6) {
-          return 'Password must be at least 6 characters';
-        }
-        return '';
-
-      default:
-        return '';
-    }
+    if (name === 'email') return validateEmail(value);
+    if (name === 'password') return validateLoginPassword(value);
+    return '';
   }, []);
 
   /**
-   * Handle input changes with real-time validation
+   * Event handlers using shared utilities
    */
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-
-    // Only validate if field has been touched
-    if (touched[name]) {
-      const fieldError = validateField(name, value);
-      setErrors(prev => ({
-        ...prev,
-        [name]: fieldError,
-        general: '' // Clear general error when user types
-      }));
-    }
-  };
-
-  /**
-   * Mark field as touched on blur for validation
-   */
-  const handleBlur = (e) => {
-    const { name, value } = e.target;
-    setTouched(prev => ({ ...prev, [name]: true }));
-
-    const fieldError = validateField(name, value);
-    if (fieldError) {
-      setErrors(prev => ({ ...prev, [name]: fieldError }));
-    }
-  };
+  const handleChange = createHandleChange(setFormData, validateField, touched, setErrors);
+  const handleBlur = createHandleBlur(validateField, markTouched, setErrors);
 
   /**
    * Validate entire form before submission
    */
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors = {
+      email: validateField('email', formData.email),
+      password: validateField('password', formData.password)
+    };
 
-    const emailError = validateField('email', formData.email);
-    const passwordError = validateField('password', formData.password);
-
-    if (emailError) newErrors.email = emailError;
-    if (passwordError) newErrors.password = passwordError;
+    // Remove empty error messages
+    Object.keys(newErrors).forEach(key => {
+      if (!newErrors[key]) delete newErrors[key];
+    });
 
     setErrors(newErrors);
-    setTouched({ email: true, password: true });
+    markAllTouched();
 
     return Object.keys(newErrors).length === 0;
   };
@@ -183,34 +166,69 @@ const Login = () => {
     e.preventDefault();
 
     if (!validateForm()) {
-      // Focus first error field
-      if (errors.email) {
-        emailInputRef.current?.focus();
-      } else if (errors.password) {
-        passwordInputRef.current?.focus();
-      }
+      // Use shared focus handler
+      focusFirstError(
+        errors,
+        { email: emailInputRef, password: passwordInputRef },
+        ['email', 'password']
+      );
       return;
     }
 
     setLoading(true);
-    setErrors({});
+    clearAllErrors();
 
     try {
       const result = await login(formData.email, formData.password);
 
       if (result.success) {
-        // Success! Navigate to intended destination
-        navigate(from, { replace: true });
+        // Show success state briefly before navigation
+        setLoginSuccess(true);
+
+        // Use shared image preloader
+        await preloadProfileImage(result.user?.profile_photo_url);
+
+        setTimeout(() => {
+          navigate(from, { replace: true });
+        }, 200);
       } else {
         // Handle backend errors
         const errorData = result.error?.data || {};
-        const backendMessage = result.error?.details || result.error?.message || 'Login failed. Please try again.';
+        const backendMessage = result.error?.message || result.error?.details || 'Login failed. Please try again.';
 
-        setErrors({
+        // Set appropriate error states
+        const newErrors = {
           general: backendMessage,
           accountNotFound: errorData.accountNotFound || false,
-          accountDeleted: errorData.accountDeleted || false
-        });
+          accountDeleted: errorData.accountDeleted || false,
+          canRestore: errorData.canRestore || false,
+          deletedEmail: errorData.email || formData.email,
+          incorrectPassword: errorData.incorrectPassword || false
+        };
+
+        // If account is deleted and can be restored, show that info immediately
+        if (errorData.accountDeleted && errorData.canRestore) {
+          newErrors.general = backendMessage; // Already has the days remaining message
+          newErrors.canRestore = true;
+          newErrors.deletedEmail = errorData.email || formData.email;
+        }
+
+        // If incorrect password, highlight the password field
+        if (errorData.incorrectPassword) {
+          newErrors.password = 'Incorrect password';
+          passwordInputRef.current?.focus();
+        }
+
+        // If account not found (and not deleted), highlight the email field
+        if (errorData.accountNotFound && !errorData.accountDeleted) {
+          newErrors.email = 'No account found with this email';
+          emailInputRef.current?.focus();
+
+          // Still check if this is a deleted account (as a fallback)
+          checkAccountDeletionStatus(formData.email, setErrors);
+        }
+
+        setErrors(newErrors);
 
         // Email not verified - redirect to verification page
         if (errorData.requiresVerification) {
@@ -232,42 +250,27 @@ const Login = () => {
   };
 
   /**
-   * Toggle password visibility
-   */
-  const togglePasswordVisibility = () => {
-    setShowPassword(prev => !prev);
-  };
-
-  /**
-   * Handle Google OAuth login
-   */
-  const handleGoogleLogin = () => {
-    // Redirect to backend Google OAuth route
-    window.location.href = `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001'}/api/auth/google`;
-  };
-
-  /**
    * Handle remember me checkbox
    */
   const handleRememberMeChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      rememberMe: e.target.checked
-    }));
+    setFormData(prev => ({ ...prev, rememberMe: e.target.checked }));
   };
+
+  /**
+   * Clear form using shared hook
+   */
+  const clearForm = useClearForm(
+    { email: '', password: '', rememberMe: false },
+    setFormData,
+    clearAllErrors,
+    resetTouched,
+    emailInputRef
+  );
 
   /**
    * Handle keyboard shortcuts
    */
-  const handleKeyDown = (e) => {
-    // Escape key clears form
-    if (e.key === 'Escape') {
-      setFormData({ email: '', password: '', rememberMe: false });
-      setErrors({});
-      setTouched({ email: false, password: false });
-      emailInputRef.current?.focus();
-    }
-  };
+  const handleKeyDown = useFormKeyboard(clearForm, null);
 
   return (
     <PageLayout
@@ -279,7 +282,7 @@ const Login = () => {
       <div className="min-h-screen flex flex-col lg:flex-row">
         {/* Left Side - Visual Storytelling / Branding Block (55-60%) */}
         <div
-          className="lg:w-[58%] relative overflow-hidden flex items-center justify-center p-8 lg:p-12 min-h-[400px] lg:min-h-screen"
+          className="lg:w-[58%] relative overflow-hidden flex items-center justify-center p-8 lg:p-8 min-h-[400px] lg:min-h-screen"
           style={{
             backgroundImage: 'linear-gradient(to bottom right, rgba(15, 118, 110, 0.92), rgba(13, 148, 136, 0.88)), url(/images/hero/lisu-people.jpg)',
             backgroundSize: 'cover',
@@ -380,7 +383,7 @@ const Login = () => {
         </div>
 
         {/* Right Side - Login Form (40-45%) */}
-        <div className="lg:w-[42%] bg-gray-50 flex items-center justify-center p-6 lg:p-12 min-h-screen lg:min-h-0 transition-colors duration-200">
+        <div className="lg:w-[42%] bg-gray-50 flex items-center justify-center p-6 lg:p-8 min-h-screen lg:min-h-0 transition-colors duration-200">
           <div className="w-full max-w-md">
             {/* Heading */}
             <div className="mb-8">
@@ -411,33 +414,60 @@ const Login = () => {
             {/* Error Message */}
             {errors.general && (
               <div className={`mb-6 border rounded-lg p-4 ${errors.accountDeleted || errors.accountNotFound
-                ? 'bg-red-100 border-red-300'
-                : 'bg-red-50 border-red-200'
+                ? errors.canRestore ? 'bg-yellow-50 border-yellow-300' : 'bg-red-100 border-red-300'
+                : errors.incorrectPassword
+                  ? 'bg-orange-50 border-orange-200'
+                  : 'bg-red-50 border-red-200'
                 }`}>
                 <div className="flex items-start">
-                  {(errors.accountDeleted || errors.accountNotFound) && (
+                  {errors.canRestore ? (
+                    <svg className="w-5 h-5 text-yellow-600 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                  ) : (errors.accountDeleted || errors.accountNotFound) ? (
                     <svg className="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                     </svg>
+                  ) : errors.incorrectPassword && (
+                    <svg className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
                   )}
                   <div className="flex-1">
-                    <p className={`text-sm ${errors.accountDeleted || errors.accountNotFound
-                      ? 'text-red-700 font-semibold'
-                      : 'text-red-600'
+                    <p className={`text-sm ${errors.canRestore
+                      ? 'text-yellow-800 font-semibold'
+                      : errors.accountDeleted || errors.accountNotFound
+                        ? 'text-red-700 font-semibold'
+                        : errors.incorrectPassword
+                          ? 'text-orange-700 font-semibold'
+                          : 'text-red-600'
                       }`}>
                       {errors.general}
                     </p>
 
+                    {/* Show restore button if account can be restored */}
+                    {errors.canRestore && errors.deletedEmail && (
+                      <div className="mt-3 pt-3 border-t border-yellow-300">
+                        <button
+                          type="button"
+                          onClick={() => navigate('/restore-account', { state: { email: errors.deletedEmail } })}
+                          className="w-full px-3 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-semibold rounded-lg transition-colors duration-200"
+                        >
+                          Restore My Account
+                        </button>
+                      </div>
+                    )}
+
                     {/* Show verification help if email not verified */}
                     {errors.general.toLowerCase().includes('verify') && !errors.accountNotFound && formData.email && (
                       <div className="mt-3 pt-3 border-t border-red-300">
-                        <p className="text-sm text-red-800 font-medium mb-2">
+                        <p className="text-sm text-red-800 font-medium mb-1.5">
                           Need help with verification?
                         </p>
                         <button
                           type="button"
                           onClick={() => navigate('/verify-email', { state: { email: formData.email } })}
-                          className="text-sm text-teal-600 hover:text-teal-700:text-teal-300 font-semibold underline"
+                          className="text-sm text-teal-600 hover:text-teal-700 font-semibold underline"
                         >
                           → Go to Verification Page
                         </button>
@@ -452,13 +482,13 @@ const Login = () => {
             <form
               onSubmit={handleSubmit}
               onKeyDown={handleKeyDown}
-              className="space-y-5"
+              className="space-y-4"
               noValidate
               aria-label="Login form"
             >
               {/* Email Field */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
                   Email Address
                   <span className="text-red-500 ml-1" aria-label="required">*</span>
                 </label>
@@ -476,7 +506,7 @@ const Login = () => {
                     aria-required="true"
                     aria-invalid={errors.email ? 'true' : 'false'}
                     aria-describedby={errors.email ? 'email-error' : undefined}
-                    className={`w-full px-4 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500:ring-teal-400 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-400`}
+                    className={`w-full px-3 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300'} text-sm rounded-lg focus:ring-2 focus:ring-teal-500:ring-teal-400 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-400`}
                     placeholder="your.email@example.com"
                   />
                   {errors.email && (
@@ -486,17 +516,12 @@ const Login = () => {
                     />
                   )}
                 </div>
-                {errors.email && (
-                  <p id="email-error" className="mt-2 text-sm text-red-600 flex items-center gap-1" role="alert">
-                    <ExclamationCircleIcon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                    {errors.email}
-                  </p>
-                )}
+                <FieldError error={errors.email} />
               </div>
 
               {/* Password Field */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
                   Password
                   <span className="text-red-500 ml-1" aria-label="required">*</span>
                 </label>
@@ -514,29 +539,16 @@ const Login = () => {
                     aria-required="true"
                     aria-invalid={errors.password ? 'true' : 'false'}
                     aria-describedby={errors.password ? 'password-error' : undefined}
-                    className={`w-full px-4 py-3 pr-12 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500:ring-teal-400 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-400`}
+                    className={`w-full px-4 py-2 pr-12 border ${errors.password ? 'border-red-500' : 'border-gray-300'} text-sm rounded-lg focus:ring-2 focus:ring-teal-500:ring-teal-400 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-400`}
                     placeholder="Enter your password"
                   />
                   {/* Show/Hide Password Toggle */}
-                  <button
-                    type="button"
-                    onClick={togglePasswordVisibility}
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700:text-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500 rounded p-1 transition-colors"
-                  >
-                    {showPassword ? (
-                      <EyeSlashIcon className="w-5 h-5" aria-hidden="true" />
-                    ) : (
-                      <EyeIcon className="w-5 h-5" aria-hidden="true" />
-                    )}
-                  </button>
+                  <PasswordToggleButton
+                    showPassword={showPassword}
+                    onToggle={togglePasswordVisibility}
+                  />
                 </div>
-                {errors.password && (
-                  <p id="password-error" className="mt-2 text-sm text-red-600 flex items-center gap-1" role="alert">
-                    <ExclamationCircleIcon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                    {errors.password}
-                  </p>
-                )}
+                <FieldError error={errors.password} />
               </div>
 
               {/* Remember Me and Forgot Password */}
@@ -569,13 +581,20 @@ const Login = () => {
               {/* Log In Button */}
               <div className="pt-2">
                 <button
-                  ref={submitButtonRef}
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || loginSuccess}
                   aria-busy={loading}
-                  className="w-full px-6 py-3.5 bg-teal-600 hover:bg-teal-700:bg-teal-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2:ring-offset-gray-900 disabled:hover:bg-teal-600 disabled:hover:shadow-md"
+                  className={`w-full px-6 py-3.5 font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2:ring-offset-gray-900 disabled:hover:shadow-md ${loginSuccess
+                    ? 'bg-green-600 hover:bg-green-600'
+                    : 'bg-teal-600 hover:bg-teal-700:bg-teal-700 disabled:hover:bg-teal-600'
+                    }`}
                 >
-                  {loading ? (
+                  {loginSuccess ? (
+                    <span className="flex items-center justify-center" aria-live="polite">
+                      <CheckCircleIcon className="w-5 h-5 mr-2" aria-hidden="true" />
+                      Success! Redirecting...
+                    </span>
+                  ) : loading ? (
                     <span className="flex items-center justify-center" aria-live="polite">
                       <svg
                         className="animate-spin h-5 w-5 mr-2"
@@ -605,21 +624,11 @@ const Login = () => {
 
               {/* Social Login Buttons */}
               <div className="space-y-3 pt-2">
-                <button
-                  type="button"
-                  onClick={handleGoogleLogin}
+                <GoogleOAuthButton
+                  onClick={handleGoogleAuth}
+                  text="Continue with Google"
                   disabled={loading}
-                  className="w-full flex items-center justify-center px-4 py-3 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50:bg-gray-700 transition-all duration-200 text-sm font-medium text-gray-700 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label="Continue with Google account"
-                >
-                  <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                  </svg>
-                  Continue with Google
-                </button>
+                />
               </div>
 
               {/* Sign Up Link */}

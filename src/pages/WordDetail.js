@@ -1139,25 +1139,45 @@ const WordDetail = () => {
                     Related Words
                   </h3>
                   <div className="space-y-3">
-                    {relatedWords.map((related) => (
-                      <Link
-                        key={related.id}
-                        to={`/words/${related.id}`}
-                        className="block p-3 hover:bg-gray-50:bg-gray-700 rounded-lg transition-colors group"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium text-gray-900 group-hover:text-teal-600:text-teal-400">
-                              {related.lisu_word}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {related.english_word}
-                            </p>
+                    {relatedWords.map((related) => {
+                      // Check if URL has a search query to determine language preference
+                      const searchParams = new URLSearchParams(location.search);
+                      const query = searchParams.get('q') || searchParams.get('from') || '';
+                      const isLisuContext = query && query.charCodeAt(0) >= 42192 && query.charCodeAt(0) <= 42239;
+
+                      return (
+                        <Link
+                          key={related.id}
+                          to={`/words/${related.id}`}
+                          className="block p-3 hover:bg-gray-50:bg-gray-700 rounded-lg transition-colors group"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              {isLisuContext ? (
+                                <>
+                                  <p className="font-medium text-gray-900 group-hover:text-teal-600:text-teal-400">
+                                    {related.lisu_word}
+                                  </p>
+                                  <p className="text-sm text-gray-600">
+                                    {related.english_word}
+                                  </p>
+                                </>
+                              ) : (
+                                <>
+                                  <p className="font-medium text-gray-900 group-hover:text-teal-600:text-teal-400">
+                                    {related.english_word}
+                                  </p>
+                                  <p className="text-sm text-gray-600">
+                                    {related.lisu_word}
+                                  </p>
+                                </>
+                              )}
+                            </div>
+                            <ChevronRightIcon className="w-4 h-4 text-gray-400 group-hover:text-teal-600:text-teal-400" />
                           </div>
-                          <ChevronRightIcon className="w-4 h-4 text-gray-400 group-hover:text-teal-600:text-teal-400" />
-                        </div>
-                      </Link>
-                    ))}
+                        </Link>
+                      );
+                    })}
                   </div>
                 </div>
               )}

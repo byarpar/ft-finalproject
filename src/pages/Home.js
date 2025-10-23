@@ -164,24 +164,29 @@ const Home = () => {
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            {/* Lisu Word */}
+                            {/* English Word (shown first for better accessibility) */}
                             <div className="text-lg font-bold text-gray-900 mb-1 group-hover:text-teal-600:text-teal-400 transition-colors">
-                              {word.lisu_word || 'ꓡꓴ'}
+                              {word.english_word || 'Word'}
                             </div>
 
-                            {/* English Translation */}
+                            {/* Lisu Translation */}
                             <div className="text-sm font-medium text-gray-600 mb-2">
-                              {word.english_word || 'word'}
+                              {word.lisu_word || 'ꓡꓴ'}
                               {word.pronunciation_lisu && (
                                 <span className="text-xs text-gray-400 ml-2">
                                   • {word.pronunciation_lisu}
+                                </span>
+                              )}
+                              {word.part_of_speech && (
+                                <span className="ml-2 px-1.5 py-0.5 bg-gray-100 text-[10px] font-medium text-gray-500 uppercase tracking-wide rounded">
+                                  {typeof word.part_of_speech === 'object' ? word.part_of_speech?.name : word.part_of_speech}
                                 </span>
                               )}
                             </div>
 
                             {/* Definition */}
                             <p className="text-xs text-gray-500 line-clamp-1">
-                              {word.english_definition || word.lisu_definition || 'Explore the meaning and context for this Lisu word.'}
+                              {word.english_definition || word.lisu_definition || 'Explore the meaning and context for this word.'}
                             </p>
                           </div>
                         </div>
@@ -228,14 +233,26 @@ const Home = () => {
                             className="block hover:opacity-80 transition-opacity"
                           >
                             <div className="flex items-center gap-3 mb-3">
-                              <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                <span className="text-sm font-bold text-teal-700">
-                                  {discussion.username?.charAt(0).toUpperCase() || 'A'}
-                                </span>
+                              <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                {discussion.user_data?.display_picture && (
+                                  <img
+                                    src={discussion.user_data.display_picture}
+                                    alt={discussion.user_data?.username || 'User'}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                    }}
+                                  />
+                                )}
+                                {!discussion.user_data?.display_picture && (
+                                  <span className="text-sm font-bold text-teal-700">
+                                    {discussion.user_data?.username?.charAt(0).toUpperCase() || 'A'}
+                                  </span>
+                                )}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="font-semibold text-gray-900 truncate">
-                                  {discussion.username || 'Anonymous'}
+                                  {discussion.user_data?.username || 'Anonymous'}
                                 </div>
                                 <div className="text-xs text-gray-500">
                                   {typeof discussion.category === 'object' ? discussion.category?.name : discussion.category || 'General'}

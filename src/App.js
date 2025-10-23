@@ -23,6 +23,7 @@ import VerifyEmail from './pages/VerifyEmail';
 import AuthCallback from './pages/AuthCallback';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import RestoreAccount from './pages/RestoreAccount';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import NotFound from './pages/NotFound';
@@ -172,6 +173,7 @@ function App() {
                     <Route path="/verify-email" element={<VerifyEmail />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/restore-account" element={<RestoreAccount />} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
 
                     {/* Protected Routes */}

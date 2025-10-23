@@ -322,7 +322,7 @@ const Notifications = () => {
         offset: offset
       });
 
-      setNotifications(response.data || []);
+      setNotifications(response.data?.notifications || []);
       setTotalNotifications(response.pagination?.total || 0);
       setHasMore(response.pagination?.hasMore || false);
       setLoading(false);
@@ -608,7 +608,7 @@ const Notifications = () => {
             <div className="space-y-2 sm:space-y-3">
               {notifications.map((notification) => {
                 const actorName = notification.actor_full_name || notification.actor_username || notification.actor_name;
-                const actorAvatar = notification.actor_profile_photo || notification.actor_avatar;
+                const actorAvatar = notification.actor_profile_photo || notification.actor_avatar || notification.actor_profile_photo_url;
                 const actorInitial = actorName?.[0]?.toUpperCase() || 'U';
                 const actionButtons = typeof notification.action_buttons === 'string'
                   ? JSON.parse(notification.action_buttons)
@@ -621,10 +621,10 @@ const Notifications = () => {
                     className={`
                       group relative flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border cursor-pointer transition-all touch-manipulation
                       ${!notification.is_read
-                        ? 'bg-teal-50/50 border-teal-200 active:bg-teal-50:bg-teal-900/20 shadow-sm'
-                        : 'bg-white border-gray-200 active:bg-gray-50:bg-gray-750'
+                        ? 'bg-teal-50/50 border-teal-200 active:bg-teal-50 shadow-sm'
+                        : 'bg-white border-gray-200 active:bg-gray-50'
                       }
-                      hover:shadow-md:shadow-lg
+                      hover:shadow-md
                     `}
                   >
                     {/* Unread Indicator Strip - Left Edge for Mobile */}
@@ -637,11 +637,26 @@ const Notifications = () => {
                       {actorName ? (
                         <div className="relative">
                           {actorAvatar ? (
-                            <img
-                              src={actorAvatar}
-                              alt={actorName}
-                              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover ring-2 ring-white"
-                            />
+                            <div className="relative w-10 h-10 sm:w-12 sm:h-12">
+                              <img
+                                src={actorAvatar}
+                                alt={actorName}
+                                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover ring-2 ring-white"
+                                crossOrigin="anonymous"
+                                referrerPolicy="no-referrer"
+                                onError={(e) => {
+                                  // Hide broken image and show fallback
+                                  e.target.style.display = 'none';
+                                  const fallback = e.target.nextElementSibling;
+                                  if (fallback) fallback.style.display = 'flex';
+                                }}
+                              />
+                              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-teal-400 to-blue-500 rounded-full items-center justify-center shadow-sm hidden">
+                                <span className="text-white font-bold text-sm sm:text-base">
+                                  {actorInitial}
+                                </span>
+                              </div>
+                            </div>
                           ) : (
                             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-teal-400 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
                               <span className="text-white font-bold text-sm sm:text-base">

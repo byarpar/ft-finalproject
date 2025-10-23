@@ -187,7 +187,8 @@ const ResetPassword = () => {
     try {
       await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:3001/api'}/auth/reset-password`, {
         token,
-        newPassword: formData.password
+        newPassword: formData.password,
+        confirmPassword: formData.confirmPassword
       });
 
       setSuccess(true);
@@ -338,7 +339,7 @@ const ResetPassword = () => {
                       aria-invalid={touched.password && getFieldError('password', formData.password) ? 'true' : 'false'}
                       aria-describedby="password-hint password-error"
                       className="w-full px-4 py-3.5 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors bg-white text-gray-900 placeholder-gray-400 text-base"
-                      placeholder="Enter new password (min. 8 characters)"
+                      placeholder="Enter new password"
                     />
                     {/* Show/Hide Password Toggle */}
                     <button
@@ -445,11 +446,6 @@ const ResetPassword = () => {
                       Passwords match
                     </p>
                   )}
-                </div>
-
-                {/* Keyboard Hint */}
-                <div className="text-center text-xs text-gray-500 mt-4">
-                  Press <kbd className="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs font-mono">Enter</kbd> to reset or <kbd className="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs font-mono">Esc</kbd> to clear
                 </div>
 
                 <button

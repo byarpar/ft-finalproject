@@ -16,7 +16,7 @@ const VoteButtons = ({
   const { isAuthenticated } = useAuth();
   const [voteCount, setVoteCount] = useState(initialVoteCount);
   const [upvotes, setUpvotes] = useState(initialUpvotes);
-  const [userVote, setUserVote] = useState(initialUserVote); // 'upvote', 'downvote', or null
+  const [userVote, setUserVote] = useState(initialUserVote); // 'up', 'down', or null
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -46,9 +46,9 @@ const VoteButtons = ({
       // Calculate new counts (upvote only)
       let newCount = voteCount;
       let newUpvotes = upvotes;
-      let newUserVote = 'upvote';
+      let newUserVote = 'up';
 
-      if (previousVote === 'upvote') {
+      if (previousVote === 'up') {
         // Removing vote
         newUserVote = null;
         newCount -= 1;
@@ -69,7 +69,7 @@ const VoteButtons = ({
         ? discussionsAPI.voteDiscussion
         : discussionsAPI.voteAnswer;
 
-      const response = await endpoint(itemId, 'upvote');
+      const response = await endpoint(itemId, 'up');
 
       // Update with server response
       if (response.data) {
@@ -99,15 +99,15 @@ const VoteButtons = ({
     <button
       onClick={handleVote}
       disabled={isLoading}
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-200 ${userVote === 'upvote'
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-200 ${userVote === 'up'
         ? 'bg-green-100 text-green-600'
         : 'bg-gray-100 text-gray-600 hover:bg-green-50:bg-green-900/20 hover:text-green-600:text-green-400'
         } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}`}
-      title={userVote === 'upvote' ? 'Remove vote' : 'Vote'}
-      aria-label={userVote === 'upvote' ? 'Remove vote' : 'Vote'}
+      title={userVote === 'up' ? 'Remove vote' : 'Vote'}
+      aria-label={userVote === 'up' ? 'Remove vote' : 'Vote'}
     >
       {/* Vote Icon */}
-      {userVote === 'upvote' ? (
+      {userVote === 'up' ? (
         <ArrowUpSolid className="h-5 w-5" />
       ) : (
         <ArrowUpIcon className="h-5 w-5" />

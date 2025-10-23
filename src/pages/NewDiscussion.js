@@ -64,10 +64,29 @@ const NewDiscussion = () => {
     const fetchCategories = async () => {
       try {
         const response = await discussionsAPI.getCategories();
-        setCategories(response.data?.categories || []);
+        const categoriesData = response.data?.categories || {};
+
+        // Convert object to array if needed
+        let categoriesList = [];
+        if (Array.isArray(categoriesData)) {
+          categoriesList = categoriesData;
+        } else {
+          // If it's an object, convert to array
+          categoriesList = Object.entries(categoriesData).map(([key, cat]) => ({
+            id: key,
+            name: cat.name,
+            icon: cat.icon,
+            color: cat.color,
+            description: cat.description,
+            count: cat.count || 0
+          }));
+        }
+
+        setCategories(categoriesList);
       } catch (err) {
         console.error('Error fetching categories:', err);
         toast.error('Failed to load categories');
+        setCategories([]); // Ensure categories is always an array
       } finally {
         setLoading(false);
       }
@@ -371,7 +390,7 @@ const NewDiscussion = () => {
                       required
                     >
                       <option value="">Select a category</option>
-                      {categories.filter(cat => cat.id !== 'all').map((category) => (
+                      {Array.isArray(categories) && categories.filter(cat => cat.id !== 'all').map((category) => (
                         <option key={category.id} value={category.id}>
                           {category.name}
                         </option>

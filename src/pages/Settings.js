@@ -119,10 +119,8 @@ const Settings = () => {
             preferred_language: userData.preferred_language || 'en'
           });
 
-          // Set avatar preview if exists
-          if (userData.profile_photo_url) {
-            setAvatarPreview(userData.profile_photo_url);
-          }
+          // Always set avatar preview (even if null/empty to clear previous state)
+          setAvatarPreview(userData.profile_photo_url || null);
 
           // Set notifications from user data
           if (userData.email_notifications !== undefined) {
@@ -148,19 +146,41 @@ const Settings = () => {
   const updateProfileMutation = useMutation(
     (data) => authAPI.updateProfile(data),
     {
-      onSuccess: () => {
+      onSuccess: (response) => {
+        console.log('Profile update response:', response);
         toast.success('Profile updated successfully!');
         setUnsavedChanges(false);
         setAvatarFile(null); // Clear the file input after successful upload
+
+        // Update local state immediately with the response data
+        if (response?.data?.user) {
+          const userData = response.data.user;
+          console.log('Updated user data:', userData);
+          console.log('Profile photo URL:', userData.profile_photo_url);
+
+          setProfileData({
+            username: userData.username || '',
+            email: userData.email || '',
+            full_name: userData.full_name || '',
+            bio: userData.bio || '',
+            location: userData.location || '',
+            preferred_language: userData.preferred_language || 'en'
+          });
+
+          // Always update avatar preview with the response (even if null/empty)
+          setAvatarPreview(userData.profile_photo_url || null);
+          console.log('Avatar preview set to:', userData.profile_photo_url || null);
+        }
+
+        // Invalidate queries to refresh data everywhere
         queryClient.invalidateQueries(['userProfile']);
       },
       onError: (error) => {
+        console.error('Profile update error:', error);
         toast.error(error.response?.data?.message || 'Failed to update profile');
       }
     }
-  );
-
-  // Change password mutation
+  );  // Change password mutation
   const changePasswordMutation = useMutation(
     (data) => authAPI.changePassword(data),
     {
@@ -243,6 +263,18 @@ const Settings = () => {
         if (value.length < 8) {
           return 'Password must be at least 8 characters';
         }
+        if (!/(?=.*[a-z])/.test(value)) {
+          return 'Password must include lowercase letter';
+        }
+        if (!/(?=.*[A-Z])/.test(value)) {
+          return 'Password must include uppercase letter';
+        }
+        if (!/(?=.*\d)/.test(value)) {
+          return 'Password must include number';
+        }
+        if (!/(?=.*[@$!%*?&\-_#])/.test(value)) {
+          return 'Password must include special character (@$!%*?&-_#)';
+        }
         if (value === passwordData.current_password) {
           return 'New password must be different from current password';
         }
@@ -295,13 +327,16 @@ const Settings = () => {
       }
     });
 
-    // Add base64 encoded profile photo if available
-    if (avatarPreview !== null) {
+    // Add base64 encoded profile photo if a new file was uploaded
+    if (avatarFile) {
+      console.log('Uploading new avatar, file:', avatarFile.name);
+      console.log('Avatar preview length:', avatarPreview?.length);
       updateData.profile_photo_base64 = avatarPreview;
     }
 
+    console.log('Sending update data:', { ...updateData, profile_photo_base64: updateData.profile_photo_base64 ? `[base64 data ${updateData.profile_photo_base64?.length} chars]` : undefined });
     updateProfileMutation.mutate(updateData);
-  }, [profileData, avatarPreview, updateProfileMutation]);
+  }, [profileData, avatarPreview, avatarFile, updateProfileMutation]);
 
   // Save notification preferences
   const handleSaveNotifications = useCallback(() => {
@@ -460,9 +495,17 @@ const Settings = () => {
       return;
     }
 
+    // Validate password format (matching backend requirements)
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&\-_#])/;
+    if (!passwordRegex.test(passwordData.new_password)) {
+      toast.error('Password must include uppercase, lowercase, number, and special character (@$!%*?&-_#)');
+      return;
+    }
+
     changePasswordMutation.mutate({
-      current_password: passwordData.current_password,
-      new_password: passwordData.new_password
+      currentPassword: passwordData.current_password,
+      newPassword: passwordData.new_password,
+      confirmPassword: passwordData.confirm_password
     });
   };
 
@@ -561,21 +604,6 @@ const Settings = () => {
 
             {/* Right Content Panel */}
             <div className="mt-8 lg:mt-0 lg:col-span-9">
-              {/* Unsaved Changes Banner */}
-              {unsavedChanges && (
-                <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start">
-                  <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-yellow-800">
-                      You have unsaved changes
-                    </p>
-                    <p className="text-xs text-yellow-700 mt-1">
-                      Press <kbd className="px-2 py-0.5 text-xs font-semibold bg-yellow-100 rounded">Ctrl+S</kbd> to save or <kbd className="px-2 py-0.5 text-xs font-semibold bg-yellow-100 rounded">Esc</kbd> to cancel
-                    </p>
-                  </div>
-                </div>
-              )}
-
               <div className="bg-white shadow rounded-lg">
                 {/* Profile Information Section */}
                 {activeSection === 'profile' && (

@@ -109,9 +109,24 @@ const Discussions = () => {
   const fetchCategories = useCallback(async () => {
     try {
       const response = await discussionsAPI.getCategories();
-      setCategories(response.data?.categories || []);
+      const categoriesData = response.data?.categories || response.categories || {};
+
+      // Convert categories object to array with 'All' category first
+      const categoriesArray = [
+        { id: 'all', name: 'All Categories', icon: '📋', color: '#6b7280' },
+        ...Object.entries(categoriesData).map(([id, category]) => ({
+          id,
+          ...category
+        }))
+      ];
+
+      setCategories(categoriesArray);
     } catch (err) {
       console.error('Error fetching categories:', err);
+      // Set default categories if fetch fails
+      setCategories([
+        { id: 'all', name: 'All Categories', icon: '📋', color: '#6b7280' }
+      ]);
     }
   }, []);
 
@@ -128,7 +143,7 @@ const Discussions = () => {
     const activities = discussions.slice(0, 5).map(discussion => ({
       id: discussion.id,
       type: 'reply',
-      username: discussion.author_name || 'Anonymous',
+      username: discussion.user_data?.username || 'Anonymous',
       threadTitle: discussion.title,
       timestamp: discussion.updated_at || discussion.created_at
     }));
@@ -478,22 +493,23 @@ const Discussions = () => {
                                 className="flex-shrink-0 relative"
                               >
                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center overflow-hidden">
-                                  {discussion.author_profile_photo ? (
+                                  {discussion.user_data?.display_picture && (
                                     <img
-                                      src={discussion.author_profile_photo}
-                                      alt={discussion.author_name || 'User'}
+                                      src={discussion.user_data.display_picture}
+                                      alt={discussion.user_data?.username || 'User'}
                                       className="w-full h-full object-cover"
                                       onError={(e) => {
                                         e.target.style.display = 'none';
-                                        e.target.nextElementSibling.style.display = 'flex';
                                       }}
                                     />
-                                  ) : null}
-                                  <span className={`text-sm font-bold text-white ${discussion.author_profile_photo ? 'hidden' : ''}`}>
-                                    {(discussion.author_name || 'A').charAt(0).toUpperCase()}
-                                  </span>
+                                  )}
+                                  {!discussion.user_data?.display_picture && (
+                                    <span className="text-sm font-bold text-white">
+                                      {(discussion.user_data?.username || 'A').charAt(0).toUpperCase()}
+                                    </span>
+                                  )}
                                 </div>
-                                {discussion.author_role === 'admin' && (
+                                {discussion.user_data?.role === 'admin' && (
                                   <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center">
                                     <CheckBadgeIcon className="w-3.5 h-3.5 text-red-500" />
                                   </div>
@@ -504,7 +520,7 @@ const Discussions = () => {
                                   to={`/users/${discussion.author_id}`}
                                   className="font-semibold text-sm text-gray-900"
                                 >
-                                  {discussion.author_name || 'Anonymous'}
+                                  {discussion.user_data?.username || 'Anonymous'}
                                 </Link>
                                 <span className="text-xs text-gray-500">
                                   {formatRelativeDate(discussion.updated_at || discussion.created_at)}

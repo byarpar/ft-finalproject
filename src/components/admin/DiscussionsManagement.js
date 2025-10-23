@@ -77,17 +77,48 @@ const DiscussionsManagement = () => {
     try {
       const response = await discussionsAPI.getCategories();
       if (response.success && response.data && response.data.categories) {
-        // Filter out the "All Questions" category and any invalid entries
-        const categoriesList = response.data.categories
-          .filter(cat => cat && cat.id && cat.id !== 'all' && cat.name)
-          .map(cat => ({
-            id: cat.id,
-            name: cat.name,
-            icon: cat.icon,
-            color: cat.color,
-            count: cat.count || 0
-          }));
+        // Convert object to array
+        const categoriesData = response.data.categories;
+        let categoriesList = [];
+
+        if (Array.isArray(categoriesData)) {
+          // If it's already an array
+          categoriesList = categoriesData
+            .filter(cat => cat && cat.id && cat.id !== 'all' && cat.name)
+            .map(cat => ({
+              id: cat.id,
+              name: cat.name,
+              icon: cat.icon,
+              color: cat.color,
+              count: cat.count || 0
+            }));
+        } else {
+          // If it's an object, convert to array
+          categoriesList = Object.entries(categoriesData)
+            .filter(([key, cat]) => key !== 'all' && cat && cat.name)
+            .map(([key, cat]) => ({
+              id: key,
+              name: cat.name,
+              icon: cat.icon,
+              color: cat.color,
+              count: cat.count || 0
+            }));
+        }
+
         setCategories(categoriesList);
+      } else {
+        // Use default categories as fallback
+        setCategories([
+          { id: 'general', name: 'General Discussion', icon: 'ChatBubbleLeftRightIcon', color: '#9CA3AF' },
+          { id: 'language-learning', name: 'Language Learning', icon: 'AcademicCapIcon', color: '#60A5FA' },
+          { id: 'grammar', name: 'Grammar', icon: 'BookOpenIcon', color: '#34D399' },
+          { id: 'vocabulary', name: 'Vocabulary', icon: 'TagIcon', color: '#FBBF24' },
+          { id: 'culture', name: 'Culture & Context', icon: 'UserGroupIcon', color: '#A78BFA' },
+          { id: 'pronunciation', name: 'Pronunciation', icon: 'SpeakerWaveIcon', color: '#F87171' },
+          { id: 'translation', name: 'Translation', icon: 'LanguageIcon', color: '#F472B6' },
+          { id: 'etymology', name: 'Etymology', icon: 'BookmarkIcon', color: '#10B981' },
+          { id: 'other', name: 'Other', icon: 'EllipsisHorizontalIcon', color: '#6B7280' },
+        ]);
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -109,9 +140,9 @@ const DiscussionsManagement = () => {
   const fetchTags = async () => {
     try {
       const response = await tagsAPI.getAllTags();
-      if (response.success && response.tags) {
+      if (response.success && response.data && response.data.tags) {
         // Filter out any invalid tag entries
-        const validTags = response.tags.filter(tag => tag && (tag.name || tag.tag_name));
+        const validTags = response.data.tags.filter(tag => tag && (tag.name || tag.tag_name));
         setTags(validTags);
       } else {
         setTags([]);
@@ -291,7 +322,7 @@ const DiscussionsManagement = () => {
 
       const response = await admin.getReports(params);
 
-      if (response.success && response.data && response.data.reports) {
+      if (response.success && response.data && Array.isArray(response.data.reports)) {
         const transformedReports = response.data.reports
           .filter(report => report && report.id)
           .map(report => ({
@@ -354,7 +385,7 @@ const DiscussionsManagement = () => {
       const response = await admin.getModerationHistory(params);
       console.log('Moderation history response:', response);
 
-      if (response.success && response.data && response.data.history) {
+      if (response.success && response.data && Array.isArray(response.data.history)) {
         console.log('Raw history data:', response.data.history);
 
         const transformedHistory = response.data.history

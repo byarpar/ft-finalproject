@@ -226,7 +226,7 @@ const Chat = () => {
     try {
       setLoading(true);
       const response = await chatService.getConversations();
-      const allConversations = response.data || [];
+      const allConversations = response.data?.conversations || [];
 
       // Filter: Only include accessible conversations
       const validConversations = allConversations.filter(conv => {
@@ -235,10 +235,10 @@ const Chat = () => {
           return true;
         }
 
-        // Check participant membership
+        // Check participant membership (use user_id from backend)
         return (
-          conv.participants?.some(p => p.id === user.id) ||
-          conv.other_participants?.some(p => p.id === user.id)
+          conv.participants?.some(p => p.user_id === user.id || p.id === user.id) ||
+          conv.other_participants?.some(p => p.user_id === user.id || p.id === user.id)
         );
       });
 
@@ -284,7 +284,7 @@ const Chat = () => {
 
       // Load conversation messages
       const response = await chatService.getMessages(conversation.id);
-      setMessages(response.data || []);
+      setMessages(response.data?.messages || []);
 
       // Mark messages as read
       await chatService.markAsRead(conversation.id);

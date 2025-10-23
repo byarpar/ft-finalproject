@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import ReCAPTCHA from 'react-google-recaptcha';
 import {
   UserIcon,
   AcademicCapIcon,
@@ -10,12 +11,39 @@ import {
 } from '@heroicons/react/24/solid';
 import {
   ExclamationCircleIcon,
-  CheckCircleIcon,
-  EyeIcon,
-  EyeSlashIcon
+  CheckCircleIcon
 } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
 import PageLayout from '../components/Layout/PageLayout';
+
+// Shared utilities
+import {
+  validateEmail,
+  validateRegisterPassword,
+  validateFullName,
+  validateConfirmPassword,
+  validateTermsAgreement,
+  calculatePasswordStrength
+} from '../utils/validation';
+import {
+  usePasswordToggle,
+  useFieldTouch,
+  useFormValidation,
+  useFormKeyboard,
+  useClearForm
+} from '../hooks/useAuthForm';
+import {
+  createHandleChange,
+  createHandleBlur,
+  focusFirstError,
+  mapBackendErrors,
+  handleGoogleAuth
+} from '../utils/formHandlers';
+
+// Shared components
+import PasswordToggleButton from '../components/Auth/PasswordToggleButton';
+import FieldError from '../components/Auth/FieldError';
+import GoogleOAuthButton from '../components/Auth/GoogleOAuthButton';
 
 /**
  * Register Page - User registration with email/password or Google OAuth
@@ -44,17 +72,30 @@ const Register = () => {
     agreeTerms: false
   });
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [touched, setTouched] = useState({
+  const [recaptchaToken, setRecaptchaToken] = useState(null);
+  const recaptchaRef = useRef(null);
+
+  // Custom hooks for form management
+  const passwordToggle = usePasswordToggle();
+  const confirmPasswordToggle = usePasswordToggle();
+  const { touched, markTouched, markAllTouched, resetTouched } = useFieldTouch({
+    full_name: false,
     email: false,
     password: false,
     confirmPassword: false,
     agreeTerms: false
   });
+  const { errors, setErrors, clearAllErrors } = useFormValidation();
+
+  // Destructure for cleaner usage
+  const { showPassword, togglePasswordVisibility } = passwordToggle;
+  const {
+    showPassword: showConfirmPassword,
+    togglePasswordVisibility: toggleConfirmPasswordVisibility
+  } = confirmPasswordToggle;
 
   // Refs for focus management
+  const fullNameInputRef = useRef(null);
   const emailInputRef = useRef(null);
   const passwordInputRef = useRef(null);
   const confirmPasswordInputRef = useRef(null);
@@ -62,124 +103,79 @@ const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  // Focus email input on mount (unless pre-filled)
+  // Focus full_name input on mount
   useEffect(() => {
-    if (!formData.email) {
-      emailInputRef.current?.focus();
-    }
-  }, [formData.email]);
+    fullNameInputRef.current?.focus();
+  }, []);
 
   /**
-   * Validate individual field
+   * Field validator - uses shared validation utilities
    */
   const validateField = useCallback((name, value, allFormData = formData) => {
-    switch (name) {
-      case 'email':
-        if (!value.trim()) {
-          return 'Email is required';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          return 'Please enter a valid email address';
-        }
-        return '';
-
-      case 'password':
-        if (!value) {
-          return 'Password is required';
-        } else if (value.length < 8) {
-          return 'Password must be at least 8 characters';
-        }
-        return '';
-
-      case 'confirmPassword':
-        if (!value) {
-          return 'Please confirm your password';
-        } else if (value !== allFormData.password) {
-          return 'Passwords do not match';
-        }
-        return '';
-
-      case 'agreeTerms':
-        if (!value) {
-          return 'You must agree to the Privacy Policy and Terms of Service';
-        }
-        return '';
-
-      default:
-        return '';
-    }
+    if (name === 'full_name') return validateFullName(value);
+    if (name === 'email') return validateEmail(value);
+    if (name === 'password') return validateRegisterPassword(value);
+    if (name === 'confirmPassword') return validateConfirmPassword(value, allFormData.password);
+    if (name === 'agreeTerms') return validateTermsAgreement(value);
+    return '';
   }, [formData]);
 
   /**
-   * Handle input changes with real-time validation
+   * Event handlers using shared utilities
    */
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    const newValue = type === 'checkbox' ? checked : value;
-
-    setFormData(prev => {
-      const updated = {
-        ...prev,
-        [name]: newValue
-      };
-
-      // If password changes, revalidate confirm password if it's been touched
-      if (name === 'password' && touched.confirmPassword && prev.confirmPassword) {
-        const confirmError = validateField('confirmPassword', prev.confirmPassword, updated);
-        setErrors(prevErrors => ({
-          ...prevErrors,
-          confirmPassword: confirmError
-        }));
-      }
-
-      return updated;
-    });
-
-    // Clear error when user starts typing (only if field was touched)
-    if (touched[name]) {
-      const fieldError = validateField(name, newValue);
-      setErrors(prev => ({
-        ...prev,
-        [name]: fieldError,
-        general: '' // Clear general error
-      }));
+  const handleChange = createHandleChange(
+    setFormData,
+    validateField,
+    touched,
+    setErrors,
+    {
+      validatePasswordMatch: true,
+      passwordField: 'password',
+      confirmField: 'confirmPassword'
     }
-  };
+  );
 
-  /**
-   * Mark field as touched on blur
-   */
-  const handleBlur = (e) => {
-    const { name, value, type, checked } = e.target;
-    const fieldValue = type === 'checkbox' ? checked : value;
-
-    setTouched(prev => ({ ...prev, [name]: true }));
-
-    const fieldError = validateField(name, fieldValue);
-    if (fieldError) {
-      setErrors(prev => ({ ...prev, [name]: fieldError }));
-    }
-  };
+  const handleBlur = createHandleBlur(validateField, markTouched, setErrors);
 
   /**
    * Validate entire form before submission
    */
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors = {
+      full_name: validateField('full_name', formData.full_name),
+      email: validateField('email', formData.email),
+      password: validateField('password', formData.password),
+      confirmPassword: validateField('confirmPassword', formData.confirmPassword),
+      agreeTerms: validateField('agreeTerms', formData.agreeTerms)
+    };
 
-    const emailError = validateField('email', formData.email);
-    const passwordError = validateField('password', formData.password);
-    const confirmPasswordError = validateField('confirmPassword', formData.confirmPassword);
-    const agreeTermsError = validateField('agreeTerms', formData.agreeTerms);
+    // Check reCAPTCHA
+    if (!recaptchaToken) {
+      newErrors.recaptcha = 'Please complete the reCAPTCHA verification';
+    }
 
-    if (emailError) newErrors.email = emailError;
-    if (passwordError) newErrors.password = passwordError;
-    if (confirmPasswordError) newErrors.confirmPassword = confirmPasswordError;
-    if (agreeTermsError) newErrors.agreeTerms = agreeTermsError;
+    // Remove empty error messages
+    Object.keys(newErrors).forEach(key => {
+      if (!newErrors[key]) delete newErrors[key];
+    });
 
     setErrors(newErrors);
-    setTouched({ email: true, password: true, confirmPassword: true, agreeTerms: true });
+    markAllTouched();
 
     return Object.keys(newErrors).length === 0;
+  };
+
+  /**
+   * Handle reCAPTCHA change
+   */
+  const handleRecaptchaChange = (token) => {
+    setRecaptchaToken(token);
+    // Clear reCAPTCHA error when user completes it
+    if (token && errors.recaptcha) {
+      const newErrors = { ...errors };
+      delete newErrors.recaptcha;
+      setErrors(newErrors);
+    }
   };
 
   /**
@@ -189,19 +185,22 @@ const Register = () => {
     e.preventDefault();
 
     if (!validateForm()) {
-      // Focus first error field
-      if (errors.email) {
-        emailInputRef.current?.focus();
-      } else if (errors.password) {
-        passwordInputRef.current?.focus();
-      } else if (errors.confirmPassword) {
-        confirmPasswordInputRef.current?.focus();
-      }
+      // Use shared focus handler
+      focusFirstError(
+        errors,
+        {
+          full_name: fullNameInputRef,
+          email: emailInputRef,
+          password: passwordInputRef,
+          confirmPassword: confirmPasswordInputRef
+        },
+        ['full_name', 'email', 'password', 'confirmPassword']
+      );
       return;
     }
 
     setLoading(true);
-    setErrors({});
+    clearAllErrors();
 
     try {
       const result = await register(formData.email, formData.password, formData.full_name);
@@ -214,34 +213,51 @@ const Register = () => {
         // Redirect to verify-email page with email in state
         navigate('/verify-email', { state: { email: formData.email } });
       } else {
-        const errorMessage = (result.error && (result.error.details || result.error.message)) || result.error || 'Registration failed. Please try again.';
+        // Handle validation errors from backend
+        if (result.error?.details?.errors && Array.isArray(result.error.details.errors)) {
+          // Use shared backend error mapper
+          const backendErrors = mapBackendErrors(result.error.details.errors);
+          setErrors(backendErrors);
 
-        // Check if error is "user already exists"
-        if (errorMessage.toLowerCase().includes('already exists') ||
-          errorMessage.toLowerCase().includes('account with this email')) {
-          toast.error('An account with this email already exists', {
-            position: 'top-center',
-            duration: 6000,
-          });
-          setErrors({
-            general: errorMessage,
-            accountExists: true // Flag for conditional rendering
-          });
+          // Use shared focus handler
+          focusFirstError(
+            backendErrors,
+            {
+              full_name: fullNameInputRef,
+              email: emailInputRef,
+              password: passwordInputRef,
+              confirmPassword: confirmPasswordInputRef
+            },
+            ['full_name', 'email', 'password', 'confirmPassword']
+          );
         } else {
-          toast.error(errorMessage, {
-            position: 'top-center',
-            duration: 6000,
-          });
-          setErrors({ general: errorMessage });
+          // Extract error message and ensure it's a string
+          let errorMessage = result.error?.message || result.error?.details || result.error || 'Registration failed. Please try again.';
+
+          // Convert to string if it's not already
+          if (typeof errorMessage !== 'string') {
+            errorMessage = JSON.stringify(errorMessage);
+          }
+
+          // Check if error is "user already exists"
+          const errorLower = errorMessage.toLowerCase();
+          if (errorLower.includes('already exists') ||
+            errorLower.includes('account with this email') ||
+            errorLower.includes('user with this email')) {
+            setErrors({
+              email: 'User with this email already exists',
+              accountExists: true // Flag for conditional rendering
+            });
+            // Focus on email field
+            emailInputRef.current?.focus();
+          } else {
+            setErrors({ general: errorMessage });
+          }
         }
       }
     } catch (error) {
       console.error('Registration error:', error);
       const errorMessage = error.message || 'Network error. Unable to connect to server. Please check your connection and try again.';
-      toast.error(errorMessage, {
-        position: 'top-center',
-        duration: 6000,
-      });
       setErrors({ general: errorMessage });
     } finally {
       setLoading(false);
@@ -249,62 +265,32 @@ const Register = () => {
   };
 
   /**
-   * Toggle password visibility
-   */
-  const togglePasswordVisibility = () => {
-    setShowPassword(prev => !prev);
-  };
-
-  /**
-   * Toggle confirm password visibility
-   */
-  const toggleConfirmPasswordVisibility = () => {
-    setShowConfirmPassword(prev => !prev);
-  };
-
-  /**
-   * Handle Google OAuth registration
-   */
-  const handleGoogleLogin = () => {
-    // Redirect to backend Google OAuth route
-    window.location.href = `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001'}/api/auth/google`;
-  };
+ * Clear form using shared hook
+ */
+  const clearForm = useClearForm(
+    setFormData,
+    clearAllErrors,
+    resetTouched,
+    { full_name: '', email: '', password: '', confirmPassword: '', agreeTerms: false },
+    fullNameInputRef,
+    () => {
+      // Reset reCAPTCHA
+      if (recaptchaRef.current) {
+        recaptchaRef.current.reset();
+        setRecaptchaToken(null);
+      }
+    }
+  );
 
   /**
    * Handle keyboard shortcuts
    */
-  const handleKeyDown = (e) => {
-    // Escape key clears form
-    if (e.key === 'Escape') {
-      setFormData({
-        full_name: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        agreeTerms: false
-      });
-      setErrors({});
-      setTouched({ email: false, password: false, confirmPassword: false, agreeTerms: false });
-      emailInputRef.current?.focus();
-    }
-  };
+  const handleKeyDown = useFormKeyboard(clearForm, null);
 
   /**
-   * Get password strength indicator
-   * @param {string} password - The password to evaluate
-   * @returns {Object} Strength info with level and text
+   * Calculate password strength
    */
-  const getPasswordStrength = (password) => {
-    if (!password) return { level: 0, text: '', color: '' };
-    if (password.length < 8) return { level: 1, text: 'Weak', color: 'text-red-500' };
-    if (password.length < 12) return { level: 2, text: 'Fair', color: 'text-yellow-500' };
-    if (password.length >= 12 && /[A-Z]/.test(password) && /[0-9]/.test(password)) {
-      return { level: 3, text: 'Strong', color: 'text-green-500' };
-    }
-    return { level: 2, text: 'Good', color: 'text-blue-500' };
-  };
-
-  const passwordStrength = getPasswordStrength(formData.password);
+  const passwordStrength = calculatePasswordStrength(formData.password);
 
   return (
     <PageLayout
@@ -402,51 +388,19 @@ const Register = () => {
         </div>
 
         {/* Right Side - Registration Form (40-45%) */}
-        <div className="lg:w-[42%] bg-gray-50 flex items-center justify-center p-6 lg:p-12 min-h-screen lg:min-h-0 transition-colors duration-200">
-          <div className="w-full max-w-md">
+        <div className="lg:w-[42%] bg-gray-50 flex items-center justify-center p-6 lg:p-8 py-12 overflow-y-auto">
+          <div className="w-full max-w-md my-auto">
             {/* Heading */}
-            <div className="mb-8">
+            <div className="mb-6">
               <h2 className="text-3xl font-bold text-gray-900">
                 Create Your Account
               </h2>
             </div>
 
             {/* Error Message */}
-            {errors.general && (
+            {errors.general && !errors.accountExists && (
               <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="text-sm text-red-600">{errors.general}</p>
-
-                {/* Show helpful actions if account already exists */}
-                {errors.accountExists && formData.email && (
-                  <div className="mt-4 pt-4 border-t border-red-300">
-                    <p className="text-sm text-red-800 font-medium mb-3">
-                      Already have an account? Choose an option:
-                    </p>
-                    <div className="space-y-2">
-                      <button
-                        type="button"
-                        onClick={() => navigate('/login', { state: { email: formData.email } })}
-                        className="block w-full text-left px-3 py-2 text-sm bg-white border border-red-300 rounded-lg hover:bg-red-50:bg-gray-700 text-teal-700 font-semibold transition-colors"
-                      >
-                        → Try to Log In
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => navigate('/verify-email', { state: { email: formData.email } })}
-                        className="block w-full text-left px-3 py-2 text-sm bg-white border border-red-300 rounded-lg hover:bg-red-50:bg-gray-700 text-teal-700 font-semibold transition-colors"
-                      >
-                        → Verify Email (if unverified)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => navigate('/forgot-password', { state: { email: formData.email } })}
-                        className="block w-full text-left px-3 py-2 text-sm bg-white border border-red-300 rounded-lg hover:bg-red-50:bg-gray-700 text-teal-700 font-semibold transition-colors"
-                      >
-                        → Reset Password (if forgotten)
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
@@ -454,31 +408,46 @@ const Register = () => {
             <form
               onSubmit={handleSubmit}
               onKeyDown={handleKeyDown}
-              className="space-y-5"
+              className="space-y-4"
               noValidate
               aria-label="Registration form"
             >
-              {/* Full Name Field (Optional) */}
+              {/* Full Name Field */}
               <div>
-                <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name <span className="text-gray-400 text-xs">(Optional)</span>
+                <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Full Name
+                  <span className="text-red-500 ml-1" aria-label="required">*</span>
                 </label>
-                <input
-                  type="text"
-                  id="full_name"
-                  name="full_name"
-                  value={formData.full_name}
-                  onChange={handleChange}
-                  autoComplete="name"
-                  aria-label="Full name (optional)"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500:ring-teal-400 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-400"
-                  placeholder="Enter your full name"
-                />
+                <div className="relative">
+                  <input
+                    ref={fullNameInputRef}
+                    type="text"
+                    id="full_name"
+                    name="full_name"
+                    value={formData.full_name}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    required
+                    autoComplete="name"
+                    aria-required="true"
+                    aria-invalid={errors.full_name ? 'true' : 'false'}
+                    aria-describedby={errors.full_name ? 'full-name-error' : undefined}
+                    className={`w-full px-3 py-2 border ${errors.full_name ? 'border-red-500' : 'border-gray-300'} text-sm rounded-lg focus:ring-2 focus:ring-teal-500:ring-teal-400 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-400`}
+                    placeholder="Enter your full name"
+                  />
+                  {errors.full_name && (
+                    <ExclamationCircleIcon
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-red-500"
+                      aria-hidden="true"
+                    />
+                  )}
+                </div>
+                <FieldError error={errors.full_name} />
               </div>
 
               {/* Email Field */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
                   Email Address
                   <span className="text-red-500 ml-1" aria-label="required">*</span>
                 </label>
@@ -496,7 +465,7 @@ const Register = () => {
                     aria-required="true"
                     aria-invalid={errors.email ? 'true' : 'false'}
                     aria-describedby={errors.email ? 'email-error' : undefined}
-                    className={`w-full px-4 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500:ring-teal-400 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-400`}
+                    className={`w-full px-3 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300'} text-sm rounded-lg focus:ring-2 focus:ring-teal-500:ring-teal-400 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-400`}
                     placeholder="your.email@example.com"
                   />
                   {errors.email && (
@@ -506,17 +475,12 @@ const Register = () => {
                     />
                   )}
                 </div>
-                {errors.email && (
-                  <p id="email-error" className="mt-2 text-sm text-red-600 flex items-center gap-1" role="alert">
-                    <ExclamationCircleIcon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                    {errors.email}
-                  </p>
-                )}
+                <FieldError error={errors.email} />
               </div>
 
               {/* Password Field */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
                   Password
                   <span className="text-red-500 ml-1" aria-label="required">*</span>
                 </label>
@@ -534,56 +498,42 @@ const Register = () => {
                     aria-required="true"
                     aria-invalid={errors.password ? 'true' : 'false'}
                     aria-describedby={errors.password ? 'password-error' : 'password-hint'}
-                    className={`w-full px-4 py-3 pr-12 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500:ring-teal-400 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-400`}
-                    placeholder="Minimum 8 characters"
+                    className={`w-full px-4 py-3 pr-12 border ${errors.password ? 'border-red-500' : 'border-gray-300'} text-sm rounded-lg focus:ring-2 focus:ring-teal-500:ring-teal-400 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-400`}
+                    placeholder="Enter a strong password"
                   />
                   {/* Show/Hide Password Toggle */}
-                  <button
-                    type="button"
-                    onClick={togglePasswordVisibility}
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700:text-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500 rounded p-1 transition-colors"
-                  >
-                    {showPassword ? (
-                      <EyeSlashIcon className="w-5 h-5" aria-hidden="true" />
-                    ) : (
-                      <EyeIcon className="w-5 h-5" aria-hidden="true" />
-                    )}
-                  </button>
+                  <PasswordToggleButton
+                    showPassword={showPassword}
+                    onToggle={togglePasswordVisibility}
+                  />
                 </div>
                 {/* Password strength indicator */}
-                {formData.password && !errors.password && (
+                {formData.password && (
                   <div className="mt-2">
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div
-                          className={`h-full transition-all duration-300 ${passwordStrength.level === 1 ? 'w-1/3 bg-red-500' :
-                            passwordStrength.level === 2 ? 'w-2/3 bg-yellow-500' :
-                              passwordStrength.level === 3 ? 'w-full bg-green-500' : 'w-0'
+                          className={`h-full transition-all duration-300 ${passwordStrength.score === 1 ? 'w-1/5 bg-red-500' :
+                            passwordStrength.score === 2 ? 'w-2/5 bg-red-400' :
+                              passwordStrength.score === 3 ? 'w-3/5 bg-yellow-500' :
+                                passwordStrength.score === 4 ? 'w-4/5 bg-blue-500' :
+                                  passwordStrength.score === 5 ? 'w-full bg-green-500' : 'w-0'
                             }`}
                           aria-hidden="true"
                         />
                       </div>
-                      <span className={`text-xs font-medium ${passwordStrength.color}`}>
-                        {passwordStrength.text}
+                      <span className={`text-xs font-medium text-${passwordStrength.color}-600`}>
+                        {passwordStrength.label}
                       </span>
                     </div>
-                    <p id="password-hint" className="text-xs text-gray-500 mt-1">
-                      Use 12+ characters with uppercase, numbers for best security
-                    </p>
                   </div>
                 )}
-                {errors.password && (
-                  <p id="password-error" className="mt-2 text-sm text-red-600 flex items-center gap-1" role="alert">
-                    <ExclamationCircleIcon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                    {errors.password}
-                  </p>
-                )}
+                <FieldError error={errors.password} />
               </div>
 
               {/* Confirm Password Field */}
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1.5">
                   Confirm Password
                   <span className="text-red-500 ml-1" aria-label="required">*</span>
                 </label>
@@ -601,22 +551,14 @@ const Register = () => {
                     aria-required="true"
                     aria-invalid={errors.confirmPassword ? 'true' : 'false'}
                     aria-describedby={errors.confirmPassword ? 'confirm-password-error' : undefined}
-                    className={`w-full px-4 py-3 pr-12 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500:ring-teal-400 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-400`}
+                    className={`w-full px-4 py-3 pr-12 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} text-sm rounded-lg focus:ring-2 focus:ring-teal-500:ring-teal-400 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-400`}
                     placeholder="Re-enter your password"
                   />
                   {/* Show/Hide Password Toggle */}
-                  <button
-                    type="button"
-                    onClick={toggleConfirmPasswordVisibility}
-                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700:text-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500 rounded p-1 transition-colors"
-                  >
-                    {showConfirmPassword ? (
-                      <EyeSlashIcon className="w-5 h-5" aria-hidden="true" />
-                    ) : (
-                      <EyeIcon className="w-5 h-5" aria-hidden="true" />
-                    )}
-                  </button>
+                  <PasswordToggleButton
+                    showPassword={showConfirmPassword}
+                    onToggle={toggleConfirmPasswordVisibility}
+                  />
                   {/* Match indicator - shown when passwords match */}
                   {formData.confirmPassword && formData.confirmPassword === formData.password && !errors.confirmPassword && (
                     <CheckCircleIcon
@@ -632,12 +574,7 @@ const Register = () => {
                     />
                   )}
                 </div>
-                {errors.confirmPassword && (
-                  <p id="confirm-password-error" className="mt-2 text-sm text-red-600 flex items-center gap-1" role="alert">
-                    <ExclamationCircleIcon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                    {errors.confirmPassword}
-                  </p>
-                )}
+                <FieldError error={errors.confirmPassword} />
                 {formData.confirmPassword && formData.confirmPassword === formData.password && !errors.confirmPassword && (
                   <p className="mt-2 text-sm text-green-600 flex items-center gap-1">
                     <CheckCircleIcon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
@@ -674,21 +611,39 @@ const Register = () => {
                     <span className="text-red-500 ml-1" aria-label="required">*</span>
                   </label>
                 </div>
-                {errors.agreeTerms && (
-                  <p id="terms-error" className="mt-2 text-sm text-red-600 ml-7 flex items-center gap-1" role="alert">
-                    <ExclamationCircleIcon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                    {errors.agreeTerms}
-                  </p>
+                <div className="ml-7">
+                  <FieldError error={errors.agreeTerms} />
+                </div>
+              </div>
+
+              {/* reCAPTCHA */}
+              <div>
+                <div className="flex justify-center">
+                  <ReCAPTCHA
+                    ref={recaptchaRef}
+                    sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY || "6Lew1_IrAAAAADRERW8rY4BRUD21XFQc-LI4MJUE"}
+                    onChange={handleRecaptchaChange}
+                    onExpired={() => {
+                      setRecaptchaToken(null);
+                      setErrors({ ...errors, recaptcha: 'reCAPTCHA expired. Please verify again.' });
+                    }}
+                    theme="light"
+                  />
+                </div>
+                {errors.recaptcha && (
+                  <div className="mt-2 text-center">
+                    <FieldError error={errors.recaptcha} />
+                  </div>
                 )}
               </div>
 
               {/* Create Account Button */}
-              <div className="pt-2">
+              <div className="pt-1">
                 <button
                   type="submit"
                   disabled={loading}
                   aria-busy={loading}
-                  className="w-full px-6 py-3.5 bg-teal-600 hover:bg-teal-700:bg-teal-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2:ring-offset-gray-900 disabled:hover:bg-teal-600 disabled:hover:shadow-md"
+                  className="w-full px-6 py-3 bg-teal-600 hover:bg-teal-700:bg-teal-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2:ring-offset-gray-900 disabled:hover:bg-teal-600 disabled:hover:shadow-md"
                 >
                   {loading ? (
                     <span className="flex items-center justify-center" aria-live="polite">
@@ -709,7 +664,7 @@ const Register = () => {
               </div>
 
               {/* Divider */}
-              <div className="relative pt-2">
+              <div className="relative pt-1">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-300"></div>
                 </div>
@@ -719,26 +674,16 @@ const Register = () => {
               </div>
 
               {/* Social Login Buttons */}
-              <div className="space-y-3 pt-2">
-                <button
-                  type="button"
-                  onClick={handleGoogleLogin}
+              <div className="space-y-2 pt-1">
+                <GoogleOAuthButton
+                  onClick={handleGoogleAuth}
+                  text="Sign up with Google"
                   disabled={loading}
-                  className="w-full flex items-center justify-center px-4 py-3 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50:bg-gray-700 transition-all duration-200 text-sm font-medium text-gray-700 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label="Continue with Google account"
-                >
-                  <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                  </svg>
-                  Continue with Google
-                </button>
+                />
               </div>
 
               {/* Login Link */}
-              <div className="text-center pt-4">
+              <div className="text-center pt-3">
                 <p className="text-sm text-gray-600">
                   Already have an account?{' '}
                   <Link to="/login" className="text-teal-600 hover:text-teal-700:text-teal-300 font-semibold">
