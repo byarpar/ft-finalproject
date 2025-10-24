@@ -230,13 +230,11 @@ const Login = () => {
 
         setErrors(newErrors);
 
-        // Email not verified - redirect to verification page
+        // Email not verified - show message (don't auto-redirect)
         if (errorData.requiresVerification) {
-          setTimeout(() => {
-            navigate('/verify-email', {
-              state: { email: errorData.email || formData.email }
-            });
-          }, 1500);
+          // Store email for verification page link
+          newErrors.unverifiedEmail = errorData.email || formData.email;
+          setErrors(newErrors);
         }
       }
     } catch (error) {
@@ -459,17 +457,20 @@ const Login = () => {
                     )}
 
                     {/* Show verification help if email not verified */}
-                    {errors.general.toLowerCase().includes('verify') && !errors.accountNotFound && formData.email && (
+                    {(errors.general.toLowerCase().includes('verify') || errors.unverifiedEmail) && !errors.accountNotFound && (
                       <div className="mt-3 pt-3 border-t border-red-300">
-                        <p className="text-sm text-red-800 font-medium mb-1.5">
-                          Need help with verification?
+                        <p className="text-sm text-red-800 font-medium mb-2">
+                          📧 Your email is not verified yet
+                        </p>
+                        <p className="text-xs text-red-700 mb-3">
+                          Please check your inbox for the verification code we sent to <strong>{errors.unverifiedEmail || formData.email}</strong>
                         </p>
                         <button
                           type="button"
-                          onClick={() => navigate('/verify-email', { state: { email: formData.email } })}
-                          className="text-sm text-teal-600 hover:text-teal-700 font-semibold underline"
+                          onClick={() => navigate('/verify-email', { state: { email: errors.unverifiedEmail || formData.email } })}
+                          className="w-full px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200"
                         >
-                          → Go to Verification Page
+                          Verify Email Now
                         </button>
                       </div>
                     )}
