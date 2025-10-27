@@ -44,12 +44,12 @@ const SearchBar = ({
     const timer = setTimeout(async () => {
       try {
         const response = await searchAPI.search({
-          q: value,
+          query: value,
           limit: 5,
         });
 
         // Extract results from response
-        const words = response.data?.results || response.results || [];
+        const words = response.data?.words || response.words || [];
         setSuggestions(words);
         setShowSuggestionsList(words.length > 0);
       } catch (error) {

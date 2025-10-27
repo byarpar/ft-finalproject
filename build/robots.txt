@@ -50,6 +50,16 @@ Allow: /*.jpeg
 Allow: /*.png
 Allow: /*.svg
 Allow: /*.webp
+Allow: /*.woff
+Allow: /*.woff2
+
+# Sitemap
+Sitemap: https://www.lisudictionar.com/sitemap.xml
+
+# Crawl delay (optional - adjust if needed)
+Crawl-delay: 1
+Allow: /*.svg
+Allow: /*.webp
 
 # Crawl-delay for respectful crawling
 Crawl-delay: 1

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { HomeIcon, ArrowLeftIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import PageLayout from '../components/Layout/PageLayout';
 
@@ -12,11 +13,25 @@ import PageLayout from '../components/Layout/PageLayout';
 const NotFound = () => {
   const navigate = useNavigate();
 
+  // Set proper HTTP status for server-side rendering
+  useEffect(() => {
+    // This helps with SSR/SSG scenarios
+    if (window && window.location) {
+      console.warn('404 Not Found:', window.location.href);
+    }
+  }, []);
+
   return (
     <PageLayout
       title="404 - Page Not Found"
       description="The page you're looking for doesn't exist."
     >
+      <Helmet>
+        {/* Explicitly tell search engines this is a 404 */}
+        <meta name="prerender-status-code" content="404" />
+        <meta name="robots" content="noindex, nofollow" />
+        <meta http-equiv="status" content="404" />
+      </Helmet>
       <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
         <div className="text-center max-w-2xl">
           {/* 404 Number */}

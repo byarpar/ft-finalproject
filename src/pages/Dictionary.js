@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import {
   BookmarkIcon,
   SpeakerWaveIcon,
@@ -39,14 +40,15 @@ const Dictionary = () => {
     setIsLoading(true);
     try {
       const response = await searchAPI.search({
-        q: query,
+        query: query,
         page: currentPage,
         limit: resultsPerPage
       });
 
-      const words = response.data?.results || response.results || [];
+      const words = response.data?.words || response.words || [];
       setResults(words);
-      setTotalResults(response.data?.total || response.total || words.length);
+      const total = response.metadata?.pagination?.total || response.pagination?.total || words.length;
+      setTotalResults(total);
     } catch (error) {
       console.error('Error fetching search results:', error);
       setResults([]);
@@ -109,6 +111,13 @@ const Dictionary = () => {
       fullWidth={true}
       background=""
     >
+      <Helmet>
+        {/* Ensure search results pages are indexable with content */}
+        <meta name="robots" content="index, follow" />
+        {query && totalResults === 0 && (
+          <meta name="prerender-status-code" content="200" />
+        )}
+      </Helmet>
       <div className="min-h-screen bg-gray-50">
         {/* Hero Navigation Bar */}
         <section className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800">

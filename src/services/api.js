@@ -164,7 +164,7 @@ export const usersAPI = {
 
 // Search API
 export const searchAPI = {
-  search: (params) => api.get('/search', { params }).then(res => res.data),
+  search: (params) => api.get('/words/search', { params }).then(res => res.data),
 };
 
 export default api;
