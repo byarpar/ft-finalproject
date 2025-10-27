@@ -205,8 +205,12 @@ const AdminDashboard = () => {
           <div className="flex flex-col h-full">
             {/* Logo */}
             <div className="flex items-center justify-between h-16 px-6 border-b border-teal-600">
-              <Link to="/admin" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-                <BookOpenIcon className="w-8 h-8" aria-hidden="true" />
+              <Link to="/admin" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+                <img
+                  src="/logo.png"
+                  alt="Lisu Dictionary Logo"
+                  className="w-10 h-10 object-contain drop-shadow-lg"
+                />
                 <div>
                   <h1 className="text-lg font-bold">Lisu Dictionary</h1>
                   <p className="text-xs text-teal-200">Admin Panel</p>

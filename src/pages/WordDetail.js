@@ -388,13 +388,14 @@ const WordDetail = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
               {/* Logo/Brand */}
               <Link to="/" className="group flex items-center gap-3">
-                <div className="relative w-12 h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-white/25 transition-all border border-white/20">
-                  <BookOpenIcon className="w-8 h-8 text-white/40" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-white font-bold text-[9px] tracking-tight drop-shadow-lg">LED</span>
-                  </div>
+                <div className="relative w-12 h-12 flex items-center justify-center">
+                  <img
+                    src="/logo.png"
+                    alt="Lisu Dictionary Logo"
+                    className="w-12 h-12 object-contain drop-shadow-lg"
+                  />
                 </div>
-                <div className="text-white font-light text-xl tracking-[0.3em] uppercase">
+                <div className="text-white font-light text-xl tracking-[0.3em] uppercase group-hover:text-teal-100 transition-colors">
                   LISU DICT
                 </div>
               </Link>

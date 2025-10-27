@@ -806,7 +806,7 @@ const Discussions = () => {
                                   'from-teal-400 to-green-500'
                               } flex items-center justify-center text-white font-bold text-lg sm:text-xl border-2 border-gray-200`}
                           >
-                            {member.username.charAt(0).toUpperCase()}
+                            {(member.username || 'U').charAt(0).toUpperCase()}
                           </div>
                           <div className="absolute bottom-0 right-0 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-green-500 border-2 border-white rounded-full" />
                         </div>
@@ -834,7 +834,7 @@ const Discussions = () => {
                                 'from-teal-400 to-green-500'
                             } flex items-center justify-center text-white font-bold text-xl border-2 border-gray-200`}
                         >
-                          {member.username.charAt(0).toUpperCase()}
+                          {(member.username || 'U').charAt(0).toUpperCase()}
                         </div>
                         <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full" />
                       </div>

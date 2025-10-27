@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  BookOpenIcon,
   EnvelopeIcon,
   HeartIcon
 } from '@heroicons/react/24/outline';
@@ -54,12 +53,16 @@ const Footer = () => {
 
           {/* Column 1: About / Branding */}
           <div className="space-y-4">
-            <Link to="/" className="flex items-center space-x-2 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-200">
-                <BookOpenIcon className="h-6 w-6 text-white" />
+            <Link to="/" className="flex items-center space-x-3 group">
+              <div className="w-10 h-10 flex items-center justify-center">
+                <img
+                  src="/logo.png"
+                  alt="Lisu Dictionary Logo"
+                  className="w-10 h-10 object-contain"
+                />
               </div>
               <div>
-                <h3 className="text-white font-bold text-base">LISU</h3>
+                <h3 className="text-white font-bold text-base group-hover:text-teal-400 transition-colors">LISU</h3>
                 <p className="text-xs text-gray-400 -mt-1">DICTIONARY</p>
               </div>
             </Link>

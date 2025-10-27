@@ -182,25 +182,16 @@ const Navbar = () => {
           <div className="flex items-center flex-shrink-0">
             <Link to="/" className="flex items-center space-x-3 group">
               {/* Logo */}
-              <div className="w-10 h-10 bg-gradient-to-br from-teal-600 to-teal-500 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-200">
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  className="text-white"
-                >
-                  <path
-                    d="M4 6h16v12H4V6zm2 2v8h12V8H6zm2 2h8m-8 2h8m-8 2h5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
+              <div className="w-10 h-10 flex items-center justify-center">
+                <img
+                  src="/logo.png"
+                  alt="Lisu Dictionary Logo"
+                  className="w-10 h-10 object-contain"
+                />
               </div>
               {/* Site Name */}
               <div className="hidden sm:block">
-                <h1 className="text-lg font-bold text-gray-800 tracking-tight">
+                <h1 className="text-lg font-bold text-gray-800 tracking-tight group-hover:text-teal-600 transition-colors">
                   LISU
                 </h1>
                 <p className="text-xs text-gray-500 -mt-1">DICTIONARY</p>
