@@ -52,7 +52,7 @@ const UsersList = () => {
 
       if (response.success) {
         setUsers(response.data.users || []);
-        const pagination = response.data.pagination || {};
+        const pagination = response.metadata?.pagination || {};
         setTotalPages(pagination.totalPages || pagination.total_pages || 1);
         setTotalUsers(pagination.total || pagination.total_users || 0);
       }

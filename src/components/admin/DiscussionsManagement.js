@@ -260,7 +260,7 @@ const DiscussionsManagement = () => {
 
         // Update pagination - handle both response formats
         const paginationData = response.success
-          ? response.data?.pagination
+          ? response.metadata?.pagination
           : { total: response.totalCount, totalPages: response.totalPages, page: response.currentPage };
 
         if (paginationData) {

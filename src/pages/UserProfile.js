@@ -12,11 +12,11 @@ import {
   BookOpenIcon,
   ChatBubbleLeftRightIcon,
   ArrowUpIcon,
-  TrophyIcon,
-  StarIcon
+  TrophyIcon
 } from '@heroicons/react/24/outline';
 import {
-  BookmarkIcon as BookmarkSolidIcon
+  BookmarkIcon as BookmarkSolidIcon,
+  CheckBadgeIcon
 } from '@heroicons/react/24/solid';
 import { usersAPI, discussionsAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -184,10 +184,11 @@ const UserProfileEnhanced = () => {
         description="Loading user profile"
       >
         <div className="min-h-screen bg-gray-50">
-          <HeroNavbar />
+          {/* Hero Navigation Bar with Gradient Background */}
+          <section className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800">
+            <HeroNavbar />
 
-          <div className="bg-white border-b border-gray-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
               <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
                 <SkeletonLoader variant="avatar" />
                 <div className="flex-1 space-y-3 w-full">
@@ -198,7 +199,7 @@ const UserProfileEnhanced = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
           <div className="bg-white border-b border-gray-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -232,7 +233,11 @@ const UserProfileEnhanced = () => {
         description="This user could not be found"
       >
         <div className="min-h-screen bg-gray-50">
-          <HeroNavbar />
+          {/* Hero Navigation Bar with Gradient Background */}
+          <section className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800">
+            <HeroNavbar />
+          </section>
+
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="bg-white rounded-lg shadow-sm p-12 text-center">
               <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-50 flex items-center justify-center">
@@ -273,17 +278,18 @@ const UserProfileEnhanced = () => {
       description={profile ? `View ${profile.full_name || profile.username}'s profile and activity on Lisu Dictionary` : 'User profile page'}
     >
       <div className="min-h-screen bg-gray-50">
-        <HeroNavbar />
+        {/* Hero Navigation Bar with Gradient Background */}
+        <section className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800">
+          <HeroNavbar />
 
-        <div className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
               <div className="relative">
                 {profile.profile_photo_url ? (
                   <img
                     src={profile.profile_photo_url}
                     alt={profile.username}
-                    className="w-24 h-24 md:w-32 md:h-32 rounded-full border-2 border-gray-200 object-cover"
+                    className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white/30 object-cover shadow-lg"
                     referrerPolicy="no-referrer"
                     onError={(e) => {
                       console.log('Image failed to load:', profile.profile_photo_url);
@@ -293,7 +299,7 @@ const UserProfileEnhanced = () => {
                   />
                 ) : null}
                 <div
-                  className="w-24 h-24 md:w-32 md:h-32 rounded-full border-2 border-gray-200 bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center"
+                  className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white/30 bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow-lg"
                   style={{ display: profile.profile_photo_url ? 'none' : 'flex' }}
                 >
                   <span className="text-4xl md:text-5xl font-bold text-white">
@@ -304,22 +310,25 @@ const UserProfileEnhanced = () => {
 
               <div className="flex-1 text-center md:text-left">
                 <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
-                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                  <h1 className="text-2xl md:text-3xl font-bold text-white">
                     {profile.full_name || profile.username}
                   </h1>
                   {profile.role === 'admin' && (
-                    <StarIcon className="w-6 h-6 md:w-7 md:h-7 text-red-500 flex-shrink-0" title="Verified Admin" />
+                    <div className="relative flex-shrink-0">
+                      <div className="absolute inset-0 bg-white rounded-full"></div>
+                      <CheckBadgeIcon className="relative w-6 h-6 md:w-7 md:h-7 text-red-600" title="Verified Admin" />
+                    </div>
                   )}
                 </div>
-                <p className="text-lg text-gray-600 mb-3">@{profile.username}</p>
+                <p className="text-lg text-teal-100 mb-3">@{profile.username}</p>
 
                 {profile.bio && (
-                  <p className="text-gray-700 max-w-2xl mb-3">
+                  <p className="text-white/90 max-w-2xl mb-3">
                     {profile.bio}
                   </p>
                 )}
 
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-gray-600">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-teal-100">
                   {profile.location && (
                     <span className="flex items-center gap-1">
                       <MapPinIcon className="w-4 h-4" />
@@ -342,7 +351,7 @@ const UserProfileEnhanced = () => {
                 {isOwnProfile ? (
                   <Link
                     to="/settings"
-                    className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-100:bg-gray-600 transition-colors border border-gray-300 font-medium"
+                    className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-teal-50 text-teal-700 rounded-lg transition-colors border border-white/20 font-medium shadow-sm"
                   >
                     <PencilIcon className="w-5 h-5" />
                     Edit Profile
@@ -350,7 +359,7 @@ const UserProfileEnhanced = () => {
                 ) : (
                   <button
                     onClick={() => toast('Report functionality coming soon')}
-                    className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-100:bg-gray-600 transition-colors border border-gray-300"
+                    className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/20"
                     title="Report User"
                   >
                     <FlagIcon className="w-5 h-5" />
@@ -360,7 +369,7 @@ const UserProfileEnhanced = () => {
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
         <div className="bg-white border-b border-gray-200 sticky top-16 z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -83,7 +83,7 @@ const WordsList = () => {
           console.log('Sample word data:', fetchedWords[0]);
         }
         setWords(fetchedWords);
-        const pagination = response.data.pagination || {};
+        const pagination = response.metadata?.pagination || {};
         setTotalPages(pagination.totalPages || pagination.total_pages || 1);
         setTotalWords(pagination.total || pagination.total_words || 0);
       }

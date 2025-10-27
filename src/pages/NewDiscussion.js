@@ -15,6 +15,7 @@ import {
 import toast from 'react-hot-toast';
 import SkeletonLoader from '../components/UI/SkeletonLoader';
 import PageLayout from '../components/Layout/PageLayout';
+import { markdownToHtml } from '../utils/markdownUtils';
 
 /**
  * NewDiscussion Component
@@ -24,15 +25,19 @@ import PageLayout from '../components/Layout/PageLayout';
  */
 
 const TAG_SUGGESTIONS = {
-  grammar: ['#tenses', '#verbs', '#syntax', '#structure'],
-  pronunciation: ['#tones', '#phonetics', '#accent', '#listening'],
-  vocabulary: ['#words', '#phrases', '#translation', '#meaning'],
-  cultural: ['#traditions', '#customs', '#history', '#culture'],
-  technical: ['#bug', '#feature', '#help', '#support'],
-  general: ['#question', '#discussion', '#community', '#feedback']
+  general: ['#question', '#discussion', '#community', '#feedback', '#help', '#tips'],
+  'language-learning': ['#beginners', '#practice', '#resources', '#study-tips', '#immersion'],
+  grammar: ['#tenses', '#verbs', '#syntax', '#structure', '#sentences', '#rules'],
+  vocabulary: ['#words', '#phrases', '#translation', '#meaning', '#idioms', '#expressions'],
+  'culture-traditions': ['#traditions', '#customs', '#history', '#culture', '#festivals', '#heritage'],
+  pronunciation: ['#tones', '#phonetics', '#accent', '#listening', '#speaking', '#sounds'],
+  translation: ['#translate', '#meaning', '#interpretation', '#bilingual', '#context'],
+  etymology: ['#word-origin', '#history', '#linguistics', '#roots', '#development'],
+  other: ['#miscellaneous', '#off-topic', '#general', '#chat', '#random']
 };
 
 const MAX_TAGS = 5;
+const MIN_TAGS = 1;
 const MAX_IMAGES = 5;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const MIN_TITLE_LENGTH = 10;
@@ -59,6 +64,7 @@ const NewDiscussion = () => {
   const [loading, setLoading] = useState(true);
   const [subscribeToUpdates, setSubscribeToUpdates] = useState(true);
   const [suggestedTags, setSuggestedTags] = useState([]);
+  const [previewMode, setPreviewMode] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -229,6 +235,10 @@ const NewDiscussion = () => {
       toast.error('Please select a category');
       return;
     }
+    if (formData.tags.length < MIN_TAGS) {
+      toast.error(`Please add at least ${MIN_TAGS} tag to help others find your discussion`);
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -390,18 +400,20 @@ const NewDiscussion = () => {
                       required
                     >
                       <option value="">Select a category</option>
-                      {Array.isArray(categories) && categories.filter(cat => cat.id !== 'all').map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
+                      {Array.isArray(categories) && categories
+                        .filter(cat => !['all', 'home', 'members', 'community-chat'].includes(cat.id))
+                        .map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
                     </select>
                   </div>
 
                   {/* Tags Input */}
                   <div>
                     <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
-                      Tags (Optional)
+                      Tags <span className="text-red-500">*</span>
                     </label>
                     <div className="flex gap-2 mb-2">
                       <input
@@ -467,7 +479,16 @@ const NewDiscussion = () => {
                       </div>
                     )}
                     <p className="mt-2 text-xs text-gray-500">
-                      Add up to {MAX_TAGS} tags to help others find your discussion
+                      {formData.tags.length === 0 && (
+                        <span className="text-red-500 font-medium">
+                          Please add at least {MIN_TAGS} tag to help others find your discussion
+                        </span>
+                      )}
+                      {formData.tags.length > 0 && (
+                        <span>
+                          Add up to {MAX_TAGS} tags • {formData.tags.length} of {MIN_TAGS} required added
+                        </span>
+                      )}
                     </p>
                   </div>
 
@@ -476,87 +497,130 @@ const NewDiscussion = () => {
                       Content <span className="text-red-500">*</span>
                     </label>
 
-                    <div className="flex flex-wrap gap-2 mb-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                    {/* Write/Preview Tabs */}
+                    <div className="flex items-center gap-2 mb-3 border-b border-gray-200">
                       <button
                         type="button"
-                        onClick={() => insertFormatting('bold')}
-                        className="p-2 hover:bg-gray-200:bg-gray-600 rounded text-gray-700 transition-colors"
-                        title="Bold"
+                        onClick={() => setPreviewMode(false)}
+                        className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${!previewMode
+                            ? 'border-teal-500 text-teal-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                          }`}
                       >
-                        <span className="font-bold">B</span>
+                        Write
                       </button>
                       <button
                         type="button"
-                        onClick={() => insertFormatting('italic')}
-                        className="p-2 hover:bg-gray-200:bg-gray-600 rounded text-gray-700 transition-colors"
-                        title="Italic"
+                        onClick={() => setPreviewMode(true)}
+                        className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${previewMode
+                            ? 'border-teal-500 text-teal-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                          }`}
                       >
-                        <span className="italic">I</span>
+                        Preview
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => insertFormatting('link')}
-                        className="p-2 hover:bg-gray-200:bg-gray-600 rounded text-gray-700 transition-colors"
-                        title="Insert Link"
-                      >
-                        <LinkIcon className="w-5 h-5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => insertFormatting('list')}
-                        className="p-2 hover:bg-gray-200:bg-gray-600 rounded text-gray-700 transition-colors"
-                        title="Bullet List"
-                      >
-                        <ListBulletIcon className="w-5 h-5" />
-                      </button>
-                      <div className="border-l border-gray-300 mx-2"></div>
-                      <label
-                        htmlFor="imageUpload"
-                        className="p-2 hover:bg-gray-200:bg-gray-600 rounded text-gray-700 transition-colors cursor-pointer"
-                        title="Upload Image (Max 5 images, 5MB each)"
-                      >
-                        <PhotoIcon className="w-5 h-5" />
-                        <input
-                          id="imageUpload"
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          onChange={handleImageUpload}
-                          className="hidden"
-                        />
-                      </label>
-                      <div className="flex-1"></div>
-                      <span className="text-xs text-gray-500 flex items-center">
-                        Markdown supported • {formData.images.length}/{MAX_IMAGES} images
-                      </span>
                     </div>
 
-                    <textarea
-                      ref={contentRef}
-                      id="content"
-                      name="content"
-                      value={formData.content}
-                      onChange={handleChange}
-                      placeholder="Describe your question or topic clearly. Provide examples and context to help others understand and provide better responses."
-                      rows={12}
-                      maxLength={MAX_CONTENT_LENGTH}
-                      disabled={isSubmitting}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent placeholder-gray-400 resize-none disabled:opacity-50 font-mono text-sm"
-                      required
-                    />
-                    <div className="mt-2 flex items-center justify-between text-xs">
-                      <span className={`${formData.content.length < MIN_CONTENT_LENGTH ? 'text-red-500' :
-                        formData.content.length < 100 ? 'text-yellow-500' :
-                          'text-green-500'
-                        }`}>
-                        {formData.content.length < MIN_CONTENT_LENGTH && `Minimum ${MIN_CONTENT_LENGTH} characters`}
-                        {formData.content.length >= MIN_CONTENT_LENGTH && formData.content.length < 100 && 'Add more details'}
-                        {formData.content.length >= 100 && 'Good detail level'}
-                      </span>
-                      <span className="text-gray-500">
-                        {formData.content.length}/{MAX_CONTENT_LENGTH}
-                      </span>
-                    </div>
+                    {!previewMode && (
+                      <>
+                        <div className="flex flex-wrap gap-2 mb-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                          <button
+                            type="button"
+                            onClick={() => insertFormatting('bold')}
+                            className="p-2 hover:bg-gray-200:bg-gray-600 rounded text-gray-700 transition-colors"
+                            title="Bold"
+                          >
+                            <span className="font-bold">B</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => insertFormatting('italic')}
+                            className="p-2 hover:bg-gray-200:bg-gray-600 rounded text-gray-700 transition-colors"
+                            title="Italic"
+                          >
+                            <span className="italic">I</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => insertFormatting('link')}
+                            className="p-2 hover:bg-gray-200:bg-gray-600 rounded text-gray-700 transition-colors"
+                            title="Insert Link"
+                          >
+                            <LinkIcon className="w-5 h-5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => insertFormatting('list')}
+                            className="p-2 hover:bg-gray-200:bg-gray-600 rounded text-gray-700 transition-colors"
+                            title="Bullet List"
+                          >
+                            <ListBulletIcon className="w-5 h-5" />
+                          </button>
+                          <div className="border-l border-gray-300 mx-2"></div>
+                          <label
+                            htmlFor="imageUpload"
+                            className="p-2 hover:bg-gray-200:bg-gray-600 rounded text-gray-700 transition-colors cursor-pointer"
+                            title="Upload Image (Max 5 images, 5MB each)"
+                          >
+                            <PhotoIcon className="w-5 h-5" />
+                            <input
+                              id="imageUpload"
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              onChange={handleImageUpload}
+                              className="hidden"
+                            />
+                          </label>
+                          <div className="flex-1"></div>
+                          <span className="text-xs text-gray-500 flex items-center">
+                            Markdown supported • {formData.images.length}/{MAX_IMAGES} images
+                          </span>
+                        </div>
+
+                        <textarea
+                          ref={contentRef}
+                          id="content"
+                          name="content"
+                          value={formData.content}
+                          onChange={handleChange}
+                          placeholder="Describe your question or topic clearly. Provide examples and context to help others understand and provide better responses."
+                          rows={12}
+                          maxLength={MAX_CONTENT_LENGTH}
+                          disabled={isSubmitting}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent placeholder-gray-400 resize-none disabled:opacity-50 font-mono text-sm"
+                          required
+                        />
+                        <div className="mt-2 flex items-center justify-between text-xs">
+                          <span className={`${formData.content.length < MIN_CONTENT_LENGTH ? 'text-red-500' :
+                            formData.content.length < 100 ? 'text-yellow-500' :
+                              'text-green-500'
+                            }`}>
+                            {formData.content.length < MIN_CONTENT_LENGTH && `Minimum ${MIN_CONTENT_LENGTH} characters`}
+                            {formData.content.length >= MIN_CONTENT_LENGTH && formData.content.length < 100 && 'Add more details'}
+                            {formData.content.length >= 100 && 'Good detail level'}
+                          </span>
+                          <span className="text-gray-500">
+                            {formData.content.length}/{MAX_CONTENT_LENGTH}
+                          </span>
+                        </div>
+                      </>
+                    )}
+
+                    {previewMode && (
+                      <div className="border border-gray-300 rounded-lg p-4 min-h-[300px] bg-gray-50">
+                        {formData.content.trim() ? (
+                          <div
+                            className="prose prose-sm sm:prose max-w-none"
+                            dangerouslySetInnerHTML={{ __html: markdownToHtml(formData.content) }}
+                          />
+                        ) : (
+                          <div className="text-gray-400 text-center py-12">
+                            Nothing to preview yet. Switch to Write tab to add content.
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {formData.images.length > 0 && (
@@ -616,7 +680,7 @@ const NewDiscussion = () => {
 
                     <button
                       type="submit"
-                      disabled={isSubmitting || !formData.title.trim() || !formData.content.trim() || !formData.category}
+                      disabled={isSubmitting || !formData.title.trim() || !formData.content.trim() || !formData.category || formData.tags.length < MIN_TAGS}
                       className="flex-1 sm:flex-none px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
                     >
                       {isSubmitting ? (

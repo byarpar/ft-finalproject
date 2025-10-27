@@ -316,6 +316,8 @@ const WordDetail = () => {
       examples = word.examples;
     }
   }
+  // Ensure all examples are strings
+  examples = examples.filter(ex => typeof ex === 'string' && ex.trim().length > 0);
 
   const partOfSpeechColors = {
     'Noun': 'bg-blue-100 text-blue-800',

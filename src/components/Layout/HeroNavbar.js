@@ -156,7 +156,7 @@ const HeroNavbar = () => {
         <Link to="/" className="flex items-center gap-3 group">
           <div className="relative w-12 h-12 flex items-center justify-center">
             <img
-              src="/logo.png"
+              src="/navbar.png"
               alt="Lisu Dictionary Logo"
               className="w-12 h-12 object-contain drop-shadow-lg"
             />

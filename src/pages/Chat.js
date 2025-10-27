@@ -438,8 +438,10 @@ const Chat = () => {
     >
       {/* Main Container */}
       <div className="h-screen flex flex-col">
-        {/* Navigation Bar */}
-        <HeroNavbar />
+        {/* Navigation Bar with Gradient Background */}
+        <section className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800">
+          <HeroNavbar />
+        </section>
 
         {/* Chat Container - Responsive Three Column Layout */}
         <div className="flex-1 flex overflow-hidden bg-gray-50">
