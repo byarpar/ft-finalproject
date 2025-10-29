@@ -45,7 +45,6 @@ const Discussions = () => {
 
   const [discussions, setDiscussions] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [popularTags, setPopularTags] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [activeMembers, setActiveMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -156,8 +155,8 @@ const Discussions = () => {
 
   const fetchPopularTags = useCallback(async () => {
     try {
-      const response = await tagsAPI.getPopularTags(10);
-      setPopularTags(response.data || []);
+      await tagsAPI.getPopularTags(10);
+      // Tags are fetched but not currently displayed in this view
     } catch (err) {
       console.error('Error fetching tags:', err);
     }
@@ -340,7 +339,6 @@ const Discussions = () => {
             <div className="bg-white rounded-lg border border-gray-200 p-4">
               <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide">
                 {categories.map((category) => {
-                  const IconComp = category.IconComponent || ChatBubbleLeftRightIcon;
                   return (
                     <button
                       key={category.id}
@@ -491,7 +489,6 @@ const Discussions = () => {
                       {discussions.map((discussion) => {
                         const category = categories.find(cat => cat.id === discussion.category) || categories[0];
                         const CategoryIcon = category.IconComponent || ChatBubbleLeftRightIcon;
-                        const isTrending = (discussion.answers_count > 5) || (discussion.vote_count > 10);
 
                         return (
                           <Link
@@ -637,7 +634,6 @@ const Discussions = () => {
                       {discussions.map((discussion) => {
                         const category = categories.find(cat => cat.id === discussion.category) || categories[0];
                         const CategoryIcon = category.IconComponent || ChatBubbleLeftRightIcon;
-                        const isTrending = (discussion.answers_count > 5) || (discussion.vote_count > 10);
 
                         return (
                           <Link
