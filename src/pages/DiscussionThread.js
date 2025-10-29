@@ -12,7 +12,7 @@ import ReplyItem from '../components/Discussion/ReplyItem';
 import ImageLightbox from '../components/Discussion/ImageLightbox';
 import {
   ChatBubbleLeftRightIcon, BookmarkIcon, ClockIcon, PencilIcon, TrashIcon,
-  FlagIcon, PhotoIcon, XMarkIcon, MagnifyingGlassPlusIcon
+  FlagIcon, PhotoIcon, XMarkIcon, MagnifyingGlassPlusIcon, EyeIcon
 } from '@heroicons/react/24/outline';
 import { BookmarkIcon as BookmarkSolidIcon, CheckBadgeIcon } from '@heroicons/react/24/solid';
 import toast from 'react-hot-toast';
@@ -431,98 +431,106 @@ const DiscussionThread = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <VoteButtons
-                      itemId={discussion.id}
-                      itemType="discussion"
-                      initialVoteCount={discussion.vote_count || 0}
-                      initialUpvotes={discussion.upvotes || 0}
-                      initialUserVote={discussion.user_vote || null}
-                      onVoteChange={(voteData) => setDiscussion(prev => ({ ...prev, ...voteData }))}
-                    />
-                    <button onClick={toggleSave} className={`p-2 rounded-lg transition-colors ${discussion.is_saved ? 'bg-teal-100' : 'bg-gray-100 hover:bg-gray-200'}`}>
-                      {discussion.is_saved ? <BookmarkSolidIcon className="w-5 h-5 text-teal-600" /> : <BookmarkIcon className="w-5 h-5 text-gray-500" />}
-                    </button>
-                    <button onClick={() => setShowReplyBox(!showReplyBox)} className="flex-1 sm:flex-none sm:ml-auto px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium flex items-center justify-center gap-2">
-                      <ChatBubbleLeftRightIcon className="w-5 h-5" />
-                      <span>Reply</span>
+                <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <VoteButtons
+                        itemId={discussion.id}
+                        itemType="discussion"
+                        initialVoteCount={discussion.vote_count || 0}
+                        initialUpvotes={discussion.upvotes || 0}
+                        initialUserVote={discussion.user_vote || null}
+                        onVoteChange={(voteData) => setDiscussion(prev => ({ ...prev, ...voteData }))}
+                      />
+                      <div className="flex items-center gap-1 text-gray-500 text-sm">
+                        <EyeIcon className="w-4 h-4" />
+                        <span>{discussion.views_count || 0}</span>
+                      </div>
+                    </div>
+                    <button onClick={toggleSave} className={`p-2 rounded-lg transition-colors ${discussion.is_saved ? 'text-teal-600 hover:bg-teal-50' : 'text-gray-400 hover:bg-gray-100'}`}>
+                      {discussion.is_saved ? <BookmarkSolidIcon className="w-5 h-5" /> : <BookmarkIcon className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
               </div>
 
               {/* Replies Section */}
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                {(showReplyBox || user) && (
-                  <ReplyForm
-                    user={user}
-                    replyContent={replyContent}
-                    setReplyContent={setReplyContent}
-                    replyImages={replyImages}
-                    setReplyImages={setReplyImages}
-                    replyingTo={replyingTo}
-                    replyToUsername={replyToUsername}
-                    setReplyingTo={setReplyingTo}
-                    setReplyToUsername={setReplyToUsername}
-                    showReplyBox={showReplyBox}
-                    setShowReplyBox={setShowReplyBox}
-                    isSubmitting={isSubmitting}
-                    onSubmit={handleSubmitReply}
-                    MIN_REPLY_LENGTH={MIN_REPLY_LENGTH}
-                    MAX_REPLY_LENGTH={MAX_REPLY_LENGTH}
-                    MAX_REPLY_IMAGES={MAX_REPLY_IMAGES}
-                    MAX_IMAGE_SIZE={MAX_IMAGE_SIZE}
-                  />
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                {user && (
+                  <div className="p-6 border-b border-gray-200">
+                    <ReplyForm
+                      user={user}
+                      replyContent={replyContent}
+                      setReplyContent={setReplyContent}
+                      replyImages={replyImages}
+                      setReplyImages={setReplyImages}
+                      replyingTo={replyingTo}
+                      replyToUsername={replyToUsername}
+                      setReplyingTo={setReplyingTo}
+                      setReplyToUsername={setReplyToUsername}
+                      showReplyBox={showReplyBox}
+                      setShowReplyBox={setShowReplyBox}
+                      isSubmitting={isSubmitting}
+                      onSubmit={handleSubmitReply}
+                      MIN_REPLY_LENGTH={MIN_REPLY_LENGTH}
+                      MAX_REPLY_LENGTH={MAX_REPLY_LENGTH}
+                      MAX_REPLY_IMAGES={MAX_REPLY_IMAGES}
+                      MAX_IMAGE_SIZE={MAX_IMAGE_SIZE}
+                    />
+                  </div>
                 )}
 
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl md:text-2xl font-bold text-gray-900">Replies ({answers.length})</h2>
-                  {answers.length > 1 && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600 hidden sm:inline">Sort by:</span>
-                      <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500">
-                        <option value="newest">Newest</option>
-                        <option value="oldest">Oldest</option>
-                        <option value="most_voted">Most Voted</option>
-                      </select>
-                    </div>
-                  )}
-                </div>
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {answers.length === 0 ? 'Replies' : `${answers.length} ${answers.length === 1 ? 'Reply' : 'Replies'}`}
+                    </h2>
+                    {answers.length > 1 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600 hidden sm:inline">Sort by:</span>
+                        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500">
+                          <option value="newest">Newest</option>
+                          <option value="oldest">Oldest</option>
+                          <option value="most_voted">Most Voted</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
 
-                <div className="space-y-6">
-                  {sortedAnswers.length === 0 ? (
-                    <div className="text-center py-12">
-                      <ChatBubbleLeftRightIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                      <p className="text-gray-600">No replies yet. Be the first to respond!</p>
-                    </div>
-                  ) : (
-                    sortedAnswers.map(answer => (
-                      <ReplyItem
-                        key={answer.id}
-                        answer={answer}
-                        user={user}
-                        editingAnswerId={editingAnswerId}
-                        editContent={editContent}
-                        setEditContent={setEditContent}
-                        onEdit={handleEditAnswer}
-                        onSaveEdit={handleSaveEdit}
-                        onCancelEdit={handleCancelEdit}
-                        onDelete={handleDeleteAnswer}
-                        onReplyTo={handleReplyToAnswer}
-                        onVoteChange={(answerId, voteData) => {
-                          setAnswers(prev => prev.map(a => a.id === answerId ? { ...a, ...voteData } : a));
-                        }}
-                        expandedReplies={expandedReplies}
-                        onToggleReplies={(id) => {
-                          const newSet = new Set(expandedReplies);
-                          newSet.has(id) ? newSet.delete(id) : newSet.add(id);
-                          setExpandedReplies(newSet);
-                        }}
-                        openLightbox={openLightbox}
-                      />
-                    ))
-                  )}
+                  <div className="space-y-6">
+                    {sortedAnswers.length === 0 ? (
+                      <div className="text-center py-12">
+                        <ChatBubbleLeftRightIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                        <p className="text-gray-600">No replies yet. Be the first to respond!</p>
+                      </div>
+                    ) : (
+                      sortedAnswers.map(answer => (
+                        <ReplyItem
+                          key={answer.id}
+                          answer={answer}
+                          user={user}
+                          editingAnswerId={editingAnswerId}
+                          editContent={editContent}
+                          setEditContent={setEditContent}
+                          onEdit={handleEditAnswer}
+                          onSaveEdit={handleSaveEdit}
+                          onCancelEdit={handleCancelEdit}
+                          onDelete={handleDeleteAnswer}
+                          onReplyTo={handleReplyToAnswer}
+                          onVoteChange={(answerId, voteData) => {
+                            setAnswers(prev => prev.map(a => a.id === answerId ? { ...a, ...voteData } : a));
+                          }}
+                          expandedReplies={expandedReplies}
+                          onToggleReplies={(id) => {
+                            const newSet = new Set(expandedReplies);
+                            newSet.has(id) ? newSet.delete(id) : newSet.add(id);
+                            setExpandedReplies(newSet);
+                          }}
+                          openLightbox={openLightbox}
+                        />
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

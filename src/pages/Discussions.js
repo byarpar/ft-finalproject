@@ -9,16 +9,22 @@ import {
   MagnifyingGlassIcon,
   PlusIcon,
   BookmarkIcon,
-  ClockIcon,
-  UserIcon,
-  SparklesIcon,
-  PhotoIcon
+  UserGroupIcon,
+  AcademicCapIcon,
+  SpeakerWaveIcon,
+  BookOpenIcon,
+  DocumentTextIcon,
+  WrenchScrewdriverIcon,
+  FireIcon,
+  EyeIcon,
+  BellIcon,
+  QuestionMarkCircleIcon,
+  Squares2X2Icon,
+  ListBulletIcon
 } from '@heroicons/react/24/outline';
 import {
   BookmarkIcon as BookmarkSolidIcon,
-  LockClosedIcon,
-  MapPinIcon,
-  CheckBadgeIcon
+  MapPinIcon
 } from '@heroicons/react/24/solid';
 import toast from 'react-hot-toast';
 import DiscussionSkeleton from '../components/UI/DiscussionSkeleton';
@@ -51,6 +57,7 @@ const Discussions = () => {
   const [filterBy, setFilterBy] = useState('all');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [layoutView, setLayoutView] = useState('grid'); // 'grid' or 'list'
 
   const fetchDiscussions = useCallback(async () => {
     try {
@@ -95,7 +102,12 @@ const Discussions = () => {
       });
 
       setDiscussions(normalizedDiscussions);
-      setTotalPages(response.totalPages || response.metadata?.pagination?.totalPages || 1);
+
+      // Handle pagination - support both formats
+      const pagination = response.metadata?.pagination || response.pagination || {};
+      const calculatedTotalPages = pagination.totalPages || pagination.total_pages || response.totalPages || 1;
+      setTotalPages(calculatedTotalPages);
+
       setError(null);
     } catch (err) {
       console.error('Error fetching discussions:', err);
@@ -111,13 +123,20 @@ const Discussions = () => {
       const response = await discussionsAPI.getCategories();
       const categoriesData = response.data?.categories || response.categories || {};
 
-      // Convert categories object to array with 'All' category first
+      // Convert categories object to array with 'All' category first and new categories
       const categoriesArray = [
-        { id: 'all', name: 'All Categories', icon: '📋', color: '#6b7280' },
-        ...Object.entries(categoriesData).map(([id, category]) => ({
-          id,
-          ...category
-        }))
+        { id: 'all', name: 'All', color: '#14b8a6', IconComponent: ChatBubbleLeftRightIcon },
+        { id: 'grammar', name: 'Grammar Questions', color: '#14b8a6', IconComponent: AcademicCapIcon },
+        { id: 'pronunciation', name: 'Pronunciation Help', color: '#14b8a6', IconComponent: SpeakerWaveIcon },
+        { id: 'cultural', name: 'Cultural Context', color: '#14b8a6', IconComponent: BookOpenIcon },
+        { id: 'vocabulary', name: 'Vocabulary Requests', color: '#14b8a6', IconComponent: DocumentTextIcon },
+        { id: 'technical', name: 'Technical Support', color: '#14b8a6', IconComponent: WrenchScrewdriverIcon },
+        ...Object.entries(categoriesData)
+          .filter(([id]) => id !== 'members' && id !== 'home' && id !== 'community-chat')
+          .map(([id, category]) => ({
+            id,
+            ...category
+          }))
       ];
 
       setCategories(categoriesArray);
@@ -125,7 +144,12 @@ const Discussions = () => {
       console.error('Error fetching categories:', err);
       // Set default categories if fetch fails
       setCategories([
-        { id: 'all', name: 'All Categories', icon: '📋', color: '#6b7280' }
+        { id: 'all', name: 'All', color: '#14b8a6', IconComponent: ChatBubbleLeftRightIcon },
+        { id: 'grammar', name: 'Grammar Questions', color: '#14b8a6', IconComponent: AcademicCapIcon },
+        { id: 'pronunciation', name: 'Pronunciation Help', color: '#14b8a6', IconComponent: SpeakerWaveIcon },
+        { id: 'cultural', name: 'Cultural Context', color: '#14b8a6', IconComponent: BookOpenIcon },
+        { id: 'vocabulary', name: 'Vocabulary Requests', color: '#14b8a6', IconComponent: DocumentTextIcon },
+        { id: 'technical', name: 'Technical Support', color: '#14b8a6', IconComponent: WrenchScrewdriverIcon }
       ]);
     }
   }, []);
@@ -310,44 +334,38 @@ const Discussions = () => {
         </section>
 
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-          {/* Filtering & Sorting Section - Mobile Optimized */}
-          <div id="categories" className="bg-white rounded-xl shadow-sm mb-4 sm:mb-6 border border-gray-200">
-            {/* Category Tabs - Horizontally Scrollable on Mobile */}
-            <div className="border-b border-gray-200 bg-gray-50">
-              <div className="flex items-center gap-2 px-3 sm:px-6 py-3 sm:py-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory">
-                {categories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => {
-                      // Handle special categories that redirect to different pages
-                      if (category.id === 'members') {
-                        navigate('/discussions/members');
-                        return;
-                      }
-                      if (category.id === 'community-chat') {
-                        navigate('/chat');
-                        return;
-                      }
-                      setSelectedCategory(category.id);
-                      setPage(1);
-                    }}
-                    className={`flex-shrink-0 snap-start px-4 sm:px-5 py-2 sm:py-2.5 font-semibold text-xs sm:text-sm whitespace-nowrap rounded-full transition-all duration-200 touch-manipulation min-h-[44px] sm:min-h-0 flex items-center ${selectedCategory === category.id
-                      ? 'bg-teal-600 text-white shadow-md'
-                      : 'bg-white text-gray-600 hover:bg-gray-100:bg-gray-600 border border-gray-300'
-                      }`}
-                  >
-                    {category.name}
-                  </button>
-                ))}
+          {/* Unique Filtering Section - Card-Based Design */}
+          <div className="mb-6 space-y-4">
+            {/* Category Pills - Horizontal Scroll */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide">
+                {categories.map((category) => {
+                  const IconComp = category.IconComponent || ChatBubbleLeftRightIcon;
+                  return (
+                    <button
+                      key={category.id}
+                      onClick={() => {
+                        setSelectedCategory(category.id);
+                        setPage(1);
+                      }}
+                      className={`flex-shrink-0 px-4 py-2.5 rounded-full text-sm font-medium border-2 ${selectedCategory === category.id
+                        ? 'bg-teal-600 text-white border-teal-600'
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-teal-300'
+                        }`}
+                    >
+                      <span>{category.name}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Search and Filters - Mobile First Design */}
-            <div className="p-3 sm:p-4 bg-gray-50">
-              <div className="space-y-3">
-                {/* Search Bar */}
+            {/* Search & Controls Row */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+              {/* Search Box */}
+              <div className="md:col-span-5">
                 <div className="relative">
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  <MagnifyingGlassIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     id="search-discussions"
                     type="text"
@@ -357,74 +375,54 @@ const Discussions = () => {
                       setSearchQuery(e.target.value);
                       setPage(1);
                     }}
-                    className="w-full pl-11 pr-4 py-3 sm:py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent placeholder-gray-400 touch-manipulation"
+                    className="w-full pl-12 pr-4 py-3 text-sm bg-white border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:outline-none"
                   />
-                </div>
-
-                {/* Filter and Sort - Side by Side on Mobile for Better UX */}
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                  {/* Filter Dropdown - Enhanced Touch Target */}
-                  <div className="relative">
-                    <select
-                      value={filterBy}
-                      onChange={(e) => {
-                        setFilterBy(e.target.value);
-                        setPage(1);
-                      }}
-                      className="w-full appearance-none px-3 py-3 sm:py-2.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white touch-manipulation pr-8"
-                    >
-                      <option value="all">All Questions </option>
-                      <option value="unanswered"> Unanswered</option>
-                      <option value="my">My Posts</option>
-                    </select>
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-
-                  {/* Sort Dropdown - Enhanced Touch Target */}
-                  <div className="relative">
-                    <select
-                      value={sortBy}
-                      onChange={(e) => {
-                        setSortBy(e.target.value);
-                        setPage(1);
-                      }}
-                      className="w-full appearance-none px-3 py-3 sm:py-2.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white touch-manipulation pr-8"
-                      title="Sort discussions by activity, engagement, or creation date"
-                    >
-                      <option value="latest">Latest</option>
-                      <option value="popular">Popular</option>
-                      <option value="newest">Newest</option>
-                      <option value="oldest">Oldest</option>
-                    </select>
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
                 </div>
               </div>
 
-              {/* Results Count */}
-              <div className="mt-3 text-xs text-gray-500 flex items-center justify-between">
-                <span>{discussions.length} discussion{discussions.length !== 1 ? 's' : ''} found</span>
-                {(searchQuery || filterBy !== 'all' || selectedCategory !== 'all') && (
+              {/* Sort Selector */}
+              <div className="md:col-span-4">
+                <select
+                  value={sortBy}
+                  onChange={(e) => {
+                    setSortBy(e.target.value);
+                    setPage(1);
+                  }}
+                  className="w-full px-4 py-3 text-sm bg-white border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:outline-none"
+                >
+                  <option value="latest">Latest Activity</option>
+                  <option value="trending">Trending</option>
+                  <option value="popular">Most Liked</option>
+                  <option value="unanswered">Unanswered</option>
+                  <option value="newest">Newest</option>
+                  <option value="oldest">Oldest</option>
+                </select>
+              </div>
+
+              {/* View Toggle */}
+              <div className="md:col-span-3">
+                <div className="flex gap-2">
                   <button
-                    onClick={() => {
-                      setSearchQuery('');
-                      setFilterBy('all');
-                      setSelectedCategory('all');
-                      setPage(1);
-                    }}
-                    className="text-teal-600 hover:underline font-medium"
+                    onClick={() => setLayoutView('grid')}
+                    className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium flex items-center justify-center gap-2 border-2 ${layoutView === 'grid'
+                      ? 'bg-teal-600 text-white border-teal-600'
+                      : 'bg-white text-gray-700 border-gray-200 hover:border-teal-300'
+                      }`}
                   >
-                    Clear all
+                    <Squares2X2Icon className="w-4 h-4" />
+                    Grid
                   </button>
-                )}
+                  <button
+                    onClick={() => setLayoutView('list')}
+                    className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium flex items-center justify-center gap-2 border-2 ${layoutView === 'list'
+                      ? 'bg-teal-600 text-white border-teal-600'
+                      : 'bg-white text-gray-700 border-gray-200 hover:border-teal-300'
+                      }`}
+                  >
+                    <ListBulletIcon className="w-4 h-4" />
+                    List
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -483,174 +481,440 @@ const Discussions = () => {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-                {discussions.map((discussion) => (
-                  <article
-                    key={discussion.id}
-                    className="bg-white rounded-lg overflow-hidden border border-gray-200 shadow-sm"
-                  >
-                    {/* Card Content */}
-                    <div className="p-5 sm:p-6">
-                      {/* Header Section */}
-                      <div className="flex items-start justify-between gap-3 mb-4">
-                        {/* Author Info */}
-                        <div className="flex items-center gap-2.5">
+              /* Two-Column Layout */
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Left Column: Discussion Threads */}
+                <div className="lg:col-span-8">
+                  {/* Grid Layout - Unique Card Design */}
+                  {layoutView === 'grid' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {discussions.map((discussion) => {
+                        const category = categories.find(cat => cat.id === discussion.category) || categories[0];
+                        const CategoryIcon = category.IconComponent || ChatBubbleLeftRightIcon;
+                        const isTrending = (discussion.answers_count > 5) || (discussion.vote_count > 10);
+
+                        return (
                           <Link
-                            to={`/users/${discussion.author_id}`}
-                            className="flex-shrink-0 relative"
-                          >
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center overflow-hidden">
-                              {discussion.user_data?.display_picture && (
-                                <img
-                                  src={discussion.user_data.display_picture}
-                                  alt={discussion.user_data?.username || 'User'}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    e.target.style.display = 'none';
-                                  }}
-                                />
-                              )}
-                              {!discussion.user_data?.display_picture && (
-                                <span className="text-sm font-bold text-white">
-                                  {(discussion.user_data?.username || 'A').charAt(0).toUpperCase()}
-                                </span>
-                              )}
-                            </div>
-                            {discussion.user_data?.role === 'admin' && (
-                              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center">
-                                <CheckBadgeIcon className="w-3.5 h-3.5 text-red-500" />
-                              </div>
-                            )}
-                          </Link>
-                          <div className="flex flex-col">
-                            <Link
-                              to={`/users/${discussion.author_id}`}
-                              className="font-semibold text-sm text-gray-900"
-                            >
-                              {discussion.user_data?.username || 'Anonymous'}
-                            </Link>
-                            <span className="text-xs text-gray-500">
-                              {formatRelativeDate(discussion.updated_at || discussion.created_at)}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Status Badges */}
-                        <div className="flex items-center gap-1.5">
-                          {discussion.is_pinned && (
-                            <div className="p-1.5 bg-blue-100 rounded-lg">
-                              <MapPinIcon className="w-4 h-4 text-blue-600" />
-                            </div>
-                          )}
-                          {discussion.is_locked && (
-                            <div className="p-1.5 bg-red-100 rounded-lg">
-                              <LockClosedIcon className="w-4 h-4 text-red-600" />
-                            </div>
-                          )}
-                          <button
-                            onClick={() => handleSaveDiscussion(discussion.id, discussion.is_saved)}
-                            className={`p-1.5 rounded-lg transition-colors ${discussion.is_saved
-                              ? 'bg-teal-100 hover:bg-teal-200:bg-teal-900/50'
-                              : 'bg-gray-100 hover:bg-gray-200:bg-gray-600'
-                              }`}
-                          >
-                            {discussion.is_saved ? (
-                              <BookmarkSolidIcon className="w-4 h-4 text-teal-600" />
-                            ) : (
-                              <BookmarkIcon className="w-4 h-4 text-gray-500" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Title */}
-                      <Link
-                        to={`/discussions/${discussion.id}`}
-                        className="block mb-3"
-                      >
-                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 line-clamp-2 leading-tight">
-                          {discussion.title}
-                        </h3>
-                      </Link>
-
-                      {/* Content Preview */}
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-4 leading-relaxed">
-                        {discussion.content?.replace(/<[^>]*>/g, '').substring(0, 120) || 'No description available.'}
-                        {discussion.content?.length > 120 && '...'}
-                      </p>
-
-                      {/* Tags */}
-                      {discussion.tags && discussion.tags.length > 0 && (
-                        <div className="flex items-center gap-2 mb-4 overflow-x-auto scrollbar-hide pb-1">
-                          {discussion.tags.slice(0, 3).map((tag, index) => (
-                            <button
-                              key={index}
-                              onClick={() => handleTagClick(tag)}
-                              className="inline-flex items-center px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-xs font-medium border border-teal-200 hover:bg-teal-100:bg-teal-900/40 transition-colors whitespace-nowrap"
-                            >
-                              #{tag}
-                            </button>
-                          ))}
-                          {discussion.tags.length > 3 && (
-                            <span className="text-xs text-gray-500 font-medium">
-                              +{discussion.tags.length - 3} more
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Footer - Stats & Actions */}
-                      <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                        {/* Engagement Stats */}
-                        <div className="flex items-center gap-4">
-                          {/* Vote Buttons */}
-                          <div className="scale-90 origin-left">
-                            <VoteButtons
-                              itemId={discussion.id}
-                              itemType="discussion"
-                              initialVoteCount={discussion.vote_count || 0}
-                              initialUpvotes={discussion.upvotes || 0}
-                              initialDownvotes={discussion.downvotes || 0}
-                              initialUserVote={discussion.user_vote || null}
-                              onVoteChange={(voteData) => {
-                                setDiscussions(prev => prev.map(d =>
-                                  d.id === discussion.id
-                                    ? { ...d, vote_count: voteData.vote_count, upvotes: voteData.upvotes, downvotes: voteData.downvotes }
-                                    : d
-                                ));
-                              }}
-                            />
-                          </div>
-
-                          {/* Replies Count */}
-                          <Link
+                            key={discussion.id}
                             to={`/discussions/${discussion.id}`}
-                            className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full"
+                            className="block"
                           >
-                            <ChatBubbleLeftRightIcon className="w-4 h-4 text-gray-500" />
-                            <span className="text-sm font-semibold text-gray-700">
-                              {discussion.answers_count || 0}
-                            </span>
-                          </Link>
-                        </div>
+                            <article
+                              className="bg-white rounded-xl border-2 border-gray-200 hover:border-teal-500 overflow-hidden transition-all cursor-pointer"
+                            >
+                              <div className="p-4">
+                                {/* Meta Row */}
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center gap-2">
+                                    <div
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        navigate(`/users/${discussion.author_id}`);
+                                      }}
+                                      className="cursor-pointer"
+                                    >
+                                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                                        {discussion.user_data?.display_picture ? (
+                                          <img
+                                            src={discussion.user_data.display_picture}
+                                            alt={discussion.user_data?.username || 'User'}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => { e.target.style.display = 'none'; }}
+                                          />
+                                        ) : (
+                                          <span className="text-xs font-bold text-gray-600">
+                                            {(discussion.user_data?.username || 'A').charAt(0).toUpperCase()}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      {formatRelativeDate(discussion.updated_at || discussion.created_at)}
+                                    </div>
+                                  </div>
 
-                        {/* Activity Badges */}
-                        <div className="flex items-center gap-2">
-                          {discussion.answers_count > 5 && (
-                            <span className="px-2.5 py-1 bg-gradient-to-r from-orange-100 to-red-100 text-orange-700 rounded-full text-xs font-bold">
-                              🔥 Hot
-                            </span>
-                          )}
-                          {discussion.answers_count === 0 && (
-                            <span className="px-2.5 py-1 bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 rounded-full text-xs font-medium">
-                              New
-                            </span>
-                          )}
-                        </div>
-                      </div>
+                                  <div className="flex items-center gap-1">
+                                    {discussion.is_pinned && <MapPinIcon className="w-5 h-5 text-blue-500" />}
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleSaveDiscussion(discussion.id, discussion.is_saved);
+                                      }}
+                                      className="z-10"
+                                    >
+                                      {discussion.is_saved ? (
+                                        <BookmarkSolidIcon className="w-5 h-5 text-teal-600" />
+                                      ) : (
+                                        <BookmarkIcon className="w-5 h-5 text-gray-400 hover:text-teal-600" />
+                                      )}
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Category Badge */}
+                                {category && category.id !== 'all' && (
+                                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-700 mb-2">
+                                    <CategoryIcon className="w-3 h-3" />
+                                    {category.name}
+                                  </div>
+                                )}
+
+                                {/* Title */}
+                                <h3 className="text-base font-bold text-gray-900 hover:text-teal-600 line-clamp-2 leading-snug mb-2">
+                                  {discussion.title}
+                                </h3>
+
+                                {/* Snippet */}
+                                <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                                  {discussion.content?.replace(/<[^>]*>/g, '').substring(0, 100)}...
+                                </p>
+
+                                {/* Tags */}
+                                {discussion.tags && discussion.tags.length > 0 && (
+                                  <div className="flex gap-1.5 mb-3 flex-wrap">
+                                    {discussion.tags.slice(0, 2).map((tag, index) => (
+                                      <button
+                                        key={index}
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          handleTagClick(tag);
+                                        }}
+                                        className="px-2 py-0.5 bg-teal-50 text-teal-700 rounded text-xs hover:bg-teal-100 z-10"
+                                      >
+                                        #{tag}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Stats Bar */}
+                                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                                    {/* Vote Buttons */}
+                                    <div
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                      }}
+                                    >
+                                      <VoteButtons
+                                        itemId={discussion.id}
+                                        itemType="discussion"
+                                        initialVoteCount={discussion.vote_count}
+                                        initialUserVote={discussion.user_vote}
+                                        layout="horizontal"
+                                      />
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <ChatBubbleLeftRightIcon className="w-5 h-5" />
+                                      <span>{discussion.answers_count || 0}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <EyeIcon className="w-4 h-4" />
+                                      <span>{discussion.views_count || 0}</span>
+                                    </div>
+                                  </div>
+                                  {discussion.answers_count === 0 && (
+                                    <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full font-medium">
+                                      New
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </article>
+                          </Link>
+                        );
+                      })}
                     </div>
-                  </article>
-                ))}
+                  )}
+
+                  {/* List Layout - Unique Horizontal Design */}
+                  {layoutView === 'list' && (
+                    <div className="space-y-3">
+                      {discussions.map((discussion) => {
+                        const category = categories.find(cat => cat.id === discussion.category) || categories[0];
+                        const CategoryIcon = category.IconComponent || ChatBubbleLeftRightIcon;
+                        const isTrending = (discussion.answers_count > 5) || (discussion.vote_count > 10);
+
+                        return (
+                          <Link
+                            key={discussion.id}
+                            to={`/discussions/${discussion.id}`}
+                            className="block"
+                          >
+                            <article
+                              className="bg-white rounded-xl border-2 border-gray-200 hover:border-teal-500 p-4 transition-all cursor-pointer"
+                            >
+                              <div className="flex gap-4">
+                                {/* Left Stats Panel */}
+                                <div className="flex flex-col items-center gap-2 p-3 bg-white border border-gray-200 rounded-lg">
+                                  {/* Vote Buttons */}
+                                  <div
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                    }}
+                                  >
+                                    <VoteButtons
+                                      itemId={discussion.id}
+                                      itemType="discussion"
+                                      initialVoteCount={discussion.vote_count}
+                                      initialUserVote={discussion.user_vote}
+                                      layout="vertical"
+                                    />
+                                  </div>
+
+                                  {/* Replies Count */}
+                                  <div className="text-center pt-2 border-t border-gray-200">
+                                    <div className="text-lg font-bold text-gray-900">{discussion.answers_count || 0}</div>
+                                    <div className="text-xs text-gray-500">replies</div>
+                                  </div>
+
+                                  {/* Views Count */}
+                                  <div className="text-center">
+                                    <div className="text-sm font-medium text-gray-600">{discussion.views_count || 0}</div>
+                                    <div className="text-xs text-gray-500">views</div>
+                                  </div>
+                                </div>
+
+                                {/* Right Content */}
+                                <div className="flex-1 min-w-0">
+                                  {/* Header */}
+                                  <div className="flex items-start justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                      {category && category.id !== 'all' && (
+                                        <div className="flex items-center gap-1 px-2 py-1 bg-white border border-gray-200 rounded text-xs font-medium text-gray-700">
+                                          <CategoryIcon className="w-3 h-3" />
+                                          {category.name}
+                                        </div>
+                                      )}
+                                      {discussion.answers_count === 0 && (
+                                        <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded font-medium">
+                                          New
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                      {discussion.is_pinned && <MapPinIcon className="w-4 h-4 text-blue-500" />}
+                                      <button
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          handleSaveDiscussion(discussion.id, discussion.is_saved);
+                                        }}
+                                        className="z-10"
+                                      >
+                                        {discussion.is_saved ? (
+                                          <BookmarkSolidIcon className="w-5 h-5 text-teal-600" />
+                                        ) : (
+                                          <BookmarkIcon className="w-5 h-5 text-gray-400 hover:text-teal-600" />
+                                        )}
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* Title */}
+                                  <h3 className="text-lg font-bold text-gray-900 hover:text-teal-600 mb-2">
+                                    {discussion.title}
+                                  </h3>
+
+                                  {/* Content */}
+                                  <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                                    {discussion.content?.replace(/<[^>]*>/g, '').substring(0, 180)}...
+                                  </p>
+
+                                  {/* Tags */}
+                                  {discussion.tags && discussion.tags.length > 0 && (
+                                    <div className="flex gap-2 mb-3 flex-wrap">
+                                      {discussion.tags.slice(0, 4).map((tag, index) => (
+                                        <button
+                                          key={index}
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleTagClick(tag);
+                                          }}
+                                          className="px-2 py-1 bg-teal-50 text-teal-700 rounded text-xs hover:bg-teal-100 z-10"
+                                        >
+                                          #{tag}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {/* Footer */}
+                                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                                    <div
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        navigate(`/users/${discussion.author_id}`);
+                                      }}
+                                      className="flex items-center gap-1.5 hover:text-teal-600 cursor-pointer z-10"
+                                    >
+                                      <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                                        {discussion.user_data?.display_picture ? (
+                                          <img
+                                            src={discussion.user_data.display_picture}
+                                            alt={discussion.user_data?.username || 'User'}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => { e.target.style.display = 'none'; }}
+                                          />
+                                        ) : (
+                                          <span className="text-xs font-bold text-gray-600">
+                                            {(discussion.user_data?.username || 'A').charAt(0).toUpperCase()}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <span className="font-medium">{discussion.user_data?.username || 'Anonymous'}</span>
+                                    </div>
+                                    <span>•</span>
+                                    <span>{formatRelativeDate(discussion.updated_at || discussion.created_at)}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </article>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Column: Sidebar */}
+                <aside className="lg:col-span-4 space-y-4">
+                  {/* Trending Topics */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-4">
+                    <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <FireIcon className="w-5 h-5 text-orange-500" />
+                      Trending Topics
+                    </h3>
+                    <div className="space-y-2">
+                      {discussions.slice(0, 5).map((discussion, index) => (
+                        <Link
+                          key={discussion.id}
+                          to={`/discussions/${discussion.id}`}
+                          className="block p-2 bg-white rounded hover:bg-teal-50"
+                        >
+                          <div className="flex gap-2">
+                            <span className="flex-shrink-0 w-5 h-5 bg-orange-500 text-white text-xs font-bold rounded flex items-center justify-center">
+                              {index + 1}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-medium text-gray-900 line-clamp-2">
+                                {discussion.title}
+                              </h4>
+                              <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                                <span>{discussion.answers_count} replies</span>
+                                <span>•</span>
+                                <span>{discussion.views_count || 0} views</span>
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Latest Activity */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-4">
+                    <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <BellIcon className="w-5 h-5 text-blue-500" />
+                      Latest Activity
+                    </h3>
+                    <div className="space-y-2">
+                      {recentActivity.slice(0, 5).map((activity, index) => (
+                        <div key={`${activity.id}-${index}`} className="p-2 bg-white rounded hover:bg-teal-50">
+                          <p className="text-sm text-gray-700">
+                            <span className="font-medium text-teal-600">{activity.username}</span>
+                            {' '}replied to{' '}
+                            <Link
+                              to={`/discussions/${activity.id}`}
+                              className="text-gray-900 hover:text-teal-600 line-clamp-1"
+                            >
+                              {activity.threadTitle}
+                            </Link>
+                          </p>
+                          <span className="text-xs text-gray-500">
+                            {formatRelativeDate(activity.timestamp)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Active Members */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-4">
+                    <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <UserGroupIcon className="w-5 h-5 text-purple-500" />
+                      Active Members
+                    </h3>
+                    <div className="grid grid-cols-4 gap-2 mb-3">
+                      {activeMembers.map((member) => (
+                        <Link
+                          key={member.id}
+                          to={`/users/${member.id}`}
+                          className="flex flex-col items-center"
+                        >
+                          <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center overflow-hidden">
+                            {member.avatar ? (
+                              <img
+                                src={member.avatar}
+                                alt={member.username || 'User'}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-sm font-bold text-purple-700">
+                                {(member.username || 'U').charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs text-gray-700 mt-1 text-center line-clamp-1">
+                            {member.username || 'User'}
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+                    <Link
+                      to="/discussions/members"
+                      className="block w-full py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded text-center"
+                    >
+                      View All Members
+                    </Link>
+                  </div>
+
+                  {/* Help */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-4">
+                    <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <QuestionMarkCircleIcon className="w-5 h-5 text-teal-500" />
+                      Need Help?
+                    </h3>
+                    <div className="space-y-2">
+                      <a href="/community-guidelines" className="block p-2 bg-white rounded hover:bg-teal-50">
+                        <div className="flex items-center gap-2">
+                          <BookOpenIcon className="w-4 h-4 text-teal-500" />
+                          <span className="text-sm font-medium text-gray-900">Community Guidelines</span>
+                        </div>
+                      </a>
+                      <a href="/how-to-contribute" className="block p-2 bg-white rounded hover:bg-teal-50">
+                        <div className="flex items-center gap-2">
+                          <AcademicCapIcon className="w-4 h-4 text-teal-500" />
+                          <span className="text-sm font-medium text-gray-900">How to Contribute</span>
+                        </div>
+                      </a>
+                      <a href="/faq" className="block p-2 bg-white rounded hover:bg-teal-50">
+                        <div className="flex items-center gap-2">
+                          <QuestionMarkCircleIcon className="w-4 h-4 text-teal-500" />
+                          <span className="text-sm font-medium text-gray-900">FAQ</span>
+                        </div>
+                      </a>
+                    </div>
+                  </div>
+                </aside>
               </div>
             )}
           </div>
