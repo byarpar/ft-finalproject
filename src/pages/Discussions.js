@@ -389,9 +389,9 @@ const Discussions = () => {
                   className="w-full px-4 py-3 text-sm bg-white border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:outline-none"
                 >
                   <option value="latest">Latest Activity</option>
-                  <option value="trending">Trending</option>
+                  <option value="active">Most Active</option>
                   <option value="popular">Most Liked</option>
-                  <option value="unanswered">Unanswered</option>
+                  <option value="views">Most Viewed</option>
                   <option value="newest">Newest</option>
                   <option value="oldest">Oldest</option>
                 </select>
