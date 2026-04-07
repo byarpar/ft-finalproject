@@ -1,7 +1,7 @@
 {
-  "name": "devforum-frontend",
+  "name": "modern-discussion-forum-frontend",
   "version": "1.0.0",
-  "description": "Frontend application for DevForum - A developer community platform",
+  "description": "Frontend application for A Modern Discussion Forum - A community platform for discussions and knowledge sharing",
   "private": true,
   "dependencies": {
     "@heroicons/react": "^2.1.5",
