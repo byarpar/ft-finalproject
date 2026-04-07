@@ -71,7 +71,8 @@ export const admin = {
 
   // Words Import/Export
   importWords: (formData) => adminAPI.post('/admin/words/import', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 120000 // 2 minutes for import operations
   }).then(res => res.data),
   exportWords: (params = {}) => adminAPI.post('/admin/words/export', params, {
     responseType: 'blob'

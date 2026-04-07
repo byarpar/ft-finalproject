@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { discussionsAPI } from '../services/api';
 import {
@@ -10,12 +10,14 @@ import {
   ListBulletIcon,
   PhotoIcon,
   CheckCircleIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  FaceSmileIcon,
+  ChevronDownIcon
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
-import SkeletonLoader from '../components/UI/SkeletonLoader';
-import PageLayout from '../components/Layout/PageLayout';
-import { markdownToHtml } from '../utils/markdownUtils';
+import { SkeletonLoader, EmojiPicker, MentionRenderer } from '../components/UIComponents';
+import MentionInput from '../components/UI/MentionInput';
+import { PageLayout } from '../components/LayoutComponents';
 
 /**
  * NewDiscussion Component
@@ -48,6 +50,7 @@ const MAX_CONTENT_LENGTH = 5000;
 const NewDiscussion = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const contentRef = useRef(null);
 
   const [formData, setFormData] = useState({
@@ -65,6 +68,69 @@ const NewDiscussion = () => {
   const [subscribeToUpdates, setSubscribeToUpdates] = useState(true);
   const [suggestedTags, setSuggestedTags] = useState([]);
   const [previewMode, setPreviewMode] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showBgColorPicker, setShowBgColorPicker] = useState(false);
+  const [showTextFormats, setShowTextFormats] = useState(false);
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [mentionProcessed, setMentionProcessed] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editId, setEditId] = useState(null);
+
+  // Close emoji picker and color pickers when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showEmojiPicker && !event.target.closest('.emoji-picker-container')) {
+        setShowEmojiPicker(false);
+      }
+      if (showColorPicker && !event.target.closest('.color-picker-container')) {
+        setShowColorPicker(false);
+      }
+      if (showBgColorPicker && !event.target.closest('.bg-color-picker-container')) {
+        setShowBgColorPicker(false);
+      }
+      if (showTextFormats && !event.target.closest('.text-formats-container')) {
+        setShowTextFormats(false);
+      }
+      if (showMoreOptions && !event.target.closest('.more-options-container')) {
+        setShowMoreOptions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showEmojiPicker, showColorPicker, showBgColorPicker, showTextFormats, showMoreOptions]);
+
+  const loadDiscussionData = useCallback(async (discussionId) => {
+    try {
+      const response = await discussionsAPI.getDiscussionById(discussionId);
+      const discussion = response.data?.discussion;
+
+      if (discussion) {
+        setFormData({
+          title: discussion.title || '',
+          content: discussion.content || '',
+          category: typeof discussion.category === 'object' ? discussion.category.slug : discussion.category || '',
+          tags: discussion.tags || [],
+          images: discussion.images || []
+        });
+      }
+    } catch (error) {
+      console.error('Error loading discussion:', error);
+      toast.error('Failed to load discussion data');
+      navigate('/discussions');
+    }
+  }, [navigate]);
+
+  // Load discussion data in edit mode
+  useEffect(() => {
+    const editIdParam = searchParams.get('edit');
+    if (editIdParam) {
+      setEditMode(true);
+      setEditId(editIdParam);
+      loadDiscussionData(editIdParam);
+    }
+  }, [searchParams, loadDiscussionData]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -105,6 +171,18 @@ const NewDiscussion = () => {
     setSuggestedTags(TAG_SUGGESTIONS[formData.category] || []);
   }, [formData.category]);
 
+  // Handle mention parameter from URL (only once)
+  useEffect(() => {
+    const mentionUser = searchParams.get('mention');
+    if (mentionUser && !mentionProcessed) {
+      setFormData(prev => ({
+        ...prev,
+        content: `@${mentionUser} `
+      }));
+      setMentionProcessed(true);
+    }
+  }, [searchParams, mentionProcessed]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -135,23 +213,68 @@ const NewDiscussion = () => {
     }
   }, [handleAddTag]);
 
-  const insertFormatting = useCallback((format) => {
-    const textarea = contentRef.current;
-    if (!textarea) return;
+  const insertFormatting = useCallback((format, value = null) => {
+    const mentionInputRef = contentRef.current;
+    if (!mentionInputRef || !mentionInputRef.textarea) return;
 
+    const textarea = mentionInputRef.textarea;
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const selectedText = formData.content.substring(start, end);
+    let newCursorPos = start;
 
     const formats = {
       bold: `**${selectedText || 'bold text'}**`,
       italic: `*${selectedText || 'italic text'}*`,
+      underline: `__${selectedText || 'underlined text'}__`,
       link: `[${selectedText || 'link text'}](url)`,
-      list: `\n- ${selectedText || 'list item'}`
+      list: `\n- ${selectedText || 'list item'}`,
+      numberedList: `\n1. ${selectedText || 'numbered item'}`,
+      code: `\`${selectedText || 'code'}\``,
+      codeBlock: `\n\`\`\`\n${selectedText || 'code block'}\n\`\`\`\n`,
+      heading1: `# ${selectedText || 'Heading 1'}`,
+      heading2: `## ${selectedText || 'Heading 2'}`,
+      heading3: `### ${selectedText || 'Heading 3'}`,
+      quote: `> ${selectedText || 'quote'}`,
+      color: value ? `<span style="color: ${value}">${selectedText || 'colored text'}</span>` : null,
+      bgColor: value ? `<span style="background-color: ${value}; padding: 2px 4px; border-radius: 3px;">${selectedText || 'highlighted text'}</span>` : null,
+      emoji: selectedText ? `${selectedText} 😊` : '😊 '
     };
 
     const replacement = formats[format];
     if (!replacement) return;
+
+    // Calculate cursor position for better UX
+    switch (format) {
+      case 'bold':
+      case 'underline':
+        newCursorPos = selectedText ? start + replacement.length : start + 2;
+        break;
+      case 'italic':
+        newCursorPos = selectedText ? start + replacement.length : start + 1;
+        break;
+      case 'link':
+        newCursorPos = selectedText ? start + replacement.length - 4 : start + 1;
+        break;
+      case 'code':
+        newCursorPos = selectedText ? start + replacement.length : start + 1;
+        break;
+      case 'heading1':
+        newCursorPos = selectedText ? start + replacement.length : start + 2;
+        break;
+      case 'heading2':
+        newCursorPos = selectedText ? start + replacement.length : start + 3;
+        break;
+      case 'heading3':
+        newCursorPos = selectedText ? start + replacement.length : start + 4;
+        break;
+      case 'color':
+      case 'bgColor':
+        newCursorPos = selectedText ? end + (replacement.length - selectedText.length) : start + replacement.indexOf('>') + 1;
+        break;
+      default:
+        newCursorPos = start + replacement.length;
+    }
 
     const newContent =
       formData.content.substring(0, start) + replacement + formData.content.substring(end);
@@ -159,10 +282,38 @@ const NewDiscussion = () => {
     setFormData(prev => ({ ...prev, content: newContent }));
 
     setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + replacement.length, start + replacement.length);
+      mentionInputRef.focus();
+      if (!selectedText) {
+        mentionInputRef.setSelectionRange(newCursorPos, newCursorPos);
+      }
     }, 0);
   }, [formData.content]);
+
+  const insertEmoji = useCallback((emoji) => {
+    const mentionInputRef = contentRef.current;
+    if (!mentionInputRef || !mentionInputRef.textarea) return;
+
+    const textarea = mentionInputRef.textarea;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
+    const newContent = formData.content.substring(0, start) + emoji + ' ' + formData.content.substring(end);
+    setFormData(prev => ({ ...prev, content: newContent }));
+
+    setTimeout(() => {
+      mentionInputRef.focus();
+      mentionInputRef.setSelectionRange(start + emoji.length + 1, start + emoji.length + 1);
+    }, 0);
+  }, [formData.content]);
+
+  const insertColor = useCallback((color, isBgColor = false) => {
+    insertFormatting(isBgColor ? 'bgColor' : 'color', color);
+    if (isBgColor) {
+      setShowBgColorPicker(false);
+    } else {
+      setShowColorPicker(false);
+    }
+  }, [insertFormatting]);
 
   const handleImageUpload = useCallback((e) => {
     const files = Array.from(e.target.files || []);
@@ -254,40 +405,55 @@ const NewDiscussion = () => {
         return;
       }
 
-      const response = await discussionsAPI.createDiscussion({
-        title: formData.title.trim(),
-        content: formData.content.trim(),
-        category: formData.category,
-        tags: formData.tags,
-        images: imageData,
-        subscribe: subscribeToUpdates
-      });
+      let response;
+      if (editMode && editId) {
+        // Update existing discussion
+        response = await discussionsAPI.updateDiscussion(editId, {
+          title: formData.title.trim(),
+          content: formData.content.trim(),
+          category: formData.category,
+          tags: formData.tags,
+          images: imageData
+        });
+        toast.success('Discussion updated successfully!');
+      } else {
+        // Create new discussion
+        response = await discussionsAPI.createDiscussion({
+          title: formData.title.trim(),
+          content: formData.content.trim(),
+          category: formData.category,
+          tags: formData.tags,
+          images: imageData,
+          subscribe: subscribeToUpdates
+        });
+        toast.success('Question posted successfully!');
+      }
 
-      toast.success('Discussion created successfully!');
-
-      if (response?.data?.id) {
+      if (editMode && editId) {
+        navigate(`/discussions/${editId}`);
+      } else if (response?.data?.id) {
         navigate(`/discussions/${response.data.id}`);
       } else {
         navigate('/discussions');
       }
 
     } catch (error) {
-      console.error('Error creating discussion:', error);
+      console.error(`Error ${editMode ? 'updating' : 'creating'} discussion:`, error);
 
       // Handle specific error cases
       if (error.response?.status === 413 || error.message?.includes('too large')) {
         toast.error('Images are too large. Please use smaller images (max 5MB each, 8MB total).');
       } else {
-        toast.error(error.response?.data?.error || 'Failed to create discussion');
+        toast.error(error.response?.data?.error || `Failed to ${editMode ? 'update' : 'create'} discussion`);
       }
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, subscribeToUpdates, navigate]);
+  }, [formData, subscribeToUpdates, navigate, editMode, editId]);
 
   const handleCancel = useCallback(() => {
     if (formData.title || formData.content) {
-      if (window.confirm('Are you sure you want to discard this discussion?')) {
+      if (window.confirm('Are you sure you want to discard this question?')) {
         navigate('/discussions');
       }
     } else {
@@ -297,8 +463,8 @@ const NewDiscussion = () => {
 
   if (loading) {
     return (
-      <PageLayout title="Start a New Discussion" description="Share your ideas with the community">
-        <div className="min-h-screen bg-gray-50 py-8">
+      <PageLayout title="Ask a Question" description="Get help from the community">
+        <div className="min-h-screen bg-white py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Header Skeleton */}
             <div className="mb-8">
@@ -325,20 +491,42 @@ const NewDiscussion = () => {
 
   return (
     <PageLayout
-      title="Start a New Discussion - Lisu Dictionary"
-      description="Share your questions, insights, and ideas with the Lisu Dictionary community"
+      title="Ask a Question - Modern Discussion Forum"
+      description="Get help from the Modern Discussion Forum community with your development questions"
       fullWidth={true}
       background=""
     >
+      {/* Navigation Bar with Gradient Background */}
+      <section className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800">
+      </section>
+
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Breadcrumb */}
+          <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+            <Link
+              to="/"
+              className="hover:text-gray-700 transition-colors"
+            >
+              Home
+            </Link>
+            <span>/</span>
+            <Link
+              to="/discussions"
+              className="hover:text-gray-700 transition-colors"
+            >
+              Questions
+            </Link>
+            <span>/</span>
+            <span className="text-gray-900">{editMode ? 'Edit Discussion' : 'Ask Question'}</span>
+          </nav>
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Start a New Discussion
+              {editMode ? 'Edit Discussion' : 'Ask a Question'}
             </h1>
             <p className="text-gray-600">
-              Share your questions, insights, and ideas with the Lisu Dictionary community.
+              {editMode ? 'Update your discussion with the Modern Discussion Forum community.' : 'Get help from the Modern Discussion Forum community with your development questions and coding challenges.'}
             </p>
             {user && (
               <p className="mt-2 text-sm text-gray-500">
@@ -356,7 +544,7 @@ const NewDiscussion = () => {
                   {/* Title Input */}
                   <div>
                     <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-                      Discussion Title <span className="text-red-500">*</span>
+                      Question Title <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -364,7 +552,7 @@ const NewDiscussion = () => {
                       name="title"
                       value={formData.title}
                       onChange={handleChange}
-                      placeholder="Enter a clear, concise title for your topic"
+                      placeholder="What's your question? Be specific and clear"
                       maxLength={200}
                       disabled={isSubmitting}
                       className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent placeholder-gray-400 disabled:opacity-50"
@@ -422,7 +610,7 @@ const NewDiscussion = () => {
                         value={tagInput}
                         onChange={(e) => setTagInput(e.target.value)}
                         onKeyPress={handleKeyPress}
-                        placeholder="Add keywords like #tones, #verbs, #greetings"
+                        placeholder="Add keywords like #question, #grammar, #vocabulary"
                         maxLength={30}
                         disabled={isSubmitting || formData.tags.length >= MAX_TAGS}
                         className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent placeholder-gray-400 disabled:opacity-50"
@@ -481,7 +669,7 @@ const NewDiscussion = () => {
                     <p className="mt-2 text-xs text-gray-500">
                       {formData.tags.length === 0 && (
                         <span className="text-red-500 font-medium">
-                          Please add at least {MIN_TAGS} tag to help others find your discussion
+                          Please add at least {MIN_TAGS} tag to help others find your question
                         </span>
                       )}
                       {formData.tags.length > 0 && (
@@ -503,8 +691,8 @@ const NewDiscussion = () => {
                         type="button"
                         onClick={() => setPreviewMode(false)}
                         className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${!previewMode
-                            ? 'border-teal-500 text-teal-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                          ? 'border-teal-500 text-teal-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700'
                           }`}
                       >
                         Write
@@ -513,8 +701,8 @@ const NewDiscussion = () => {
                         type="button"
                         onClick={() => setPreviewMode(true)}
                         className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${previewMode
-                            ? 'border-teal-500 text-teal-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                          ? 'border-teal-500 text-teal-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700'
                           }`}
                       >
                         Preview
@@ -523,11 +711,13 @@ const NewDiscussion = () => {
 
                     {!previewMode && (
                       <>
-                        <div className="flex flex-wrap gap-2 mb-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                        {/* Enhanced Formatting Toolbar */}
+                        <div className="flex flex-wrap gap-2 mb-2 p-2 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200">
+                          {/* Basic Text Formatting */}
                           <button
                             type="button"
                             onClick={() => insertFormatting('bold')}
-                            className="p-2 hover:bg-gray-200:bg-gray-600 rounded text-gray-700 transition-colors"
+                            className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all"
                             title="Bold"
                           >
                             <span className="font-bold">B</span>
@@ -535,34 +725,230 @@ const NewDiscussion = () => {
                           <button
                             type="button"
                             onClick={() => insertFormatting('italic')}
-                            className="p-2 hover:bg-gray-200:bg-gray-600 rounded text-gray-700 transition-colors"
+                            className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all"
                             title="Italic"
                           >
                             <span className="italic">I</span>
                           </button>
                           <button
                             type="button"
-                            onClick={() => insertFormatting('link')}
-                            className="p-2 hover:bg-gray-200:bg-gray-600 rounded text-gray-700 transition-colors"
-                            title="Insert Link"
+                            onClick={() => insertFormatting('underline')}
+                            className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all"
+                            title="Underline"
                           >
-                            <LinkIcon className="w-5 h-5" />
+                            <span className="underline">U</span>
                           </button>
+
+                          <div className="border-l border-gray-300 mx-1"></div>
+
+                          {/* Text Formats Dropdown */}
+                          <div className="relative text-formats-container">
+                            <button
+                              type="button"
+                              onClick={() => setShowTextFormats(!showTextFormats)}
+                              className="flex items-center gap-1 px-2 py-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all text-xs font-medium"
+                              title="Text Formats"
+                            >
+                              <span>H</span>
+                              <ChevronDownIcon className="w-3 h-3" />
+                            </button>
+                            {showTextFormats && (
+                              <div className="absolute z-50 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 min-w-[160px] py-1">
+                                <button
+                                  type="button"
+                                  onClick={() => { insertFormatting('heading1'); setShowTextFormats(false); }}
+                                  className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors"
+                                >
+                                  <span className="text-xl font-bold">Heading 1</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { insertFormatting('heading2'); setShowTextFormats(false); }}
+                                  className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors"
+                                >
+                                  <span className="text-lg font-bold">Heading 2</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { insertFormatting('heading3'); setShowTextFormats(false); }}
+                                  className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors"
+                                >
+                                  <span className="text-base font-bold">Heading 3</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => insertFormatting('link')}
+                            className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all"
+                            title="Link"
+                          >
+                            <LinkIcon className="w-4 h-4" />
+                          </button>
+
                           <button
                             type="button"
                             onClick={() => insertFormatting('list')}
-                            className="p-2 hover:bg-gray-200:bg-gray-600 rounded text-gray-700 transition-colors"
+                            className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all"
                             title="Bullet List"
                           >
-                            <ListBulletIcon className="w-5 h-5" />
+                            <ListBulletIcon className="w-4 h-4" />
                           </button>
-                          <div className="border-l border-gray-300 mx-2"></div>
+
+                          <div className="border-l border-gray-300 mx-1"></div>
+
+                          {/* More Options Dropdown */}
+                          <div className="relative more-options-container">
+                            <button
+                              type="button"
+                              onClick={() => setShowMoreOptions(!showMoreOptions)}
+                              className="flex items-center gap-1 px-2 py-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all text-xs font-medium"
+                              title="More Options"
+                            >
+                              <span>···</span>
+                              <ChevronDownIcon className="w-3 h-3" />
+                            </button>
+                            {showMoreOptions && (
+                              <div className="absolute z-50 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 min-w-[180px] py-1">
+                                <button
+                                  type="button"
+                                  onClick={() => { insertFormatting('numberedList'); setShowMoreOptions(false); }}
+                                  className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors text-sm"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <span className="font-semibold">1.</span> Numbered List
+                                  </span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { insertFormatting('code'); setShowMoreOptions(false); }}
+                                  className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors text-sm"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <span className="font-mono">&lt;&gt;</span> Inline Code
+                                  </span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { insertFormatting('codeBlock'); setShowMoreOptions(false); }}
+                                  className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors text-sm"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <span className="font-mono">&#123; &#125;</span> Code Block
+                                  </span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { insertFormatting('quote'); setShowMoreOptions(false); }}
+                                  className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors text-sm"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <span className="text-lg">"</span> Quote
+                                  </span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="border-l border-gray-300 mx-1"></div>
+
+                          {/* Color Pickers */}
+                          <div className="relative color-picker-container">
+                            <button
+                              type="button"
+                              onClick={() => setShowColorPicker(!showColorPicker)}
+                              className="p-2 hover:bg-white hover:shadow-sm rounded transition-all"
+                              title="Text Color"
+                            >
+                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 3L3 21h4l2-5h6l2 5h4L12 3zm0 5.84L14.5 14h-5l2.5-5.16z" fill="currentColor" />
+                                <rect x="6" y="20" width="12" height="2" className="fill-current text-red-500" />
+                              </svg>
+                            </button>
+                            {showColorPicker && (
+                              <div className="absolute z-50 mt-2 p-3 bg-white rounded-lg shadow-xl border border-gray-200 w-56">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-xs font-semibold text-gray-700">Text Color</span>
+                                  <button type="button" onClick={() => setShowColorPicker(false)} className="text-gray-400 hover:text-gray-600">
+                                    <XMarkIcon className="w-3 h-3" />
+                                  </button>
+                                </div>
+                                <div className="grid grid-cols-6 gap-1.5">
+                                  {['#000000', '#DC2626', '#2563EB', '#059669', '#D97706', '#7C3AED', '#EA580C', '#65A30D', '#0891B2', '#C026D3', '#DB2777', '#64748B'].map(color => (
+                                    <button
+                                      key={color}
+                                      type="button"
+                                      onClick={() => insertColor(color, false)}
+                                      className="w-7 h-7 rounded border hover:scale-110 transition-transform"
+                                      style={{ backgroundColor: color }}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="relative bg-color-picker-container">
+                            <button
+                              type="button"
+                              onClick={() => setShowBgColorPicker(!showBgColorPicker)}
+                              className="p-2 hover:bg-white hover:shadow-sm rounded transition-all"
+                              title="Highlight"
+                            >
+                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                                <rect x="4" y="8" width="16" height="10" rx="2" className="fill-yellow-300" stroke="currentColor" strokeWidth="1.5" />
+                              </svg>
+                            </button>
+                            {showBgColorPicker && (
+                              <div className="absolute z-50 mt-2 p-3 bg-white rounded-lg shadow-xl border border-gray-200 w-56">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-xs font-semibold text-gray-700">Highlight</span>
+                                  <button type="button" onClick={() => setShowBgColorPicker(false)} className="text-gray-400 hover:text-gray-600">
+                                    <XMarkIcon className="w-3 h-3" />
+                                  </button>
+                                </div>
+                                <div className="grid grid-cols-6 gap-1.5">
+                                  {['#FEF3C7', '#FED7AA', '#FECACA', '#FBCFE8', '#FDE68A', '#FCA5A5', '#DDD6FE', '#BFDBFE', '#BAE6FD', '#A7F3D0', '#BBF7D0', '#E5E7EB'].map(color => (
+                                    <button
+                                      key={color}
+                                      type="button"
+                                      onClick={() => insertColor(color, true)}
+                                      className="w-7 h-7 rounded border hover:scale-110 transition-transform"
+                                      style={{ backgroundColor: color }}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="border-l border-gray-300 mx-1"></div>
+
+                          {/* Emoji & Image */}
+                          <div className="relative emoji-picker-container">
+                            <button
+                              type="button"
+                              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                              className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all"
+                              title="Emoji"
+                            >
+                              <FaceSmileIcon className="w-4 h-4" />
+                            </button>
+                            <EmojiPicker
+                              isOpen={showEmojiPicker}
+                              onEmojiSelect={insertEmoji}
+                              onClose={() => setShowEmojiPicker(false)}
+                            />
+                          </div>
+
                           <label
                             htmlFor="imageUpload"
-                            className="p-2 hover:bg-gray-200:bg-gray-600 rounded text-gray-700 transition-colors cursor-pointer"
-                            title="Upload Image (Max 5 images, 5MB each)"
+                            className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all cursor-pointer"
+                            title="Upload Images"
                           >
-                            <PhotoIcon className="w-5 h-5" />
+                            <PhotoIcon className="w-4 h-4" />
                             <input
                               id="imageUpload"
                               type="file"
@@ -572,24 +958,24 @@ const NewDiscussion = () => {
                               className="hidden"
                             />
                           </label>
+
                           <div className="flex-1"></div>
-                          <span className="text-xs text-gray-500 flex items-center">
-                            Markdown supported • {formData.images.length}/{MAX_IMAGES} images
+
+                          <span className="text-xs text-gray-500 px-1">
+                            {formData.images.length}/{MAX_IMAGES}
                           </span>
                         </div>
 
-                        <textarea
+                        <MentionInput
                           ref={contentRef}
-                          id="content"
-                          name="content"
                           value={formData.content}
-                          onChange={handleChange}
-                          placeholder="Describe your question or topic clearly. Provide examples and context to help others understand and provide better responses."
+                          onChange={(newValue) => setFormData(prev => ({ ...prev, content: newValue }))}
+                          placeholder="Describe your question in detail. What exactly are you trying to learn or understand? Include examples, context, and what you've already tried. The more specific you are, the better answers you'll receive."
                           rows={12}
                           maxLength={MAX_CONTENT_LENGTH}
                           disabled={isSubmitting}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent placeholder-gray-400 resize-none disabled:opacity-50 font-mono text-sm"
-                          required
+                          showCharCount={false}
+                          className="font-mono text-sm"
                         />
                         <div className="mt-2 flex items-center justify-between text-xs">
                           <span className={`${formData.content.length < MIN_CONTENT_LENGTH ? 'text-red-500' :
@@ -600,9 +986,6 @@ const NewDiscussion = () => {
                             {formData.content.length >= MIN_CONTENT_LENGTH && formData.content.length < 100 && 'Add more details'}
                             {formData.content.length >= 100 && 'Good detail level'}
                           </span>
-                          <span className="text-gray-500">
-                            {formData.content.length}/{MAX_CONTENT_LENGTH}
-                          </span>
                         </div>
                       </>
                     )}
@@ -610,10 +993,12 @@ const NewDiscussion = () => {
                     {previewMode && (
                       <div className="border border-gray-300 rounded-lg p-4 min-h-[300px] bg-gray-50">
                         {formData.content.trim() ? (
-                          <div
-                            className="prose prose-sm sm:prose max-w-none"
-                            dangerouslySetInnerHTML={{ __html: markdownToHtml(formData.content) }}
-                          />
+                          <div className="prose prose-sm sm:prose max-w-none">
+                            <MentionRenderer
+                              content={formData.content}
+                              theme="teal"
+                            />
+                          </div>
                         ) : (
                           <div className="text-gray-400 text-center py-12">
                             Nothing to preview yet. Switch to Write tab to add content.
@@ -686,12 +1071,12 @@ const NewDiscussion = () => {
                       {isSubmitting ? (
                         <>
                           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          Publishing...
+                          {editMode ? 'Updating...' : 'Posting Question...'}
                         </>
                       ) : (
                         <>
                           <CheckCircleIcon className="w-5 h-5" />
-                          Publish Discussion
+                          {editMode ? 'Update Discussion' : 'Ask Question'}
                         </>
                       )}
                     </button>
@@ -703,32 +1088,32 @@ const NewDiscussion = () => {
             <div className="lg:col-span-1">
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">
-                  Posting Tips
+                  How to Ask a Good Question
                 </h3>
                 <ul className="space-y-3 text-sm text-gray-600">
                   <li className="flex items-start gap-2">
                     <CheckCircleIcon className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                    <span>Be specific and clear in your title and question</span>
+                    <span>Be specific about what you want to learn or understand</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircleIcon className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                    <span>Be respectful and constructive in your language</span>
+                    <span>Include examples and context to help others help you</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircleIcon className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                    <span>Use relevant tags to help others find your post</span>
+                    <span>Mention what you've already tried or researched</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircleIcon className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                    <span>Check for existing topics before creating a new one</span>
+                    <span>Use relevant tags so experts in that area can find you</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircleIcon className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                    <span>Provide examples when asking about grammar or vocabulary</span>
+                    <span>Search existing questions to avoid duplicates</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircleIcon className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                    <span>Keep personal information private</span>
+                    <span>Be patient and respectful while waiting for answers</span>
                   </li>
                 </ul>
 
@@ -741,7 +1126,7 @@ const NewDiscussion = () => {
                   </p>
                   <a
                     href="/discussions/guidelines"
-                    className="text-sm text-teal-600 hover:underline"
+                    className="text-sm text-teal-600"
                   >
                     Read full guidelines →
                   </a>
@@ -751,8 +1136,8 @@ const NewDiscussion = () => {
                   <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 p-3 rounded-lg">
                     <ExclamationTriangleIcon className="w-4 h-4 flex-shrink-0 mt-0.5" aria-hidden="true" />
                     <div>
-                      <p className="font-medium mb-1">Before posting:</p>
-                      <p>Search existing discussions to avoid duplicates and get faster answers.</p>
+                      <p className="font-medium mb-1">Before asking:</p>
+                      <p>Search existing questions to see if someone already asked something similar.</p>
                     </div>
                   </div>
                 </div>

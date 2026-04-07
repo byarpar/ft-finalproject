@@ -17,7 +17,7 @@ import {
   ArrowPathIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
-import PageLayout from '../components/Layout/PageLayout';
+import { PageLayout } from '../components/LayoutComponents';
 import { useAuth } from '../contexts/AuthContext';
 
 const RestoreAccount = () => {
@@ -129,7 +129,7 @@ const RestoreAccount = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex items-center justify-center px-4 py-16 bg-gray-50">
+        <div className="flex-1 flex items-center justify-center px-4 py-16 bg-white">
           <div className="w-full max-w-md">
             <div className="bg-white rounded-lg shadow-lg p-10 md:p-12">
               <h2 className="text-2xl font-semibold text-gray-900 mb-6 text-center">
@@ -217,7 +217,7 @@ const RestoreAccount = () => {
                     type="button"
                     onClick={checkDeletionStatus}
                     disabled={loading || checkingStatus}
-                    className="w-full px-6 py-3.5 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                    className="w-full px-6 py-3.5 bg-white text-gray-700 font-semibold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 border border-gray-300 hover:bg-gray-50"
                   >
                     {checkingStatus ? 'Checking...' : 'Check Account Status'}
                   </button>

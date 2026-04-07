@@ -4,10 +4,9 @@ import {
   HomeIcon,
   ArrowPathIcon,
   ExclamationCircleIcon,
-  EnvelopeIcon,
-  InformationCircleIcon
+  EnvelopeIcon
 } from '@heroicons/react/24/outline';
-import PageLayout from '../components/Layout/PageLayout';
+import { PageLayout } from '../components/LayoutComponents';
 
 /**
  * 500 Internal Server Error Page
@@ -73,7 +72,7 @@ const ServerError = () => {
             {/* Additional Help */}
             <div className="mt-12 pt-8 border-t border-slate-200">
               <h3 className="text-lg font-semibold text-slate-900 mb-4">Need immediate help?</h3>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-1">
                 <button
                   onClick={() => window.location.href = 'mailto:support@lisudict.com'}
                   className="flex items-center justify-center p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200 hover:border-slate-300"
@@ -81,14 +80,6 @@ const ServerError = () => {
                   <EnvelopeIcon className="h-5 w-5 text-slate-600 mr-3" />
                   <span className="text-slate-700 font-medium">Contact Support</span>
                 </button>
-
-                <Link
-                  to="/about"
-                  className="flex items-center justify-center p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200 hover:border-slate-300"
-                >
-                  <InformationCircleIcon className="h-5 w-5 text-slate-600 mr-3" />
-                  <span className="text-slate-700 font-medium">About Us</span>
-                </Link>
               </div>
             </div>
           </div>

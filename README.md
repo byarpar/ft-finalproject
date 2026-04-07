@@ -262,3 +262,4 @@ The language belongs to the Loloish branch of the Tibeto-Burman language family 
 **⭐ Star this repository if you find it helpful!**
 
 **Made with ❤️ for the Lisu community**
+# ft-finalproject

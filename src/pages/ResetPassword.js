@@ -27,7 +27,7 @@ import {
   EyeIcon,
   EyeSlashIcon
 } from '@heroicons/react/24/outline';
-import PageLayout from '../components/Layout/PageLayout';
+import { PageLayout } from '../components/LayoutComponents';
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -367,7 +367,7 @@ const ResetPassword = () => {
                   {formData.password && (
                     <div className="mt-2">
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                           <div
                             className={`h-full transition-all duration-300 ${passwordStrength.level === 1 ? 'w-1/3 bg-red-500' :
                               passwordStrength.level === 2 ? 'w-2/3 bg-yellow-500' :

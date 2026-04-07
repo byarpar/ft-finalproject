@@ -1,679 +1,646 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  PencilIcon,
-  CalendarIcon,
-  ChatBubbleLeftIcon,
-  MapPinIcon,
-  FlagIcon,
-  BookmarkIcon,
-  ClockIcon,
-  BookOpenIcon,
-  ChatBubbleLeftRightIcon,
-  ArrowUpIcon,
-  TrophyIcon
+  ClockIcon, ChatBubbleLeftRightIcon, BookOpenIcon, BookmarkIcon,
+  PencilIcon, PlusIcon, HandThumbUpIcon, HandThumbDownIcon, StarIcon, UserPlusIcon,
+  ChatBubbleLeftIcon, QuestionMarkCircleIcon
 } from '@heroicons/react/24/outline';
-import {
-  BookmarkIcon as BookmarkSolidIcon,
-  CheckBadgeIcon
-} from '@heroicons/react/24/solid';
+import { CheckBadgeIcon } from '@heroicons/react/24/solid';
+import { PageLayout } from '../components/LayoutComponents';
 import { usersAPI, discussionsAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import HeroNavbar from '../components/Layout/HeroNavbar';
-import SkeletonLoader from '../components/UI/SkeletonLoader';
 import { getTimeAgo } from '../utils/dateUtils';
-import PageLayout from '../components/Layout/PageLayout';
 
-const UserProfileEnhanced = () => {
+const TABS = {
+  ACTIVITY: 'activity',
+  DISCUSSIONS: 'discussions',
+  CONTRIBUTIONS: 'contributions',
+  SAVED: 'saved'
+};
+
+
+
+const UserProfile = () => {
   const { userId, username } = useParams();
   const navigate = useNavigate();
-  const { user: currentUser } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+  const profileIdentifier = userId || username;
+  const isOwnProfile = user?.id?.toString() === userId || user?.username === username;
 
   // State
   const [profile, setProfile] = useState(null);
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('activity');
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
   const [discussions, setDiscussions] = useState([]);
   const [savedDiscussions, setSavedDiscussions] = useState([]);
-  const [savedLoading, setSavedLoading] = useState(false);
+  const [userStats, setUserStats] = useState(null);
+  const [activeTab, setActiveTab] = useState(TABS.ACTIVITY);
+  const [loading, setLoading] = useState({ profile: true, content: false });
+  const [followLoading, setFollowLoading] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
-  // Determine if viewing own profile
-  const isOwnProfile = currentUser && (
-    userId === currentUser.id ||
-    username === currentUser.username ||
-    username === 'me'
-  );
+  // Computed stats
+  const stats = {
+    discussions: userStats?.statistics?.discussionsStarted ?? discussions.length,
+    answers: userStats?.statistics?.answersPosted ?? discussions.reduce((sum, d) => sum + (d.answers_count || 0), 0),
+    upvotedPosts: userStats?.statistics?.upvotedDiscussions ?? 0,
+    downvotedPosts: userStats?.statistics?.downvotedDiscussions ?? 0,
+    upvotedAnswers: userStats?.statistics?.upvotedAnswers ?? 0,
+    downvotedAnswers: userStats?.statistics?.downvotedAnswers ?? 0
+  };
 
-  const fetchUserProfile = useCallback(async () => {
+  // Data fetching
+  const fetchProfile = useCallback(async () => {
+    setLoading(prev => ({ ...prev, profile: true }));
+    setImageLoaded(false);
     try {
-      setLoading(true);
-      setError(null);
+      const response = await usersAPI.getUserProfile(profileIdentifier);
+      const profileData = response.data?.user || response.user || response;
+      setProfile(profileData);
 
-      let targetUserId = userId;
+      if (!profileData?.id) return;
 
-      if (username && !userId) {
-        if (username === 'me' && currentUser) {
-          targetUserId = currentUser.id;
-        } else {
-          const usersResponse = await usersAPI.getAllUsers({
-            search: username,
-            limit: 10
-          });
+      const promises = [
+        usersAPI.getUserFollowers(profileData.id),
+        usersAPI.getUserFollowing(profileData.id),
+        discussionsAPI.getDiscussions({ author_id: profileData.id, limit: 20 }),
+        usersAPI.getUserStats(profileData.id)
+      ];
 
-          if (usersResponse.users && usersResponse.users.length > 0) {
-            const foundUser = usersResponse.users.find(u =>
-              u.username.toLowerCase() === username.toLowerCase()
-            );
-            if (foundUser) {
-              targetUserId = foundUser.id;
-            } else {
-              setError('User not found');
-              setLoading(false);
-              return;
-            }
-          } else {
-            setError('User not found');
-            setLoading(false);
-            return;
+      if (user && !isOwnProfile) {
+        promises.push(usersAPI.getFollowInfo(profileData.id));
+      }
+
+      const results = await Promise.allSettled(promises);
+
+      if (results[0].status === 'fulfilled') {
+        const followers = results[0].value.data?.followers || results[0].value.followers || [];
+        setFollowersCount(followers.length);
+      }
+
+      if (results[1].status === 'fulfilled') {
+        const following = results[1].value.data?.following || results[1].value.following || [];
+        setFollowingCount(following.length);
+      }
+
+      if (results[2].status === 'fulfilled') {
+        const discussionsData = results[2].value.discussions || results[2].value.data?.discussions || [];
+        setDiscussions(discussionsData);
+      }
+
+      if (results[3].status === 'fulfilled') {
+        const statsData = results[3].value.data || results[3].value;
+        setUserStats(statsData);
+      } else if (results[3].status === 'rejected') {
+        console.error('Failed to fetch user stats:', results[3].reason);
+        // Set empty stats object to avoid undefined errors
+        setUserStats({
+          statistics: {
+            upvotedDiscussions: 0,
+            downvotedDiscussions: 0,
+            upvotedAnswers: 0,
+            downvotedAnswers: 0,
+            reputation: 0
           }
-        }
+        });
       }
 
-      const profileResponse = await usersAPI.getUserProfile(targetUserId);
-      if (profileResponse && profileResponse.data && profileResponse.data.user) {
-        setProfile(profileResponse.data.user);
-      }
-
-      const statsResponse = await usersAPI.getUserStats(targetUserId);
-      if (statsResponse && statsResponse.data) {
-        setStats(statsResponse.data.stats || statsResponse.data);
-      }
-
-      const discussionsResponse = await discussionsAPI.getDiscussions({
-        author_id: targetUserId,
-        limit: 20
-      });
-      if (discussionsResponse?.data?.discussions) {
-        setDiscussions(discussionsResponse.data.discussions);
-      } else if (discussionsResponse?.discussions) {
-        setDiscussions(discussionsResponse.discussions);
-      }
-
-    } catch (err) {
-      console.error('Error fetching user profile:', err);
-
-      if (err.response?.status === 404 || err.message?.includes('not found')) {
-        setError('User not found');
-        toast.error('This user does not exist or has been deleted');
-      } else {
-        setError('Failed to load user profile. Please try again.');
-        toast.error('Failed to load profile');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [userId, username, currentUser]);
-
-  useEffect(() => {
-    if (currentUser || userId || username) {
-      fetchUserProfile();
-    } else {
-      navigate('/login');
-    }
-  }, [userId, username, currentUser, navigate, fetchUserProfile]);
-
-  const fetchSavedDiscussions = useCallback(async () => {
-    if (!isOwnProfile) return;
-
-    try {
-      setSavedLoading(true);
-      const response = await discussionsAPI.getSavedDiscussions({ limit: 50 });
-      if (response && response.data && response.data.discussions) {
-        setSavedDiscussions(response.data.discussions);
+      if (results[4]?.status === 'fulfilled') {
+        const followData = results[4].value.data || results[4].value;
+        setIsFollowing(followData.isFollowing || followData.is_following || false);
       }
     } catch (error) {
-      console.error('Error fetching saved discussions:', error);
-      toast.error('Failed to load saved discussions');
+      if (error.response?.status === 404) setProfile(false);
     } finally {
-      setSavedLoading(false);
+      setLoading(prev => ({ ...prev, profile: false }));
+    }
+  }, [profileIdentifier, user, isOwnProfile]);
+
+  const fetchContent = useCallback(async (tab) => {
+    if (!isOwnProfile && tab === TABS.SAVED) return;
+
+    setLoading(prev => ({ ...prev, content: true }));
+    try {
+      if (tab === TABS.SAVED) {
+        const res = await discussionsAPI.getSavedDiscussions({ limit: 20 });
+        setSavedDiscussions(res.discussions || res.data?.discussions || []);
+      }
+    } catch {
+      if (tab === TABS.SAVED) setSavedDiscussions([]);
+    } finally {
+      setLoading(prev => ({ ...prev, content: false }));
     }
   }, [isOwnProfile]);
 
-  useEffect(() => {
-    if (activeTab === 'saved' && isOwnProfile && savedDiscussions.length === 0) {
-      fetchSavedDiscussions();
+  // Handlers
+  const handleFollow = async () => {
+    if (followLoading || !profile?.id) return;
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        await usersAPI.unfollowUser(profile.id);
+        setFollowersCount(prev => Math.max(0, prev - 1));
+      } else {
+        await usersAPI.followUser(profile.id);
+        setFollowersCount(prev => prev + 1);
+      }
+      setIsFollowing(!isFollowing);
+    } catch (error) {
+      console.error('Follow action failed:', error);
+    } finally {
+      setFollowLoading(false);
     }
-  }, [activeTab, isOwnProfile, savedDiscussions.length, fetchSavedDiscussions]);
-
-  const formatJoinDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   };
 
-  const getUserBadges = () => {
-    if (!stats) return [];
 
-    const badges = [];
-    const discussionCount = stats?.discussion_count || stats?.total_discussions || 0;
-    const replyCount = stats?.reply_count || stats?.total_messages || 0;
-    const contributionCount = stats?.total_contributions || 0;
 
-    if (discussionCount >= 50) {
-      badges.push({ icon: TrophyIcon, label: 'Discussion Master', color: 'text-yellow-600', bg: 'bg-yellow-50' });
-    } else if (discussionCount >= 10) {
-      badges.push({ icon: ChatBubbleLeftRightIcon, label: 'Active Contributor', color: 'text-teal-600', bg: 'bg-teal-50' });
+
+
+  // Effects
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && isOwnProfile && Object.values(TABS).includes(tab)) {
+      setActiveTab(tab);
     }
+    fetchProfile();
+  }, [searchParams, isOwnProfile, fetchProfile]);
 
-    if (replyCount >= 50) {
-      badges.push({ icon: ChatBubbleLeftIcon, label: 'Helpful Member', color: 'text-blue-600', bg: 'bg-blue-50' });
+  useEffect(() => {
+    if (activeTab === TABS.SAVED) {
+      fetchContent(activeTab);
     }
+  }, [activeTab, fetchContent]);
 
-    if (contributionCount >= 10) {
-      badges.push({ icon: BookOpenIcon, label: 'Dictionary Contributor', color: 'text-purple-600', bg: 'bg-purple-50' });
-    }
+  // Reset image loading state when profile changes
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [profile?.profile_photo_url, profile?.id]);
 
-    return badges;
-  }; if (loading) {
-    return (
-      <PageLayout
-        title="Loading Profile - Lisu Dictionary"
-        description="Loading user profile"
-      >
-        <div className="min-h-screen bg-gray-50">
-          {/* Hero Navigation Bar with Gradient Background */}
-          <section className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800">
-            <HeroNavbar />
-
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-                <SkeletonLoader variant="avatar" />
-                <div className="flex-1 space-y-3 w-full">
-                  <SkeletonLoader variant="text" count={1} className="h-8 w-64" />
-                  <SkeletonLoader variant="text" count={1} className="h-6 w-40" />
-                  <SkeletonLoader variant="text" count={2} className="h-4 w-full max-w-2xl" />
-                  <SkeletonLoader variant="text" count={1} className="h-4 w-48" />
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <div className="bg-white border-b border-gray-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex gap-6">
-                <SkeletonLoader variant="text" count={1} className="h-12 w-32" />
-                <SkeletonLoader variant="text" count={1} className="h-12 w-32" />
-                <SkeletonLoader variant="text" count={1} className="h-12 w-32" />
-              </div>
-            </div>
-          </div>
-
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2">
-                <SkeletonLoader variant="card" count={3} />
-              </div>
-              <div>
-                <SkeletonLoader variant="card" count={1} />
-              </div>
-            </div>
-          </div>
-        </div>
-      </PageLayout>
-    );
-  }
-
-  if (error || !profile) {
-    return (
-      <PageLayout
-        title="User Not Found - Lisu Dictionary"
-        description="This user could not be found"
-      >
-        <div className="min-h-screen bg-gray-50">
-          {/* Hero Navigation Bar with Gradient Background */}
-          <section className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800">
-            <HeroNavbar />
-          </section>
-
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-50 flex items-center justify-center">
-                <FlagIcon className="w-10 h-10 text-red-500" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-3">
-                {error === 'User not found' ? 'User Not Found' : 'Error Loading Profile'}
-              </h2>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                {error === 'User not found'
-                  ? 'This user does not exist or has been deleted.'
-                  : error || 'Unable to load this profile. Please try again later.'}
-              </p>
-              <div className="flex gap-4 justify-center">
-                <button
-                  onClick={() => navigate(-1)}
-                  className="px-6 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg font-medium transition-colors"
-                >
-                  Go Back
-                </button>
-                <button
-                  onClick={() => navigate('/discussions')}
-                  className="px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors"
-                >
-                  Browse Discussions
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </PageLayout>
-    );
-  }
-
-  return (
-    <PageLayout
-      title={profile ? `${profile.full_name || profile.username} - Lisu Dictionary` : 'User Profile - Lisu Dictionary'}
-      description={profile ? `View ${profile.full_name || profile.username}'s profile and activity on Lisu Dictionary` : 'User profile page'}
-    >
-      <div className="min-h-screen bg-gray-50">
-        {/* Hero Navigation Bar with Gradient Background */}
-        <section className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800">
-          <HeroNavbar />
-
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-              <div className="relative">
-                {profile.profile_photo_url ? (
-                  <img
-                    src={profile.profile_photo_url}
-                    alt={profile.username}
-                    className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white/30 object-cover shadow-lg"
-                    referrerPolicy="no-referrer"
-                    onError={(e) => {
-                      console.log('Image failed to load:', profile.profile_photo_url);
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
-                  />
-                ) : null}
-                <div
-                  className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white/30 bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow-lg"
-                  style={{ display: profile.profile_photo_url ? 'none' : 'flex' }}
-                >
-                  <span className="text-4xl md:text-5xl font-bold text-white">
-                    {(profile.username || 'U').charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex-1 text-center md:text-left">
-                <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
-                  <h1 className="text-2xl md:text-3xl font-bold text-white">
-                    {profile.full_name || profile.username}
-                  </h1>
-                  {profile.role === 'admin' && (
-                    <div className="relative flex-shrink-0">
-                      <div className="absolute inset-0 bg-white rounded-full"></div>
-                      <CheckBadgeIcon className="relative w-6 h-6 md:w-7 md:h-7 text-red-600" title="Verified Admin" />
-                    </div>
-                  )}
-                </div>
-                <p className="text-lg text-teal-100 mb-3">@{profile.username}</p>
-
-                {profile.bio && (
-                  <p className="text-white/90 max-w-2xl mb-3">
-                    {profile.bio}
-                  </p>
-                )}
-
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-teal-100">
-                  {profile.location && (
-                    <span className="flex items-center gap-1">
-                      <MapPinIcon className="w-4 h-4" />
-                      {profile.location}
-                    </span>
-                  )}
-                  {profile.native_language && (
-                    <span className="flex items-center gap-1">
-                      {profile.native_language}
-                    </span>
-                  )}
-                  <span className="flex items-center gap-1">
-                    <CalendarIcon className="w-4 h-4" />
-                    Joined {formatJoinDate(profile.created_at)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                {isOwnProfile ? (
-                  <Link
-                    to="/settings"
-                    className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-teal-50 text-teal-700 rounded-lg transition-colors border border-white/20 font-medium shadow-sm"
-                  >
-                    <PencilIcon className="w-5 h-5" />
-                    Edit Profile
-                  </Link>
-                ) : (
-                  <button
-                    onClick={() => toast('Report functionality coming soon')}
-                    className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/20"
-                    title="Report User"
-                  >
-                    <FlagIcon className="w-5 h-5" />
-                    Report
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div className="bg-white border-b border-gray-200 sticky top-16 z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex overflow-x-auto">
-              {[
-                { id: 'activity', label: 'Activity', icon: ClockIcon },
-                { id: 'discussions', label: 'Discussions', icon: ChatBubbleLeftRightIcon },
-                { id: 'contributions', label: 'Contributions', icon: BookOpenIcon },
-                ...(isOwnProfile ? [{ id: 'saved', label: 'Saved', icon: BookmarkIcon }] : [])
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-6 py-4 border-b-2 font-medium transition-colors whitespace-nowrap ${activeTab === tab.id
-                    ? 'border-teal-600 text-teal-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900:text-white'
-                    }`}
-                >
-                  <tab.icon className="w-5 h-5" />
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
+  // Components
+  const PageWrapper = ({ children }) => (
+    <PageLayout fullWidth={true} background="">
+      <section className="relative bg-teal-600">
+      </section>
+      <div className="bg-white min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {activeTab === 'activity' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2">
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                  <div className="p-6 border-b border-gray-200">
-                    <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                      <ClockIcon className="w-6 h-6 text-teal-600" />
-                      Recent Activity
-                    </h2>
-                  </div>
-
-                  <div className="divide-y divide-gray-200">
-                    {discussions.length === 0 ? (
-                      <div className="p-12 text-center">
-                        <ClockIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                        <p className="text-gray-600">
-                          {isOwnProfile ? 'No recent activity yet. Start by joining a discussion!' : 'No recent activity'}
-                        </p>
-                      </div>
-                    ) : (
-                      discussions.slice(0, 10).map((discussion) => (
-                        <div key={discussion.id} className="p-6 hover:bg-gray-50:bg-gray-700/50 transition-colors">
-                          <div className="flex gap-4">
-                            <div className="flex-shrink-0">
-                              <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center">
-                                <ChatBubbleLeftRightIcon className="w-5 h-5 text-teal-600" />
-                              </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-gray-900 mb-1">
-                                <span className="font-medium">Posted in</span>{' '}
-                                <Link
-                                  to={`/discussions/${discussion.id}`}
-                                  className="text-teal-600 hover:underline font-semibold"
-                                >
-                                  {discussion.title}
-                                </Link>
-                              </p>
-                              {discussion.content && (
-                                <p className="text-sm text-gray-600 mb-2">
-                                  {discussion.content.substring(0, 100).replace(/<[^>]*>/g, '')}...
-                                </p>
-                              )}
-                              <div className="flex items-center gap-2 text-xs text-gray-500">
-                                <ClockIcon className="w-4 h-4" />
-                                {getTimeAgo(discussion.created_at)}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <TrophyIcon className="w-5 h-5 text-teal-600" />
-                    Statistics
-                  </h3>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                      <span className="text-sm text-gray-600">Discussions</span>
-                      <span className="text-lg font-bold text-teal-600">
-                        {stats?.discussion_count || stats?.total_discussions || 0}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                      <span className="text-sm text-gray-600">Replies</span>
-                      <span className="text-lg font-bold text-blue-600">
-                        {stats?.reply_count || stats?.total_messages || 0}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                      <span className="text-sm text-gray-600">Contributions</span>
-                      <span className="text-lg font-bold text-purple-600">
-                        {stats?.total_contributions || 0}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between py-2">
-                      <span className="text-sm text-gray-600">Reputation</span>
-                      <span className="text-lg font-bold text-yellow-600">
-                        {stats?.reputation || ((stats?.discussion_count || 0) * 5 + (stats?.reply_count || 0) * 2) || 0}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {getUserBadges().length > 0 && (
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <TrophyIcon className="w-5 h-5 text-yellow-600" />
-                      Achievements
-                    </h3>
-                    <div className="space-y-2">
-                      {getUserBadges().map((badge, index) => (
-                        <div
-                          key={index}
-                          className={`flex items-center gap-3 p-3 ${badge.bg} rounded-lg`}
-                        >
-                          <badge.icon className={`w-5 h-5 ${badge.color}`} />
-                          <span className={`text-sm font-medium ${badge.color}`}>
-                            {badge.label}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'discussions' && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                  <ChatBubbleLeftRightIcon className="w-6 h-6 text-teal-600" />
-                  {isOwnProfile ? 'My Discussions' : `${profile.username}'s Discussions`}
-                </h2>
-              </div>
-
-              <div className="p-6">
-                {discussions.length === 0 ? (
-                  <div className="text-center py-12">
-                    <ChatBubbleLeftRightIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                    <p className="text-gray-600 mb-4">
-                      {isOwnProfile ? 'You haven\'t started any discussions yet' : 'No discussions yet'}
-                    </p>
-                    {isOwnProfile && (
-                      <Link
-                        to="/discussions"
-                        className="inline-block px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium"
-                      >
-                        Start a Discussion
-                      </Link>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {discussions.map(discussion => (
-                      <Link
-                        key={discussion.id}
-                        to={`/discussions/${discussion.id}`}
-                        className="block p-6 border border-gray-200 rounded-lg hover:border-teal-300:border-teal-700 hover:shadow-md transition-all"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900 hover:text-teal-600:text-teal-400 flex-1">
-                            {discussion.title}
-                          </h3>
-                          <span className="text-sm text-gray-500 ml-4">
-                            {getTimeAgo(discussion.created_at)}
-                          </span>
-                        </div>
-                        <p className="text-gray-600 mb-3 line-clamp-2">
-                          {discussion.content?.replace(/<[^>]*>/g, '')}
-                        </p>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <ArrowUpIcon className="w-4 h-4" />
-                            {discussion.vote_count || 0} votes
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <ChatBubbleLeftRightIcon className="w-4 h-4" />
-                            {discussion.answers_count || 0} replies
-                          </span>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'contributions' && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                  <BookOpenIcon className="w-6 h-6 text-teal-600" />
-                  {isOwnProfile ? 'My Contributions' : `${profile.username}'s Contributions`}
-                </h2>
-              </div>
-
-              <div className="p-12 text-center">
-                <BookOpenIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-600 mb-2">
-                  Dictionary contributions feature coming soon
-                </p>
-                <p className="text-sm text-gray-500">
-                  This will show words and definitions {isOwnProfile ? "you've" : "they've"} contributed
-                </p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'saved' && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                  <BookmarkSolidIcon className="w-6 h-6 text-teal-600" />
-                  {isOwnProfile ? 'My Saved Items' : `${profile.username}'s Saved Items`}
-                </h2>
-              </div>
-
-              {!isOwnProfile ? (
-                <div className="p-12 text-center">
-                  <BookmarkIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                  <p className="text-gray-600 mb-2">
-                    Saved items are private
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Only the user can see their saved items
-                  </p>
-                </div>
-              ) : savedLoading ? (
-                <div className="p-6">
-                  <SkeletonLoader variant="list-item" count={5} />
-                </div>
-              ) : savedDiscussions.length === 0 ? (
-                <div className="p-12 text-center">
-                  <BookmarkIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                  <p className="text-gray-600 mb-2">
-                    No saved items yet
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Save discussions to see them here
-                  </p>
-                </div>
-              ) : (
-                <div className="divide-y divide-gray-200">
-                  {savedDiscussions.map((discussion) => (
-                    <Link
-                      key={discussion.id}
-                      to={`/discussions/${discussion.id}`}
-                      className="block p-6 hover:bg-gray-50:bg-gray-700/50 transition-colors"
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="flex-shrink-0">
-                          <BookmarkSolidIcon className="w-5 h-5 text-teal-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2 hover:text-teal-600:text-teal-400">
-                            {discussion.title}
-                          </h3>
-                          <div className="flex items-center gap-4 text-sm text-gray-600">
-                            <span className="flex items-center gap-1">
-                              <ArrowUpIcon className="w-4 h-4" />
-                              {discussion.vote_count || 0} votes
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <ChatBubbleLeftIcon className="w-4 h-4" />
-                              {discussion.answers_count || 0} replies
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <ClockIcon className="w-4 h-4" />
-                              Saved {getTimeAgo(discussion.saved_at)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          {children}
         </div>
       </div>
     </PageLayout>
   );
+
+  const LoadingSpinner = () => (
+    <div className="text-center py-12">
+      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mb-4"></div>
+      <h2 className="text-lg font-medium text-gray-900">Loading profile...</h2>
+    </div>
+  );
+
+  const NotFoundMessage = () => (
+    <div className="text-center py-12">
+      <h2 className="text-2xl font-bold text-gray-900 mb-4">User not found</h2>
+      <p className="text-gray-600 mb-4">
+        The user profile for "{profileIdentifier}" could not be found.
+      </p>
+      <div className="space-x-4">
+        <Link to="/users" className="inline-block px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
+          Browse Users
+        </Link>
+        <Link to="/" className="inline-block px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-50 border border-gray-300">
+          Go Home
+        </Link>
+      </div>
+    </div>
+  );
+
+  const ProfileHeader = () => (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+      <div className="p-6">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+          {/* Profile Image */}
+          <div className="w-24 h-24 rounded-full border-2 border-gray-200 overflow-hidden bg-gray-100 relative">
+            {/* Fallback avatar - always show */}
+            <img
+              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || profile?.username || 'User')}&size=96&background=0891b2&color=ffffff`}
+              alt={profile?.full_name || profile?.username}
+              className="w-full h-full object-cover"
+              key={`fallback-${profile?.id || 'default'}`}
+            />
+            {/* Actual profile photo overlay */}
+            {profile?.profile_photo_url && profile.profile_photo_url.trim() !== '' && (
+              <img
+                src={profile.profile_photo_url}
+                alt={profile?.full_name || profile?.username}
+                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+                key={`profile-${profile?.id}-${profile.profile_photo_url}`}
+                onLoad={(e) => {
+                  setImageLoaded(true);
+                  e.target.style.opacity = '1';
+                }}
+                onError={(e) => {
+                  setImageLoaded(false);
+                  e.target.style.display = 'none';
+                }}
+                style={{
+                  opacity: imageLoaded ? 1 : 0,
+                  display: imageLoaded === false ? 'none' : 'block'
+                }}
+              />
+            )}
+            {/* Loading indicator */}
+            {profile?.profile_photo_url && !imageLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                <div className="w-6 h-6 border-2 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
+          </div>
+
+          {/* Profile Info */}
+          <div className="flex-1 text-center sm:text-left">
+            <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
+              <h1 className="text-2xl font-bold text-gray-900">
+                {profile?.full_name || profile?.username}
+              </h1>
+              {profile?.role && profile.role !== 'user' && (
+                <CheckBadgeIcon className="w-5 h-5 text-red-600" />
+              )}
+            </div>
+            <p className="text-gray-600 mb-3">@{profile?.username}</p>
+            {profile?.bio && <p className="text-gray-700 mb-4 text-justify">{profile.bio}</p>}
+
+            {/* Stats */}
+            <div className="flex items-center justify-center sm:justify-start gap-6 mb-4">
+              <div className="text-center">
+                <div className="text-xl font-semibold text-gray-900">{followersCount}</div>
+                <div className="text-sm text-gray-600">Followers</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-semibold text-gray-900">{followingCount}</div>
+                <div className="text-sm text-gray-600">Following</div>
+              </div>
+            </div>
+
+            {/* Meta Info */}
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-sm text-gray-500">
+              <span className="flex items-center gap-1">
+                <ClockIcon className="w-4 h-4" />
+                Joined {getTimeAgo(profile?.created_at)}
+              </span>
+              {profile?.location && (
+                <span className="flex items-center gap-1">
+                  📍 {profile.location}
+                </span>
+              )}
+              {profile?.native_language && (
+                <span className="flex items-center gap-1">
+                  🌐 {profile.native_language}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            {!isOwnProfile && profile?.id && (
+              <>
+                <button
+                  onClick={handleFollow}
+                  disabled={followLoading}
+                  className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg ${isFollowing
+                    ? 'text-gray-700 bg-gray-100 hover:bg-gray-100 border border-gray-300'
+                    : 'text-white bg-teal-600 hover:bg-teal-700'
+                    } ${followLoading ? 'opacity-50' : ''}`}
+                >
+                  {followLoading ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <UserPlusIcon className="w-4 h-4" />
+                  )}
+                  {isFollowing ? 'Unfollow' : 'Follow'}
+                </button>
+                <button
+                  onClick={() => navigate(`/discussions/new?mention=${profile.username}`)}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg"
+                >
+                  <QuestionMarkCircleIcon className="w-4 h-4" />
+                  Ask Question
+                </button>
+                <button
+                  onClick={() => navigate(`/chat?user=${profile.username}`)}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  <ChatBubbleLeftIcon className="w-4 h-4" />
+                  Message
+                </button>
+              </>
+            )}
+            {isOwnProfile && (
+              <Link
+                to="/settings"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg"
+              >
+                <PencilIcon className="w-4 h-4" />
+                Edit Profile
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="border-t border-gray-200">
+        <div className="flex overflow-x-auto">
+          {[
+            { id: TABS.ACTIVITY, label: 'Activity', icon: ClockIcon },
+            { id: TABS.DISCUSSIONS, label: 'Questions', icon: ChatBubbleLeftRightIcon },
+            { id: TABS.CONTRIBUTIONS, label: 'Contributions', icon: BookOpenIcon },
+            ...(isOwnProfile ? [
+              { id: TABS.SAVED, label: 'Saved', icon: BookmarkIcon }
+            ] : [])
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 ${activeTab === tab.id
+                ? 'text-teal-600 border-teal-500'
+                : 'text-gray-500 hover:text-gray-700 border-transparent'
+                }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const TabContent = () => {
+    if (activeTab === TABS.ACTIVITY) {
+      return (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Recent Activity */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="p-4 border-b border-gray-200">
+                <h2 className="font-bold text-gray-900">
+                  {isOwnProfile ? 'Recent Activity' : `${profile?.username}'s Activity`}
+                </h2>
+              </div>
+              <div className="divide-y divide-gray-200">
+                {discussions.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <ClockIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 mb-2">No questions yet</p>
+                    <p className="text-sm text-gray-500 mb-4">
+                      {isOwnProfile ? 'Ask a question to begin your activity!' : 'This user hasn\'t asked any questions yet'}
+                    </p>
+                    {isOwnProfile && (
+                      <Link
+                        to="/discussions"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700"
+                      >
+                        <PlusIcon className="w-4 h-4" />
+                        Ask a Question
+                      </Link>
+                    )}
+                  </div>
+                ) : (
+                  discussions.slice(0, 10).map((discussion) => (
+                    <div key={discussion.id} className="p-4 hover:bg-gray-50">
+                      <Link to={`/discussions/${discussion.id}`} className="block">
+                        <h3 className="font-medium text-gray-900 hover:text-teal-600 mb-1">
+                          {discussion.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 mb-2 line-clamp-2 text-justify">
+                          {discussion.content?.replace(/<[^>]*>/g, '').substring(0, 120)}...
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <ClockIcon className="w-3 h-3" />
+                          {getTimeAgo(discussion.created_at)}
+                        </div>
+                      </Link>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Statistics */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="p-4 border-b border-gray-200">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                  <StarIcon className="w-5 h-5 text-teal-600" />
+                  Statistics
+                </h3>
+              </div>
+              <div className="p-4 space-y-3">
+                {[
+                  { icon: ChatBubbleLeftRightIcon, label: 'Questions', value: stats.discussions, color: 'teal' },
+                  { icon: ChatBubbleLeftIcon, label: 'Answers', value: stats.answers, color: 'blue' },
+                  { icon: StarIcon, label: 'Reputation', value: userStats?.statistics?.reputation || profile?.reputation || 0, color: 'orange' },
+                  ...(isOwnProfile ? [{ icon: BookmarkIcon, label: 'Saved', value: userStats?.statistics?.savedDiscussionsCount || savedDiscussions.length || 0, color: 'indigo' }] : [])
+                ].map(({ icon: Icon, label, value, color }) => (
+                  <div key={label} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Icon className={`w-4 h-4 text-${color}-600`} />
+                      <span className="text-gray-600">{label}</span>
+                    </div>
+                    <span className={`font-semibold text-${color}-600`}>{value}</span>
+                  </div>
+                ))}
+                <hr className="border-gray-200" />
+                <div className="text-sm text-gray-500">
+                  <div className="text-xs font-medium text-gray-700 mb-2">Voting Activity</div>
+                  {loading.profile ? (
+                    <div className="space-y-2">
+                      {[...Array(4)].map((_, i) => (
+                        <div key={i} className="flex items-center justify-between">
+                          <div className="h-3 bg-gray-100 rounded w-20 animate-pulse"></div>
+                          <div className="h-3 bg-gray-100 rounded w-6 animate-pulse"></div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1">
+                          <HandThumbUpIcon className="w-3 h-3 text-green-600" />
+                          <span className="text-xs text-gray-600">Upvoted Questions</span>
+                        </div>
+                        <span className="text-xs font-medium text-green-600">{stats.upvotedPosts}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1">
+                          <HandThumbDownIcon className="w-3 h-3 text-red-600" />
+                          <span className="text-xs text-gray-600">Downvoted Questions</span>
+                        </div>
+                        <span className="text-xs font-medium text-red-600">{stats.downvotedPosts}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1">
+                          <HandThumbUpIcon className="w-3 h-3 text-green-600" />
+                          <span className="text-xs text-gray-600">Upvoted Answers</span>
+                        </div>
+                        <span className="text-xs font-medium text-green-600">{stats.upvotedAnswers}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1">
+                          <HandThumbDownIcon className="w-3 h-3 text-red-600" />
+                          <span className="text-xs text-gray-600">Downvoted Answers</span>
+                        </div>
+                        <span className="text-xs font-medium text-red-600">{stats.downvotedAnswers}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (activeTab === TABS.DISCUSSIONS) {
+      return (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="font-bold text-gray-900">
+              {isOwnProfile ? 'My Questions' : `${profile.username}'s Questions`}
+            </h2>
+          </div>
+          <div className="divide-y divide-gray-200">
+            {discussions.length === 0 ? (
+              <div className="p-8 text-center">
+                <ChatBubbleLeftRightIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 mb-2">No questions yet</p>
+                <p className="text-sm text-gray-500">
+                  {isOwnProfile ? 'Start engaging with the community!' : "This user hasn't asked any questions"}
+                </p>
+              </div>
+            ) : (
+              discussions.map(discussion => (
+                <div key={discussion.id} className="p-4 hover:bg-gray-50">
+                  <Link to={`/discussions/${discussion.id}`} className="block">
+                    <h3 className="font-medium text-gray-900 hover:text-teal-600 mb-1">
+                      {discussion.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-2 line-clamp-2 text-justify">
+                      {discussion.content?.replace(/<[^>]*>/g, '').substring(0, 400)}...
+                    </p>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span>{discussion.vote_count || 0} votes</span>
+                      <span>{discussion.answers_count || 0} answers</span>
+                      <span>{getTimeAgo(discussion.created_at)}</span>
+                    </div>
+                  </Link>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (activeTab === TABS.CONTRIBUTIONS) {
+      return (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="font-bold text-gray-900">
+              {isOwnProfile ? 'My Contributions' : `${profile.username}'s Contributions`}
+            </h2>
+          </div>
+          <div className="p-8 text-center">
+            <BookOpenIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600 mb-2">Coming Soon</p>
+            <p className="text-sm text-gray-500">
+              Dictionary contributions feature is under development.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+
+
+    if (activeTab === TABS.SAVED && isOwnProfile) {
+      return (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="font-bold text-gray-900">Saved Items</h2>
+          </div>
+          <div className="divide-y divide-gray-200">
+            {loading.content ? (
+              <div className="p-8 text-center">
+                <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-teal-600"></div>
+              </div>
+            ) : savedDiscussions.length === 0 ? (
+              <div className="p-8 text-center">
+                <BookmarkIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 mb-2">No saved items yet</p>
+                <p className="text-sm text-gray-500 mb-4">Save questions to see them here</p>
+                <Link
+                  to="/discussions"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                  Browse Questions
+                </Link>
+              </div>
+            ) : (
+              savedDiscussions.map((discussion) => (
+                <div key={discussion.id} className="p-4 hover:bg-gray-50">
+                  <Link to={`/discussions/${discussion.id}`} className="block">
+                    <div className="flex items-start gap-3">
+                      <BookmarkIcon className="w-5 h-5 text-teal-600 mt-1 flex-shrink-0" />
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-900 hover:text-teal-600 mb-1">
+                          {discussion.title}
+                        </h3>
+                        {discussion.content && (
+                          <p className="text-sm text-gray-600 mb-2 line-clamp-2 text-justify">
+                            {discussion.content?.replace(/<[^>]*>/g, '').substring(0, 120)}...
+                          </p>
+                        )}
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <span>{discussion.vote_count || 0} votes</span>
+                          <span>{discussion.answers_count || 0} answers</span>
+                          <span>Saved {getTimeAgo(discussion.saved_at || discussion.created_at)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  // Render states
+  if (profile === false) return <PageWrapper><NotFoundMessage /></PageWrapper>;
+  if (loading.profile) return <PageWrapper><LoadingSpinner /></PageWrapper>;
+
+  return (
+    <PageWrapper>
+      <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+        <Link to="/" className="hover:text-gray-700">Home</Link>
+        <span>/</span>
+        <span className="text-gray-900">{profile?.username || profileIdentifier}</span>
+      </nav>
+
+      <ProfileHeader />
+      <TabContent />
+    </PageWrapper>
+  );
 };
 
-export default UserProfileEnhanced;
+export default UserProfile;

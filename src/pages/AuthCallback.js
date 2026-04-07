@@ -15,7 +15,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { ArrowPathIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
-import PageLayout from '../components/Layout/PageLayout';
+import { PageLayout } from '../components/LayoutComponents';
 
 const AuthCallback = () => {
   const [searchParams] = useSearchParams();
@@ -157,7 +157,7 @@ const AuthCallback = () => {
                   </button>
                   <button
                     onClick={() => navigate('/login')}
-                    className="w-full px-6 py-3 bg-gray-100 hover:bg-gray-200:bg-gray-600 text-gray-900 font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2:ring-offset-gray-800"
+                    className="w-full px-6 py-3 bg-gray-100 hover:bg-gray-100:bg-gray-600 text-gray-900 font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2:ring-offset-gray-800"
                     aria-label="Return to login"
                   >
                     Return to Login
@@ -196,7 +196,7 @@ const AuthCallback = () => {
 
                 {/* Progress Indicator */}
                 <div className="mt-8 space-y-3">
-                  <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full animate-progress"></div>
                   </div>
                   <p className="text-sm text-gray-500">
@@ -217,7 +217,7 @@ const AuthCallback = () => {
               If you're not redirected automatically,{' '}
               <button
                 onClick={() => navigate('/login')}
-                className="text-indigo-600 hover:text-indigo-700:text-indigo-300 font-medium underline focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2:ring-offset-gray-800 rounded px-1"
+                className="text-indigo-600 hover:text-indigo-700:text-indigo-300 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2:ring-offset-gray-800 rounded px-1"
               >
                 click here to return to login
               </button>

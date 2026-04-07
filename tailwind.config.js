@@ -57,11 +57,17 @@ module.exports = {
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',
+        'ping-once': 'pingOnce 0.4s cubic-bezier(0, 0, 0.2, 1)',
       },
       keyframes: {
         fadeIn: {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
+        },
+        pingOnce: {
+          '0%': { transform: 'scale(1)', opacity: '1' },
+          '50%': { transform: 'scale(1.3)', opacity: '0.7' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
         }
       },
       screens: {

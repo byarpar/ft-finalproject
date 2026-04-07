@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import adminAPI from '../../services/adminAPI';
-import StatCard from './StatCard';
+import { StatCard } from '../AdminComponents';
 import {
   UsersIcon,
   BookOpenIcon,
@@ -77,7 +77,7 @@ const DashboardOverview = () => {
         <p className="text-red-800">{error}</p>
         <button
           onClick={fetchDashboardStats}
-          className="mt-2 text-sm text-red-600 underline"
+          className="mt-2 text-sm text-red-600"
         >
           Try again
         </button>
@@ -314,7 +314,7 @@ const DashboardOverview = () => {
             ))}
           </div>
           <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
-            <button className="text-sm text-teal-600 hover:underline">
+            <button className="text-sm text-teal-600 ">
               View all pending contributions →
             </button>
           </div>
@@ -348,7 +348,7 @@ const DashboardOverview = () => {
                     <p className="text-xs text-gray-500">
                       {item} hour{item > 1 ? 's' : ''} ago
                     </p>
-                    <button className="text-xs text-teal-600 hover:underline mt-1">
+                    <button className="text-xs text-teal-600  mt-1">
                       View Profile
                     </button>
                   </div>
@@ -357,7 +357,7 @@ const DashboardOverview = () => {
             ))}
           </div>
           <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
-            <button className="text-sm text-teal-600 hover:underline">
+            <button className="text-sm text-teal-600 ">
               View all users →
             </button>
           </div>
@@ -429,7 +429,7 @@ const DashboardOverview = () => {
                 <span className="text-sm text-gray-600">CPU Usage</span>
                 <span className="text-sm font-medium text-gray-900">45%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-gray-100 rounded-full h-2">
                 <div className="bg-teal-500 h-2 rounded-full" style={{ width: '45%' }}></div>
               </div>
             </div>
@@ -438,7 +438,7 @@ const DashboardOverview = () => {
                 <span className="text-sm text-gray-600">Memory</span>
                 <span className="text-sm font-medium text-gray-900">62%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-gray-100 rounded-full h-2">
                 <div className="bg-blue-500 h-2 rounded-full" style={{ width: '62%' }}></div>
               </div>
             </div>
@@ -447,7 +447,7 @@ const DashboardOverview = () => {
                 <span className="text-sm text-gray-600">Disk Space</span>
                 <span className="text-sm font-medium text-gray-900">38%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-gray-100 rounded-full h-2">
                 <div className="bg-green-500 h-2 rounded-full" style={{ width: '38%' }}></div>
               </div>
             </div>

@@ -14,7 +14,7 @@ import {
   CheckCircleIcon
 } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
-import PageLayout from '../components/Layout/PageLayout';
+import { PageLayout } from '../components/LayoutComponents';
 
 // Shared utilities
 import {
@@ -41,9 +41,7 @@ import {
 } from '../utils/formHandlers';
 
 // Shared components
-import PasswordToggleButton from '../components/Auth/PasswordToggleButton';
-import FieldError from '../components/Auth/FieldError';
-import GoogleOAuthButton from '../components/Auth/GoogleOAuthButton';
+import { PasswordToggleButton, FieldError, GoogleOAuthButton } from '../components/AuthComponents';
 
 /**
  * Register Page - User registration with email/password or Google OAuth
@@ -511,7 +509,7 @@ const Register = () => {
                 {formData.password && (
                   <div className="mt-2">
                     <div className="flex items-center gap-2">
-                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                         <div
                           className={`h-full transition-all duration-300 ${passwordStrength.score === 1 ? 'w-1/5 bg-red-500' :
                             passwordStrength.score === 2 ? 'w-2/5 bg-red-400' :
@@ -600,14 +598,7 @@ const Register = () => {
                     className={`h-4 w-4 text-teal-600 border-gray-300 rounded focus:ring-2 focus:ring-teal-500:ring-teal-400 focus:ring-offset-2:ring-offset-gray-900 mt-1 bg-white transition-colors ${errors.agreeTerms ? 'border-red-500' : ''}`}
                   />
                   <label htmlFor="agreeTerms" className="ml-3 text-sm text-gray-700 cursor-pointer select-none">
-                    I agree to the{' '}
-                    <Link to="/privacy" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-700:text-teal-300 underline focus:outline-none focus:ring-2 focus:ring-teal-500 rounded">
-                      Privacy Policy
-                    </Link>
-                    {' '}and{' '}
-                    <Link to="/terms" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-700:text-teal-300 underline focus:outline-none focus:ring-2 focus:ring-teal-500 rounded">
-                      Terms of Service
-                    </Link>
+                    I agree to the Privacy Policy and Terms of Service
                     <span className="text-red-500 ml-1" aria-label="required">*</span>
                   </label>
                 </div>

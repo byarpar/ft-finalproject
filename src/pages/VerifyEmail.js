@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { EnvelopeIcon, CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
-import PageLayout from '../components/Layout/PageLayout';
+import { PageLayout } from '../components/LayoutComponents';
 
 /**
  * VerifyEmail Page - Email verification with 6-digit code
@@ -278,7 +278,7 @@ const VerifyEmail = () => {
                   </p>
                   <p className="text-xs text-yellow-700 mt-1">
                     Please{' '}
-                    <Link to="/register" className="underline hover:text-yellow-900:text-yellow-100">
+                    <Link to="/register" className="hover:text-yellow-900:text-yellow-100">
                       register
                     </Link>
                     {' '}first to receive a verification code.
@@ -439,13 +439,6 @@ const VerifyEmail = () => {
                     className="font-medium text-teal-600 hover:text-teal-700:text-teal-300 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 rounded px-1"
                   >
                     Change Email
-                  </Link>
-                  {' · '}
-                  <Link
-                    to="/contact"
-                    className="font-medium text-teal-600 hover:text-teal-700:text-teal-300 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 rounded px-1"
-                  >
-                    Need Help?
                   </Link>
                 </div>
               </div>

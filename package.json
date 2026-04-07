@@ -1,7 +1,7 @@
 {
-  "name": "lisu-dict-frontend",
+  "name": "devforum-frontend",
   "version": "1.0.0",
-  "description": "Frontend application for Lisu Dictionary",
+  "description": "Frontend application for DevForum - A developer community platform",
   "private": true,
   "dependencies": {
     "@heroicons/react": "^2.1.5",
@@ -16,13 +16,9 @@
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.3.1",
     "react-google-recaptcha": "^3.1.0",
-    "react-helmet-async": "^2.0.5",
     "react-hot-toast": "^2.4.1",
-    "react-query": "^3.39.3",
     "react-router-dom": "^6.26.2",
-    "react-scripts": "5.0.1",
-    "sharp": "^0.34.4",
-    "socket.io-client": "^4.8.1"
+    "react-scripts": "5.0.1"
   },
   "devDependencies": {
     "prop-types": "^15.8.1",

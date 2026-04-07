@@ -4,7 +4,6 @@ import { useAuth } from '../contexts/AuthContext';
 import {
   HomeIcon,
   UsersIcon,
-  BookOpenIcon,
   ChatBubbleLeftRightIcon,
   TagIcon,
   ChartBarIcon,
@@ -16,23 +15,20 @@ import {
   XMarkIcon,
   ArrowRightOnRectangleIcon,
   GlobeAltIcon,
-  QuestionMarkCircleIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
-import PageLayout from '../components/Layout/PageLayout';
-import SkeletonLoader from '../components/UI/SkeletonLoader';
+import { PageLayout } from '../components/LayoutComponents';
+import { SkeletonLoader } from '../components/UIComponents';
 
 // Import admin modules
 import DashboardOverview from '../components/admin/DashboardOverview';
 import UsersManagement from '../components/admin/UsersManagement';
-import WordsManagement from '../components/admin/WordsManagement';
 import DiscussionsManagement from '../components/admin/DiscussionsManagement';
-import CategoriesAndTags from '../components/admin/CategoriesAndTags';
-import ReportsAnalytics from '../components/admin/ReportsAnalytics';
-import AdminSettings from '../components/admin/AdminSettings';
+import { CategoriesAndTags, AdminSettings } from '../components/AdminComponents';
+import { ReportsAnalytics } from '../components/AdminComponents';
 
 /**
- * Admin Dashboard - Complete administrative interface for managing the Lisu Dictionary
+ * Admin Dashboard - Complete administrative interface for managing Modern Discussion Forum
  * Provides access to user management, content moderation, analytics, and system settings
  * 
  * @component
@@ -62,8 +58,7 @@ const AdminDashboard = () => {
   const handleSearch = useCallback((e) => {
     e.preventDefault();
     // TODO: Implement global admin search
-    console.log('Searching for:', searchQuery);
-  }, [searchQuery]);
+  }, []);
 
   // Handle responsive sidebar on window resize
   useEffect(() => {
@@ -88,7 +83,7 @@ const AdminDashboard = () => {
         fullWidth={true}
         background=""
       >
-        <div className="flex h-screen bg-gray-100">
+        <div className="flex h-screen bg-white">
           {/* Sidebar Skeleton */}
           <aside className="w-64 bg-gradient-to-b from-teal-700 to-teal-900">
             <div className="p-6">
@@ -106,8 +101,8 @@ const AdminDashboard = () => {
             <div className="max-w-7xl mx-auto">
               {/* Header Skeleton */}
               <div className="mb-6">
-                <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                <div className="h-8 bg-gray-100 rounded w-1/3 mb-2"></div>
+                <div className="h-4 bg-gray-100 rounded w-1/4"></div>
               </div>
 
               {/* Stats Grid Skeleton */}
@@ -142,12 +137,6 @@ const AdminDashboard = () => {
       icon: UsersIcon,
       path: '/admin/users',
       description: 'Manage user accounts and permissions'
-    },
-    {
-      name: 'Words & Definitions',
-      icon: BookOpenIcon,
-      path: '/admin/words',
-      description: 'Manage dictionary entries and translations'
     },
     {
       name: 'Discussions',
@@ -190,12 +179,12 @@ const AdminDashboard = () => {
 
   return (
     <PageLayout
-      title="Admin Dashboard - Lisu Dictionary"
-      description="Administrative interface for managing Lisu Dictionary users, content, and system settings"
+      title="Admin Dashboard - Modern Discussion Forum"
+      description="Administrative interface for managing Modern Discussion Forum users, content, and system settings"
       fullWidth={true}
       background=""
     >
-      <div className="flex h-screen bg-gray-100">
+      <div className="flex h-screen bg-white">
         {/* Sidebar */}
         <aside
           className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -208,11 +197,11 @@ const AdminDashboard = () => {
               <Link to="/admin" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
                 <img
                   src="/logo.png"
-                  alt="Lisu Dictionary Logo"
+                  alt="Modern Discussion Forum Logo"
                   className="w-10 h-10 object-contain drop-shadow-lg"
                 />
                 <div>
-                  <h1 className="text-lg font-bold">Lisu Dictionary</h1>
+                  <h1 className="text-lg font-bold">Modern Discussion Forum</h1>
                   <p className="text-xs text-teal-200">Admin Panel</p>
                 </div>
               </Link>
@@ -339,15 +328,6 @@ const AdminDashboard = () => {
                   <span className="hidden sm:inline">View Site</span>
                 </a>
 
-                <Link
-                  to="/admin/help"
-                  className="flex items-center space-x-1 px-3 py-2 text-sm text-gray-600 hover:text-teal-600:text-teal-400 rounded-lg hover:bg-gray-100:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  aria-label="Admin help and documentation"
-                >
-                  <QuestionMarkCircleIcon className="w-5 h-5" aria-hidden="true" />
-                  <span className="hidden sm:inline">Help</span>
-                </Link>
-
                 {/* Notifications */}
                 <button
                   className="relative p-2 text-gray-600 hover:bg-gray-100:bg-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500"
@@ -370,7 +350,7 @@ const AdminDashboard = () => {
 
           {/* Main Content Area */}
           <main
-            className="flex-1 overflow-y-auto bg-gray-50"
+            className="flex-1 overflow-y-auto bg-white"
             role="main"
             aria-label="Admin dashboard content"
           >
@@ -378,7 +358,6 @@ const AdminDashboard = () => {
               <Routes>
                 <Route path="/" element={<DashboardOverview />} />
                 <Route path="/users/*" element={<UsersManagement />} />
-                <Route path="/words/*" element={<WordsManagement />} />
                 <Route path="/discussions/*" element={<DiscussionsManagement />} />
                 <Route path="/categories/*" element={<CategoriesAndTags />} />
                 <Route path="/reports/*" element={<ReportsAnalytics />} />

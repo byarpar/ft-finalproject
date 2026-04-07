@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
-import adminAPI from '../../services/adminAPI';
-import Pagination from '../UI/Pagination';
+import admin from '../../services/adminAPI';
+import { Pagination } from '../UIComponents';
 import {
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -48,16 +48,22 @@ const UsersList = () => {
         ...(statusFilter !== 'all' && { status: statusFilter }),
       };
 
-      const response = await adminAPI.getAllUsers(params);
+      const response = await admin.getAllUsers(params);
 
       if (response.success) {
-        setUsers(response.data.users || []);
-        const pagination = response.metadata?.pagination || {};
+        const users = response.data?.users || response.users || [];
+        setUsers(users);
+        const pagination = response.metadata?.pagination || response.pagination || {};
         setTotalPages(pagination.totalPages || pagination.total_pages || 1);
         setTotalUsers(pagination.total || pagination.total_users || 0);
       }
     } catch (error) {
       console.error('Error fetching users:', error);
+      console.error('Error details:', error.response?.data || error.message);
+      // Set empty state on error
+      setUsers([]);
+      setTotalPages(1);
+      setTotalUsers(0);
     } finally {
       setLoading(false);
     }
@@ -65,7 +71,7 @@ const UsersList = () => {
 
   const handleRoleChange = async (userId, newRole) => {
     try {
-      await adminAPI.updateUserRole(userId, newRole);
+      await admin.updateUserRole(userId, newRole);
       fetchUsers();
     } catch (error) {
       console.error('Error updating user role:', error);
@@ -75,7 +81,7 @@ const UsersList = () => {
 
   const handleStatusToggle = async (userId, currentStatus) => {
     try {
-      await adminAPI.updateUserStatus(userId, !currentStatus);
+      await admin.updateUserStatus(userId, !currentStatus);
       fetchUsers();
     } catch (error) {
       console.error('Error updating user status:', error);
@@ -87,7 +93,7 @@ const UsersList = () => {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
 
     try {
-      await adminAPI.deleteUser(userId);
+      await admin.deleteUser(userId);
       fetchUsers();
     } catch (error) {
       console.error('Error deleting user:', error);

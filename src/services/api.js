@@ -115,12 +115,6 @@ export const discussionsAPI = {
   getRelatedDiscussions: (id, params = {}) => api.get(`/discussions/${id}/related`, { params }).then(res => res.data),
 };
 
-// Tags API
-export const tagsAPI = {
-  getAllTags: () => api.get('/tags').then(res => res.data),
-  getPopularTags: (limit = 10) => api.get('/tags/popular', { params: { limit } }).then(res => res.data),
-};
-
 // Answers API
 export const answersAPI = {
   getAnswersForDiscussion: (discussionId, params = {}) =>
@@ -153,6 +147,9 @@ export const answersAPI = {
   },
 
   deleteAnswer: (answerId) => api.delete(`/answers/${answerId}`).then(res => res.data),
+
+  // Vote functionality
+  removeVote: (answerId) => api.delete(`/answers/${answerId}/vote`).then(res => res.data),
 };
 
 // Users API (Public)
@@ -160,11 +157,18 @@ export const usersAPI = {
   getAllUsers: (params = {}) => api.get('/users', { params }).then(res => res.data),
   getUserProfile: (userId) => api.get(`/users/${userId}`).then(res => res.data),
   getUserStats: (userId) => api.get(`/users/${userId}/statistics`).then(res => res.data),
+  getMentionSuggestions: (query, limit = 10) => api.get(`/users/mention-suggestions`, {
+    params: { q: query, limit }
+  }).then(res => res.data),
+
+  // Follow functionality
+  followUser: (userId) => api.post(`/users/${userId}/follow`).then(res => res.data),
+  unfollowUser: (userId) => api.delete(`/users/${userId}/follow`).then(res => res.data),
+  getFollowInfo: (userId) => api.get(`/users/${userId}/follow-info`).then(res => res.data),
+  getUserFollowers: (userId, params = {}) => api.get(`/users/${userId}/followers`, { params }).then(res => res.data),
+  getUserFollowing: (userId, params = {}) => api.get(`/users/${userId}/following`, { params }).then(res => res.data),
 };
 
-// Search API
-export const searchAPI = {
-  search: (params) => api.get('/words/search', { params }).then(res => res.data),
-};
+
 
 export default api;

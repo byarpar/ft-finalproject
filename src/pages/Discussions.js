@@ -1,36 +1,28 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { discussionsAPI, tagsAPI, usersAPI } from '../services/api';
-import HeroNavbar from '../components/Layout/HeroNavbar';
-import Pagination from '../components/UI/Pagination';
+import { discussionsAPI, usersAPI } from '../services/api';
+import { Pagination } from '../components/UIComponents';
 import {
   ChatBubbleLeftRightIcon,
   MagnifyingGlassIcon,
-  PlusIcon,
   BookmarkIcon,
-  UserGroupIcon,
-  AcademicCapIcon,
-  SpeakerWaveIcon,
-  BookOpenIcon,
-  DocumentTextIcon,
-  WrenchScrewdriverIcon,
-  FireIcon,
   EyeIcon,
-  BellIcon,
   QuestionMarkCircleIcon,
   Squares2X2Icon,
   ListBulletIcon
 } from '@heroicons/react/24/outline';
 import {
   BookmarkIcon as BookmarkSolidIcon,
-  MapPinIcon
+  MapPinIcon,
+  CheckBadgeIcon
 } from '@heroicons/react/24/solid';
 import toast from 'react-hot-toast';
-import DiscussionSkeleton from '../components/UI/DiscussionSkeleton';
-import VoteButtons from '../components/Discussion/VoteButtons';
+import { DiscussionSkeleton } from '../components/UIComponents';
+import { VoteButtons } from '../components/DiscussionComponents';
+import { MentionRenderer } from '../components/UIComponents';
 import { formatRelativeDate } from '../utils/dateUtils';
-import PageLayout from '../components/Layout/PageLayout';
+import { PageLayout } from '../components/LayoutComponents';
 
 /**
  * Discussions Component
@@ -45,7 +37,6 @@ const Discussions = () => {
 
   const [discussions, setDiscussions] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [recentActivity, setRecentActivity] = useState([]);
   const [activeMembers, setActiveMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -53,7 +44,6 @@ const Discussions = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('latest');
-  const [filterBy, setFilterBy] = useState('all');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [layoutView, setLayoutView] = useState('grid'); // 'grid' or 'list'
@@ -67,8 +57,7 @@ const Discussions = () => {
         limit: 12,
         category: selectedCategory !== 'all' ? selectedCategory : undefined,
         search: searchQuery || undefined,
-        sortBy,
-        filter: filterBy !== 'all' ? filterBy : undefined
+        sortBy
       });
 
       const rawDiscussions = response.discussions || response.data?.discussions || [];
@@ -115,23 +104,18 @@ const Discussions = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, selectedCategory, searchQuery, sortBy, filterBy]);
+  }, [page, selectedCategory, searchQuery, sortBy]);
 
   const fetchCategories = useCallback(async () => {
     try {
       const response = await discussionsAPI.getCategories();
       const categoriesData = response.data?.categories || response.categories || {};
 
-      // Convert categories object to array with 'All' category first and new categories
+      // Convert categories object to array with 'All' category first
       const categoriesArray = [
         { id: 'all', name: 'All', color: '#14b8a6', IconComponent: ChatBubbleLeftRightIcon },
-        { id: 'grammar', name: 'Grammar Questions', color: '#14b8a6', IconComponent: AcademicCapIcon },
-        { id: 'pronunciation', name: 'Pronunciation Help', color: '#14b8a6', IconComponent: SpeakerWaveIcon },
-        { id: 'cultural', name: 'Cultural Context', color: '#14b8a6', IconComponent: BookOpenIcon },
-        { id: 'vocabulary', name: 'Vocabulary Requests', color: '#14b8a6', IconComponent: DocumentTextIcon },
-        { id: 'technical', name: 'Technical Support', color: '#14b8a6', IconComponent: WrenchScrewdriverIcon },
         ...Object.entries(categoriesData)
-          .filter(([id]) => id !== 'members' && id !== 'home' && id !== 'community-chat')
+          .filter(([id]) => id !== 'members' && id !== 'home' && id !== 'community-chat' && id !== 'general')
           .map(([id, category]) => ({
             id,
             ...category
@@ -144,34 +128,16 @@ const Discussions = () => {
       // Set default categories if fetch fails
       setCategories([
         { id: 'all', name: 'All', color: '#14b8a6', IconComponent: ChatBubbleLeftRightIcon },
-        { id: 'grammar', name: 'Grammar Questions', color: '#14b8a6', IconComponent: AcademicCapIcon },
-        { id: 'pronunciation', name: 'Pronunciation Help', color: '#14b8a6', IconComponent: SpeakerWaveIcon },
-        { id: 'cultural', name: 'Cultural Context', color: '#14b8a6', IconComponent: BookOpenIcon },
-        { id: 'vocabulary', name: 'Vocabulary Requests', color: '#14b8a6', IconComponent: DocumentTextIcon },
-        { id: 'technical', name: 'Technical Support', color: '#14b8a6', IconComponent: WrenchScrewdriverIcon }
+        { id: 'programming', name: 'Programming', color: '#ec4899', IconComponent: ChatBubbleLeftRightIcon },
+        { id: 'web-development', name: 'Web Development', color: '#f59e0b', IconComponent: ChatBubbleLeftRightIcon },
+        { id: 'cybersecurity', name: 'Cybersecurity', color: '#ef4444', IconComponent: ChatBubbleLeftRightIcon },
+        { id: 'data-science', name: 'Data Science', color: '#10b981', IconComponent: ChatBubbleLeftRightIcon },
+        { id: 'machine-learning', name: 'Machine Learning', color: '#3b82f6', IconComponent: ChatBubbleLeftRightIcon }
       ]);
     }
   }, []);
 
-  const fetchPopularTags = useCallback(async () => {
-    try {
-      await tagsAPI.getPopularTags(10);
-      // Tags are fetched but not currently displayed in this view
-    } catch (err) {
-      console.error('Error fetching tags:', err);
-    }
-  }, []);
 
-  const fetchRecentActivity = useCallback(() => {
-    const activities = discussions.slice(0, 5).map(discussion => ({
-      id: discussion.id,
-      type: 'reply',
-      username: discussion.user_data?.username || 'Anonymous',
-      threadTitle: discussion.title,
-      timestamp: discussion.updated_at || discussion.created_at
-    }));
-    setRecentActivity(activities);
-  }, [discussions]);
 
   const fetchActiveMembers = useCallback(async () => {
     try {
@@ -181,6 +147,7 @@ const Discussions = () => {
           id: user.id,
           username: user.username,
           avatar: user.profile_photo_url,
+          avatarError: false, // Track if image failed to load
           lastActive: 'Active',
           role: user.role || 'Member'
         }));
@@ -223,19 +190,12 @@ const Discussions = () => {
 
   useEffect(() => {
     fetchCategories();
-    fetchPopularTags();
     fetchActiveMembers();
-  }, [fetchCategories, fetchPopularTags, fetchActiveMembers]);
+  }, [fetchCategories, fetchActiveMembers]);
 
   useEffect(() => {
     fetchDiscussions();
   }, [fetchDiscussions]);
-
-  useEffect(() => {
-    if (discussions.length > 0) {
-      fetchRecentActivity();
-    }
-  }, [discussions, fetchRecentActivity]);
 
   const handleSaveDiscussion = async (discussionId, isSaved) => {
     if (!user) {
@@ -286,10 +246,9 @@ const Discussions = () => {
             }}
           />
           {/* Enhanced overlay for better text readability on mobile */}
-          <div className="absolute inset-0 bg-gradient-to-b from-teal-900/90 via-teal-800/75 to-teal-700/60 sm:bg-gradient-to-r sm:from-teal-800/85 sm:via-teal-700/60 sm:to-teal-600/40" />
+          <div className="absolute inset-0 bg-gradient-to-b from-gray-900/90 via-gray-800/75 to-gray-700/60 sm:bg-gradient-to-r sm:from-gray-800/85 sm:via-gray-700/60 sm:to-gray-600/40" />
 
-          {/* Hero Navbar Component */}
-          <HeroNavbar />
+
 
           {/* Main Hero Content */}
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
@@ -297,25 +256,26 @@ const Discussions = () => {
               <div className="space-y-6 relative z-10 text-center sm:text-left">
                 <div>
                   <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight text-white drop-shadow-lg">
-                    Community Discussions
+                    Questions &
+                    <span className="block text-white">Answers</span>
                   </h1>
                   <p className="text-base sm:text-lg md:text-xl text-white/90 leading-relaxed max-w-lg mx-auto sm:mx-0 drop-shadow-md">
-                    Join conversations about Lisu language and culture
+                    Ask questions and get help from the Lisu learning community
                   </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="pt-4">
                   <Link
                     to={user ? "/discussions/new" : "/login"}
                     onClick={() => {
                       if (!user) {
-                        toast.error('Please login to start a discussion');
+                        toast.error('Please login to ask a question');
                       }
                     }}
                     className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-base rounded-xl transition-colors shadow-xl"
                   >
-                    <PlusIcon className="w-5 h-5" />
-                    Start Discussion
+                    <QuestionMarkCircleIcon className="w-5 h-5" />
+                    Ask Question
                   </Link>
                 </div>
               </div>
@@ -346,9 +306,9 @@ const Discussions = () => {
                         setSelectedCategory(category.id);
                         setPage(1);
                       }}
-                      className={`flex-shrink-0 px-4 py-2.5 rounded-full text-sm font-medium border-2 ${selectedCategory === category.id
+                      className={`flex-shrink-0 px-4 py-2.5 rounded-full text-sm font-medium border ${selectedCategory === category.id
                         ? 'bg-teal-600 text-white border-teal-600'
-                        : 'bg-white text-gray-700 border-gray-200 hover:border-teal-300'
+                        : 'bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-teal-500 hover:shadow-lg transition-all duration-300 text-center h-full"'
                         }`}
                     >
                       <span>{category.name}</span>
@@ -387,13 +347,12 @@ const Discussions = () => {
                     setPage(1);
                   }}
                   className="w-full px-4 py-3 text-sm bg-white border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:outline-none"
+                  title="Sort discussions by different criteria"
                 >
-                  <option value="latest">Latest Activity</option>
-                  <option value="active">Most Active</option>
-                  <option value="popular">Most Liked</option>
-                  <option value="views">Most Viewed</option>
-                  <option value="newest">Newest</option>
-                  <option value="oldest">Oldest</option>
+                  <option value="latest" title="Recently active discussions with new replies or updates">Latest Activity</option>
+                  <option value="popular" title="Discussions with most engagement (votes + replies)">Most Popular</option>
+                  <option value="views" title="Most viewed discussions">Most Viewed</option>
+                  <option value="newest" title="Brand new discussions, just posted">Newest First</option>
                 </select>
               </div>
 
@@ -449,31 +408,30 @@ const Discussions = () => {
                     <ChatBubbleLeftRightIcon className="w-10 h-10 text-teal-600" />
                   </div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                    {searchQuery ? 'No discussions found' : 'Start the Conversation!'}
+                    {searchQuery ? 'No questions found' : 'Ask the First Question!'}
                   </h3>
                   <p className="text-gray-600 mb-8 text-base">
                     {searchQuery
                       ? 'Try adjusting your search terms or filters to find what you\'re looking for.'
-                      : 'Be the first to share your thoughts, ask questions, or start a discussion with the community.'}
+                      : 'Be the first to ask a question and get help from our community of Lisu language learners and experts.'}
                   </p>
                   {user && !searchQuery && (
                     <Link
                       to="/discussions/new"
                       className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white rounded-xl font-semibold shadow-lg transition-colors"
                     >
-                      <PlusIcon className="w-5 h-5" />
-                      Start New Discussion
+                      <QuestionMarkCircleIcon className="w-5 h-5" />
+                      Ask Your Question
                     </Link>
                   )}
                   {searchQuery && (
                     <button
                       onClick={() => {
                         setSearchQuery('');
-                        setFilterBy('all');
                       }}
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300:bg-gray-600 text-gray-700 rounded-lg font-medium transition-colors"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-white hover:bg-gray-100 text-gray-700 rounded-lg font-medium transition-colors border"
                     >
-                      Clear Filters
+                      Clear Search
                     </button>
                   )}
                 </div>
@@ -483,13 +441,10 @@ const Discussions = () => {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* Left Column: Discussion Threads */}
                 <div className="lg:col-span-8">
-                  {/* Grid Layout - Unique Card Design */}
+                  {/* Grid Layout */}
                   {layoutView === 'grid' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {discussions.map((discussion) => {
-                        const category = categories.find(cat => cat.id === discussion.category) || categories[0];
-                        const CategoryIcon = category.IconComponent || ChatBubbleLeftRightIcon;
-
                         return (
                           <Link
                             key={discussion.id}
@@ -497,9 +452,9 @@ const Discussions = () => {
                             className="block"
                           >
                             <article
-                              className="bg-white rounded-xl border-2 border-gray-200 hover:border-teal-500 overflow-hidden transition-all cursor-pointer"
+                              className="bg-white rounded-xl border-2 border-gray-200 hover:border-teal-500 overflow-hidden transition-all cursor-pointer h-full flex flex-col"
                             >
-                              <div className="p-4">
+                              <div className="p-4 flex-1 flex flex-col">
                                 {/* Meta Row */}
                                 <div className="flex items-center justify-between mb-3">
                                   <div className="flex items-center gap-2">
@@ -509,9 +464,9 @@ const Discussions = () => {
                                         e.stopPropagation();
                                         navigate(`/users/${discussion.author_id}`);
                                       }}
-                                      className="cursor-pointer"
+                                      className="cursor-pointer relative"
                                     >
-                                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
                                         {discussion.user_data?.display_picture ? (
                                           <img
                                             src={discussion.user_data.display_picture}
@@ -525,6 +480,9 @@ const Discussions = () => {
                                           </span>
                                         )}
                                       </div>
+                                      {discussion.user_data?.role === 'admin' && (
+                                        <CheckBadgeIcon className="w-4 h-4 text-red-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
+                                      )}
                                     </div>
                                     <div className="text-xs text-gray-500">
                                       {formatRelativeDate(discussion.updated_at || discussion.created_at)}
@@ -550,23 +508,19 @@ const Discussions = () => {
                                   </div>
                                 </div>
 
-                                {/* Category Badge */}
-                                {category && category.id !== 'all' && (
-                                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-700 mb-2">
-                                    <CategoryIcon className="w-3 h-3" />
-                                    {category.name}
-                                  </div>
-                                )}
-
                                 {/* Title */}
                                 <h3 className="text-base font-bold text-gray-900 hover:text-teal-600 line-clamp-2 leading-snug mb-2">
                                   {discussion.title}
                                 </h3>
 
-                                {/* Snippet */}
-                                <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-                                  {discussion.content?.replace(/<[^>]*>/g, '').substring(0, 100)}...
-                                </p>
+                                {/* Content Preview */}
+                                <div className="text-sm text-gray-600 mb-3 line-clamp-6 prose prose-sm max-w-none text-justify flex-1">
+                                  <MentionRenderer
+                                    content={(discussion.content || '').substring(0, 400) + ((discussion.content || '').length > 400 ? '...' : '')}
+                                    theme="teal"
+                                    renderMarkdown={true}
+                                  />
+                                </div>
 
                                 {/* Tags */}
                                 {discussion.tags && discussion.tags.length > 0 && (
@@ -579,7 +533,148 @@ const Discussions = () => {
                                           e.stopPropagation();
                                           handleTagClick(tag);
                                         }}
-                                        className="px-2 py-0.5 bg-teal-50 text-teal-700 rounded text-xs hover:bg-teal-100 z-10"
+                                        className="px-2 py-1 bg-teal-50 text-teal-700 rounded-full text-xs hover:bg-teal-100 border border-teal-200 z-10"
+                                      >
+                                        #{tag}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Stats Bar */}
+                                <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-auto">
+                                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                                    {/* Vote Buttons */}
+                                    <div
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                      }}
+                                    >
+                                      <VoteButtons
+                                        itemId={discussion.id}
+                                        itemType="discussion"
+                                        initialVoteCount={discussion.vote_count}
+                                        initialUserVote={discussion.user_vote}
+                                        layout="horizontal"
+                                      />
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <ChatBubbleLeftRightIcon className="w-4 h-4" />
+                                      <span>{discussion.answers_count || 0}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <EyeIcon className="w-4 h-4" />
+                                      <span>{discussion.views_count || 0}</span>
+                                    </div>
+                                  </div>
+                                  {discussion.answers_count === 0 && (
+                                    <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full font-medium">
+                                      New
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </article>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* List Layout */}
+                  {layoutView === 'list' && (
+                    <div className="space-y-4">
+                      {discussions.map((discussion) => {
+                        return (
+                          <Link
+                            key={discussion.id}
+                            to={`/discussions/${discussion.id}`}
+                            className="block"
+                          >
+                            <article
+                              className="bg-white rounded-xl border-2 border-gray-200 hover:border-teal-500 overflow-hidden transition-all cursor-pointer"
+                            >
+                              <div className="p-4">
+                                {/* Meta Row */}
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center gap-2">
+                                    <div
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        navigate(`/users/${discussion.author_id}`);
+                                      }}
+                                      className="cursor-pointer relative"
+                                    >
+                                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                                        {discussion.user_data?.display_picture ? (
+                                          <img
+                                            src={discussion.user_data.display_picture}
+                                            alt={discussion.user_data?.username || 'User'}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => { e.target.style.display = 'none'; }}
+                                          />
+                                        ) : (
+                                          <span className="text-xs font-bold text-gray-600">
+                                            {(discussion.user_data?.username || 'A').charAt(0).toUpperCase()}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {discussion.user_data?.role === 'admin' && (
+                                        <CheckBadgeIcon className="w-4 h-4 text-red-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
+                                      )}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      {formatRelativeDate(discussion.updated_at || discussion.created_at)}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-1">
+                                    {discussion.is_pinned && <MapPinIcon className="w-5 h-5 text-blue-500" />}
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleSaveDiscussion(discussion.id, discussion.is_saved);
+                                      }}
+                                      className="z-10"
+                                    >
+                                      {discussion.is_saved ? (
+                                        <BookmarkSolidIcon className="w-5 h-5 text-teal-600" />
+                                      ) : (
+                                        <BookmarkIcon className="w-5 h-5 text-gray-400 hover:text-teal-600" />
+                                      )}
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Title */}
+                                <h3 className="text-base font-bold text-gray-900 hover:text-teal-600 line-clamp-2 leading-snug mb-2">
+                                  {discussion.title}
+                                </h3>
+
+                                {/* Content Preview */}
+                                <div className="text-sm text-gray-600 mb-3 line-clamp-6 prose prose-sm max-w-none text-justify">
+                                  <MentionRenderer
+                                    content={(discussion.content || '').substring(0, 400) + ((discussion.content || '').length > 400 ? '...' : '')}
+                                    theme="teal"
+                                    renderMarkdown={true}
+                                  />
+                                </div>
+
+                                {/* Tags */}
+                                {discussion.tags && discussion.tags.length > 0 && (
+                                  <div className="flex gap-1.5 mb-3 flex-wrap">
+                                    {discussion.tags.slice(0, 2).map((tag, index) => (
+                                      <button
+                                        key={index}
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          handleTagClick(tag);
+                                        }}
+                                        className="px-2 py-1 bg-teal-50 text-teal-700 rounded-full text-xs hover:bg-teal-100 border border-teal-200 z-10"
                                       >
                                         #{tag}
                                       </button>
@@ -606,7 +701,7 @@ const Discussions = () => {
                                       />
                                     </div>
                                     <div className="flex items-center gap-1">
-                                      <ChatBubbleLeftRightIcon className="w-5 h-5" />
+                                      <ChatBubbleLeftRightIcon className="w-4 h-4" />
                                       <span>{discussion.answers_count || 0}</span>
                                     </div>
                                     <div className="flex items-center gap-1">
@@ -627,287 +722,192 @@ const Discussions = () => {
                       })}
                     </div>
                   )}
-
-                  {/* List Layout - Unique Horizontal Design */}
-                  {layoutView === 'list' && (
-                    <div className="space-y-3">
-                      {discussions.map((discussion) => {
-                        const category = categories.find(cat => cat.id === discussion.category) || categories[0];
-                        const CategoryIcon = category.IconComponent || ChatBubbleLeftRightIcon;
-
-                        return (
-                          <Link
-                            key={discussion.id}
-                            to={`/discussions/${discussion.id}`}
-                            className="block"
-                          >
-                            <article
-                              className="bg-white rounded-xl border-2 border-gray-200 hover:border-teal-500 p-4 transition-all cursor-pointer"
-                            >
-                              <div className="flex gap-4">
-                                {/* Left Stats Panel */}
-                                <div className="flex flex-col items-center gap-2 p-3 bg-white border border-gray-200 rounded-lg">
-                                  {/* Vote Buttons */}
-                                  <div
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                    }}
-                                  >
-                                    <VoteButtons
-                                      itemId={discussion.id}
-                                      itemType="discussion"
-                                      initialVoteCount={discussion.vote_count}
-                                      initialUserVote={discussion.user_vote}
-                                      layout="vertical"
-                                    />
-                                  </div>
-
-                                  {/* Replies Count */}
-                                  <div className="text-center pt-2 border-t border-gray-200">
-                                    <div className="text-lg font-bold text-gray-900">{discussion.answers_count || 0}</div>
-                                    <div className="text-xs text-gray-500">replies</div>
-                                  </div>
-
-                                  {/* Views Count */}
-                                  <div className="text-center">
-                                    <div className="text-sm font-medium text-gray-600">{discussion.views_count || 0}</div>
-                                    <div className="text-xs text-gray-500">views</div>
-                                  </div>
-                                </div>
-
-                                {/* Right Content */}
-                                <div className="flex-1 min-w-0">
-                                  {/* Header */}
-                                  <div className="flex items-start justify-between mb-2">
-                                    <div className="flex items-center gap-2">
-                                      {category && category.id !== 'all' && (
-                                        <div className="flex items-center gap-1 px-2 py-1 bg-white border border-gray-200 rounded text-xs font-medium text-gray-700">
-                                          <CategoryIcon className="w-3 h-3" />
-                                          {category.name}
-                                        </div>
-                                      )}
-                                      {discussion.answers_count === 0 && (
-                                        <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded font-medium">
-                                          New
-                                        </span>
-                                      )}
-                                    </div>
-
-                                    <div className="flex items-center gap-2">
-                                      {discussion.is_pinned && <MapPinIcon className="w-4 h-4 text-blue-500" />}
-                                      <button
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          handleSaveDiscussion(discussion.id, discussion.is_saved);
-                                        }}
-                                        className="z-10"
-                                      >
-                                        {discussion.is_saved ? (
-                                          <BookmarkSolidIcon className="w-5 h-5 text-teal-600" />
-                                        ) : (
-                                          <BookmarkIcon className="w-5 h-5 text-gray-400 hover:text-teal-600" />
-                                        )}
-                                      </button>
-                                    </div>
-                                  </div>
-
-                                  {/* Title */}
-                                  <h3 className="text-lg font-bold text-gray-900 hover:text-teal-600 mb-2">
-                                    {discussion.title}
-                                  </h3>
-
-                                  {/* Content */}
-                                  <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-                                    {discussion.content?.replace(/<[^>]*>/g, '').substring(0, 180)}...
-                                  </p>
-
-                                  {/* Tags */}
-                                  {discussion.tags && discussion.tags.length > 0 && (
-                                    <div className="flex gap-2 mb-3 flex-wrap">
-                                      {discussion.tags.slice(0, 4).map((tag, index) => (
-                                        <button
-                                          key={index}
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            handleTagClick(tag);
-                                          }}
-                                          className="px-2 py-1 bg-teal-50 text-teal-700 rounded text-xs hover:bg-teal-100 z-10"
-                                        >
-                                          #{tag}
-                                        </button>
-                                      ))}
-                                    </div>
-                                  )}
-
-                                  {/* Footer */}
-                                  <div className="flex items-center gap-3 text-xs text-gray-500">
-                                    <div
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        navigate(`/users/${discussion.author_id}`);
-                                      }}
-                                      className="flex items-center gap-1.5 hover:text-teal-600 cursor-pointer z-10"
-                                    >
-                                      <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                                        {discussion.user_data?.display_picture ? (
-                                          <img
-                                            src={discussion.user_data.display_picture}
-                                            alt={discussion.user_data?.username || 'User'}
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => { e.target.style.display = 'none'; }}
-                                          />
-                                        ) : (
-                                          <span className="text-xs font-bold text-gray-600">
-                                            {(discussion.user_data?.username || 'A').charAt(0).toUpperCase()}
-                                          </span>
-                                        )}
-                                      </div>
-                                      <span className="font-medium">{discussion.user_data?.username || 'Anonymous'}</span>
-                                    </div>
-                                    <span>•</span>
-                                    <span>{formatRelativeDate(discussion.updated_at || discussion.created_at)}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </article>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
                 </div>
 
                 {/* Right Column: Sidebar */}
                 <aside className="lg:col-span-4 space-y-4">
                   {/* Trending Topics */}
-                  <div className="bg-white rounded-lg border border-gray-200 p-4">
-                    <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                      <FireIcon className="w-5 h-5 text-orange-500" />
-                      Trending Topics
-                    </h3>
-                    <div className="space-y-2">
-                      {discussions.slice(0, 5).map((discussion, index) => (
-                        <Link
-                          key={discussion.id}
-                          to={`/discussions/${discussion.id}`}
-                          className="block p-2 bg-white rounded hover:bg-teal-50"
-                        >
-                          <div className="flex gap-2">
-                            <span className="flex-shrink-0 w-5 h-5 bg-orange-500 text-white text-xs font-bold rounded flex items-center justify-center">
-                              {index + 1}
-                            </span>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="text-sm font-medium text-gray-900 line-clamp-2">
-                                {discussion.title}
-                              </h4>
-                              <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
-                                <span>{discussion.answers_count} replies</span>
-                                <span>•</span>
-                                <span>{discussion.views_count || 0} views</span>
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="p-4 border-b border-gray-200">
+                      <h3 className="text-lg font-bold text-gray-900">
+                        Trending Topics
+                      </h3>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                      {discussions
+                        .slice()
+                        .sort((a, b) => {
+                          // Sort by engagement score: views + (votes * 3) + (replies * 5)
+                          const scoreA = (a.views_count || 0) + (a.vote_count || 0) * 3 + (a.answers_count || 0) * 5;
+                          const scoreB = (b.views_count || 0) + (b.vote_count || 0) * 3 + (b.answers_count || 0) * 5;
+                          return scoreB - scoreA;
+                        })
+                        .slice(0, 5)
+                        .map((discussion, index) => (
+                          <Link
+                            key={discussion.id}
+                            to={`/discussions/${discussion.id}`}
+                            className="block p-4 hover:bg-gray-50 transition-colors group"
+                          >
+                            <div className="flex gap-3">
+                              <span className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 text-white text-sm font-bold rounded flex items-center justify-center">
+                                {index + 1}
+                              </span>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-sm font-semibold text-gray-900 group-hover:text-teal-600 line-clamp-2 leading-tight mb-2">
+                                  {discussion.title}
+                                </h4>
+                                <div className="flex items-center gap-3 text-xs text-gray-500">
+                                  <span className="flex items-center gap-1">
+                                    <ChatBubbleLeftRightIcon className="w-3.5 h-3.5" />
+                                    {discussion.answers_count || 0}
+                                  </span>
+                                  <span>•</span>
+                                  <span className="flex items-center gap-1">
+                                    <EyeIcon className="w-3.5 h-3.5" />
+                                    {discussion.views_count || 0}
+                                  </span>
+                                  {discussion.vote_count > 0 && (
+                                    <>
+                                      <span>•</span>
+                                      <span className="text-teal-600 font-semibold">
+                                        +{discussion.vote_count}
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </Link>
-                      ))}
+                          </Link>
+                        ))}
                     </div>
                   </div>
 
                   {/* Latest Activity */}
-                  <div className="bg-white rounded-lg border border-gray-200 p-4">
-                    <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                      <BellIcon className="w-5 h-5 text-blue-500" />
-                      Latest Activity
-                    </h3>
-                    <div className="space-y-2">
-                      {recentActivity.slice(0, 5).map((activity, index) => (
-                        <div key={`${activity.id}-${index}`} className="p-2 bg-white rounded hover:bg-teal-50">
-                          <p className="text-sm text-gray-700">
-                            <span className="font-medium text-teal-600">{activity.username}</span>
-                            {' '}replied to{' '}
-                            <Link
-                              to={`/discussions/${activity.id}`}
-                              className="text-gray-900 hover:text-teal-600 line-clamp-1"
-                            >
-                              {activity.threadTitle}
-                            </Link>
-                          </p>
-                          <span className="text-xs text-gray-500">
-                            {formatRelativeDate(activity.timestamp)}
-                          </span>
-                        </div>
-                      ))}
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="p-4 border-b border-gray-200">
+                      <h3 className="text-lg font-bold text-gray-900">
+                        Latest Activity
+                      </h3>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                      {discussions
+                        .slice()
+                        .sort((a, b) => {
+                          // Sort by most recent activity (updated_at)
+                          const dateA = new Date(a.updated_at || a.created_at);
+                          const dateB = new Date(b.updated_at || b.created_at);
+                          return dateB - dateA;
+                        })
+                        .slice(0, 5)
+                        .map((discussion) => (
+                          <Link
+                            key={discussion.id}
+                            to={`/discussions/${discussion.id}`}
+                            className="block p-4 hover:bg-gray-50 transition-colors group"
+                          >
+                            <div className="flex gap-3">
+                              <div className="relative flex-shrink-0">
+                                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                                  {discussion.user_data?.display_picture ? (
+                                    <img
+                                      src={discussion.user_data.display_picture}
+                                      alt={discussion.user_data?.username || 'User'}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => { e.target.style.display = 'none'; }}
+                                    />
+                                  ) : (
+                                    <span className="text-sm font-bold text-gray-600">
+                                      {(discussion.user_data?.username || 'A').charAt(0).toUpperCase()}
+                                    </span>
+                                  )}
+                                </div>
+                                {discussion.user_data?.role === 'admin' && (
+                                  <CheckBadgeIcon className="w-3.5 h-3.5 text-red-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-sm font-semibold text-gray-900 group-hover:text-teal-600 line-clamp-2 leading-tight mb-1">
+                                  {discussion.title}
+                                </h4>
+                                <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                                  <span className="font-medium text-blue-600">
+                                    {discussion.user_data?.username || 'Anonymous'}
+                                  </span>
+                                  <span>•</span>
+                                  <span>{formatRelativeDate(discussion.updated_at || discussion.created_at)}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
                     </div>
                   </div>
 
                   {/* Active Members */}
-                  <div className="bg-white rounded-lg border border-gray-200 p-4">
-                    <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                      <UserGroupIcon className="w-5 h-5 text-purple-500" />
-                      Active Members
-                    </h3>
-                    <div className="grid grid-cols-4 gap-2 mb-3">
-                      {activeMembers.map((member) => (
-                        <Link
-                          key={member.id}
-                          to={`/users/${member.id}`}
-                          className="flex flex-col items-center"
-                        >
-                          <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center overflow-hidden">
-                            {member.avatar ? (
-                              <img
-                                src={member.avatar}
-                                alt={member.username || 'User'}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <span className="text-sm font-bold text-purple-700">
-                                {(member.username || 'U').charAt(0).toUpperCase()}
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-xs text-gray-700 mt-1 text-center line-clamp-1">
-                            {member.username || 'User'}
-                          </span>
-                        </Link>
-                      ))}
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="p-4 border-b border-gray-200">
+                      <h3 className="text-lg font-bold text-gray-900">
+                        Active Members
+                      </h3>
                     </div>
-                    <Link
-                      to="/discussions/members"
-                      className="block w-full py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded text-center"
-                    >
-                      View All Members
-                    </Link>
+                    <div className="p-5">
+                      <div className="grid grid-cols-4 gap-4 mb-5">
+                        {activeMembers.slice(0, 4).map((member) => (
+                          <Link
+                            key={member.id}
+                            to={`/users/${member.id}`}
+                            className="flex flex-col items-center group"
+                          >
+                            <div className="relative w-16 h-16 mb-2">
+                              <div className="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center overflow-hidden group-hover:ring-2 group-hover:ring-teal-500 transition-all">
+                                {member.avatar && !member.avatarError ? (
+                                  <img
+                                    src={member.avatar}
+                                    alt={member.username || 'User'}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      setActiveMembers(prev =>
+                                        prev.map(m =>
+                                          m.id === member.id ? { ...m, avatarError: true } : m
+                                        )
+                                      );
+                                    }}
+                                  />
+                                ) : (
+                                  <span className="text-xl font-bold text-teal-700">
+                                    {(member.username || 'U').charAt(0).toUpperCase()}
+                                  </span>
+                                )}
+                              </div>
+                              {member.role === 'admin' && (
+                                <CheckBadgeIcon className="w-4 h-4 text-red-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
+                              )}
+                            </div>
+                            <span className="text-xs text-gray-700 font-medium text-center line-clamp-1 w-full">
+                              {member.username || 'User'}
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                      <Link
+                        to="/discussions/members"
+                        className="block w-full py-3 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-lg text-center transition-colors shadow-sm"
+                      >
+                        View All Members
+                      </Link>
+                    </div>
                   </div>
 
-                  {/* Help */}
-                  <div className="bg-white rounded-lg border border-gray-200 p-4">
-                    <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                      <QuestionMarkCircleIcon className="w-5 h-5 text-teal-500" />
-                      Need Help?
-                    </h3>
-                    <div className="space-y-2">
-                      <a href="/community-guidelines" className="block p-2 bg-white rounded hover:bg-teal-50">
-                        <div className="flex items-center gap-2">
-                          <BookOpenIcon className="w-4 h-4 text-teal-500" />
-                          <span className="text-sm font-medium text-gray-900">Community Guidelines</span>
-                        </div>
-                      </a>
-                      <a href="/how-to-contribute" className="block p-2 bg-white rounded hover:bg-teal-50">
-                        <div className="flex items-center gap-2">
-                          <AcademicCapIcon className="w-4 h-4 text-teal-500" />
-                          <span className="text-sm font-medium text-gray-900">How to Contribute</span>
-                        </div>
-                      </a>
-                      <a href="/faq" className="block p-2 bg-white rounded hover:bg-teal-50">
-                        <div className="flex items-center gap-2">
-                          <QuestionMarkCircleIcon className="w-4 h-4 text-teal-500" />
-                          <span className="text-sm font-medium text-gray-900">FAQ</span>
-                        </div>
-                      </a>
+                  {/* Need Help */}
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="p-4 border-b border-gray-200">
+                      <h3 className="text-lg font-bold text-gray-900">
+                        Need Help?
+                      </h3>
+                    </div>
+                    <div className="p-4 space-y-1">
+
                     </div>
                   </div>
                 </aside>

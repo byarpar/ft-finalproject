@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Pagination from '../UI/Pagination';
+import { Pagination } from '../UIComponents';
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -24,7 +24,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { ExclamationCircleIcon } from '@heroicons/react/24/solid';
 import admin from '../../services/adminAPI';
-import { discussionsAPI, tagsAPI } from '../../services/api';
+import { discussionsAPI } from '../../services/api';
 
 const DiscussionsManagement = () => {
   const [activeTab, setActiveTab] = useState('all-threads');
@@ -65,12 +65,12 @@ const DiscussionsManagement = () => {
   });
   const [searchDebounce, setSearchDebounce] = useState(null);
   const [categories, setCategories] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [tags, setTags] = useState([]);
 
   // Fetch categories and tags on component mount
   useEffect(() => {
     fetchCategories();
-    fetchTags();
   }, []);
 
   const fetchCategories = async () => {
@@ -110,13 +110,13 @@ const DiscussionsManagement = () => {
         // Use default categories as fallback
         setCategories([
           { id: 'general', name: 'General Discussion', icon: 'ChatBubbleLeftRightIcon', color: '#9CA3AF' },
-          { id: 'language-learning', name: 'Language Learning', icon: 'AcademicCapIcon', color: '#60A5FA' },
-          { id: 'grammar', name: 'Grammar', icon: 'BookOpenIcon', color: '#34D399' },
-          { id: 'vocabulary', name: 'Vocabulary', icon: 'TagIcon', color: '#FBBF24' },
-          { id: 'culture', name: 'Culture & Context', icon: 'UserGroupIcon', color: '#A78BFA' },
-          { id: 'pronunciation', name: 'Pronunciation', icon: 'SpeakerWaveIcon', color: '#F87171' },
-          { id: 'translation', name: 'Translation', icon: 'LanguageIcon', color: '#F472B6' },
-          { id: 'etymology', name: 'Etymology', icon: 'BookmarkIcon', color: '#10B981' },
+          { id: 'frontend', name: 'Frontend Development', icon: 'CodeBracketIcon', color: '#60A5FA' },
+          { id: 'backend', name: 'Backend Development', icon: 'ServerIcon', color: '#34D399' },
+          { id: 'devops', name: 'DevOps & Infrastructure', icon: 'CloudIcon', color: '#FBBF24' },
+          { id: 'mobile', name: 'Mobile Development', icon: 'DevicePhoneMobileIcon', color: '#A78BFA' },
+          { id: 'databases', name: 'Databases', icon: 'CircleStackIcon', color: '#F87171' },
+          { id: 'security', name: 'Security', icon: 'ShieldCheckIcon', color: '#F472B6' },
+          { id: 'ai-ml', name: 'AI & Machine Learning', icon: 'CpuChipIcon', color: '#10B981' },
           { id: 'other', name: 'Other', icon: 'EllipsisHorizontalIcon', color: '#6B7280' },
         ]);
       }
@@ -125,31 +125,19 @@ const DiscussionsManagement = () => {
       // Use default categories from your backend if API fails
       setCategories([
         { id: 'general', name: 'General Discussion', icon: 'ChatBubbleLeftRightIcon', color: '#9CA3AF' },
-        { id: 'language-learning', name: 'Language Learning', icon: 'AcademicCapIcon', color: '#60A5FA' },
-        { id: 'grammar', name: 'Grammar', icon: 'BookOpenIcon', color: '#34D399' },
-        { id: 'vocabulary', name: 'Vocabulary', icon: 'TagIcon', color: '#FBBF24' },
-        { id: 'culture', name: 'Culture & Context', icon: 'UserGroupIcon', color: '#A78BFA' },
-        { id: 'pronunciation', name: 'Pronunciation', icon: 'SpeakerWaveIcon', color: '#F87171' },
-        { id: 'translation', name: 'Translation', icon: 'LanguageIcon', color: '#F472B6' },
-        { id: 'etymology', name: 'Etymology', icon: 'BookmarkIcon', color: '#10B981' },
+        { id: 'programming', name: 'Programming', icon: 'CodeBracketIcon', color: '#EC4899' },
+        { id: 'web-development', name: 'Web Development', icon: 'GlobeAltIcon', color: '#F59E0B' },
+        { id: 'cybersecurity', name: 'Cybersecurity', icon: 'LockClosedIcon', color: '#EF4444' },
+        { id: 'data-science', name: 'Data Science', icon: 'ChartBarIcon', color: '#10B981' },
+        { id: 'machine-learning', name: 'Machine Learning', icon: 'SparklesIcon', color: '#3B82F6' },
+        { id: 'cloud-computing', name: 'Cloud Computing', icon: 'CloudIcon', color: '#06B6D4' },
+        { id: 'networking', name: 'Networking', icon: 'LinkIcon', color: '#F97316' },
+        { id: 'database-systems', name: 'Database Systems', icon: 'CubeIcon', color: '#14B8A6' },
+        { id: 'devops', name: 'DevOps', icon: 'RocketLaunchIcon', color: '#FF6B6B' },
+        { id: 'iot', name: 'IoT', icon: 'WiFiIcon', color: '#14B8A6' },
+        { id: 'blockchain-technology', name: 'Blockchain', icon: 'LinkIcon', color: '#F59E0B' },
         { id: 'other', name: 'Other', icon: 'EllipsisHorizontalIcon', color: '#6B7280' },
       ]);
-    }
-  };
-
-  const fetchTags = async () => {
-    try {
-      const response = await tagsAPI.getAllTags();
-      if (response.success && response.data && response.data.tags) {
-        // Filter out any invalid tag entries
-        const validTags = response.data.tags.filter(tag => tag && (tag.name || tag.tag_name));
-        setTags(validTags);
-      } else {
-        setTags([]);
-      }
-    } catch (error) {
-      console.error('Error fetching tags:', error);
-      setTags([]);
     }
   };
 
@@ -217,7 +205,7 @@ const DiscussionsManagement = () => {
 
       const response = await admin.getAllDiscussions(params);
 
-      console.log('Discussions response:', response);
+
 
       // Handle both new format {success, data: {discussions, pagination}} 
       // and old format {discussions, totalCount, currentPage}
@@ -271,7 +259,7 @@ const DiscussionsManagement = () => {
           }));
         }
       } else {
-        console.warn('No discussions data in response:', response);
+
         setThreads([]);
         setPagination(prev => ({ ...prev, total: 0, totalPages: 0 }));
       }
@@ -383,10 +371,8 @@ const DiscussionsManagement = () => {
       }
 
       const response = await admin.getModerationHistory(params);
-      console.log('Moderation history response:', response);
 
       if (response.success && response.data && Array.isArray(response.data.history)) {
-        console.log('Raw history data:', response.data.history);
 
         const transformedHistory = response.data.history
           .filter(item => item && item.id)
@@ -783,7 +769,7 @@ const DiscussionsManagement = () => {
                   <PlusIcon className="w-5 h-5 mr-1" />
                   <span className="hidden xl:inline">New</span>
                 </button>
-                <button className="flex-1 flex items-center justify-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors">
+                <button className="flex-1 flex items-center justify-center px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 rounded-lg transition-colors border border-gray-300">
                   <ArrowDownTrayIcon className="w-5 h-5 mr-1" />
                   <span className="hidden xl:inline">Export</span>
                 </button>
@@ -1085,7 +1071,7 @@ const DiscussionsManagement = () => {
                               <span className="px-2 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-700 uppercase">
                                 {report.contentType}
                               </span>
-                              <button className="text-sm font-medium text-teal-600 hover:underline">
+                              <button className="text-sm font-medium text-teal-600 ">
                                 {report.threadTitle}
                               </button>
                             </div>
@@ -1236,7 +1222,7 @@ const DiscussionsManagement = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <button className="text-sm text-teal-600 hover:underline">
+                          <button className="text-sm text-teal-600">
                             {log.target?.title || log.target?.name || `Item #${log.target?.id}` || '—'}
                           </button>
                         </td>

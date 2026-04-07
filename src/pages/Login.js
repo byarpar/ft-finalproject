@@ -9,7 +9,7 @@ import {
   ExclamationCircleIcon,
   CheckCircleIcon
 } from '@heroicons/react/24/outline';
-import PageLayout from '../components/Layout/PageLayout';
+import { PageLayout } from '../components/LayoutComponents';
 
 // Shared utilities
 import { validateEmail, validateLoginPassword } from '../utils/validation';
@@ -24,9 +24,7 @@ import {
 } from '../utils/formHandlers';
 
 // Shared components
-import PasswordToggleButton from '../components/Auth/PasswordToggleButton';
-import FieldError from '../components/Auth/FieldError';
-import GoogleOAuthButton from '../components/Auth/GoogleOAuthButton';
+import { PasswordToggleButton, FieldError, GoogleOAuthButton } from '../components/AuthComponents';
 
 /**
  * Login Page - User authentication with email/password or Google OAuth
@@ -272,8 +270,8 @@ const Login = () => {
 
   return (
     <PageLayout
-      title="Log In - Lisu Dictionary"
-      description="Log in to your Lisu Dictionary account to access personalized features, contribute to the community, and continue your language learning journey."
+      title="Log In - Modern Discussion Forum"
+      description="Log in to your Modern Discussion Forum account to access personalized features, contribute to the developer community, and continue your coding journey."
       fullWidth
       background="bg-gray-50"
     >
@@ -282,7 +280,7 @@ const Login = () => {
         <div
           className="lg:w-[58%] relative overflow-hidden flex items-center justify-center p-8 lg:p-8 min-h-[400px] lg:min-h-screen"
           style={{
-            backgroundImage: 'linear-gradient(to bottom right, rgba(15, 118, 110, 0.92), rgba(13, 148, 136, 0.88)), url(/images/hero/lisu-people.jpg)',
+            backgroundImage: 'linear-gradient(to bottom right, rgba(15, 118, 110, 0.92), rgba(13, 148, 136, 0.88)), url(/images/hero/dev-community.jpg)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'
@@ -370,12 +368,12 @@ const Login = () => {
 
             {/* Bold Message */}
             <h1 className="text-4xl lg:text-5xl xl:text-6xl font-extrabold text-white mb-4 tracking-tight leading-tight">
-              CONTINUE YOUR<br />DISCOVERY
+              CONTINUE YOUR<br />CODING JOURNEY
             </h1>
 
             {/* Supporting Tagline */}
             <p className="text-lg lg:text-xl text-teal-50 font-light max-w-md mx-auto">
-              Welcome back to your journey of exploring and preserving the Lisu language
+              Welcome back to your journey of building amazing software and connecting with fellow developers
             </p>
           </div>
         </div>

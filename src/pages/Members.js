@@ -1,21 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { usersAPI } from '../services/api';
-import HeroNavbar from '../components/Layout/HeroNavbar';
-import Pagination from '../components/UI/Pagination';
+import { Pagination } from '../components/UIComponents';
 import {
   MagnifyingGlassIcon,
-  AdjustmentsHorizontalIcon,
-  UserGroupIcon,
-  CalendarIcon,
-  ChatBubbleLeftRightIcon,
-  DocumentTextIcon,
-  ShieldCheckIcon
+  UserGroupIcon
 } from '@heroicons/react/24/outline';
+import { CheckBadgeIcon } from '@heroicons/react/24/solid';
 import toast from 'react-hot-toast';
-import SkeletonLoader from '../components/UI/SkeletonLoader';
+import { SkeletonLoader } from '../components/UIComponents';
 import { formatDate } from '../utils/dateUtils';
-import PageLayout from '../components/Layout/PageLayout';
+import { PageLayout } from '../components/LayoutComponents';
 
 /**
  * Members Component
@@ -45,7 +40,7 @@ const Members = () => {
         page,
         limit: 12,
         search: searchQuery || undefined,
-        sortBy,
+        orderBy: sortBy,
         order: sortOrder
       });
 
@@ -107,7 +102,7 @@ const Members = () => {
       fullWidth={true}
       background=""
     >
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-white">
         {/* Header Section - Oxford Dictionary Style */}
         <section className="relative overflow-hidden">
           {/* Background Pattern */}
@@ -120,8 +115,7 @@ const Members = () => {
           {/* Enhanced overlay for better text readability */}
           <div className="absolute inset-0 bg-gradient-to-b from-teal-900/90 via-teal-800/75 to-teal-700/60 sm:bg-gradient-to-r sm:from-teal-800/85 sm:via-teal-700/60 sm:to-teal-600/40" />
 
-          {/* Hero Navbar Component */}
-          <HeroNavbar />
+
 
           {/* Main Hero Content */}
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
@@ -182,15 +176,24 @@ const Members = () => {
 
               {/* Sort Dropdown */}
               <div className="flex items-center gap-2 sm:gap-3">
-                <AdjustmentsHorizontalIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
                 <select
                   value={sortBy}
                   onChange={(e) => handleSortChange(e.target.value)}
-                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white text-gray-900 sm:min-w-[200px] cursor-pointer min-h-[44px] sm:min-h-0 text-sm sm:text-base touch-manipulation"
+                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white text-gray-900 sm:min-w-[200px] cursor-pointer min-h-[44px] sm:min-h-0 text-sm sm:text-base touch-manipulation"
+                  title="Sort members by different criteria"
                 >
-                  <option value="created_at">✨ Newest Members</option>
-                  <option value="username">🔤 Username (A-Z)</option>
-                  <option value="full_name">👤 Name (A-Z)</option>
+                  <option value="created_at" title="Show newest members first">
+                    Newest Members
+                  </option>
+                  <option value="activity" title="Most active contributors">
+                    Most Active
+                  </option>
+                  <option value="username" title="Sort alphabetically by username">
+                    Username (A-Z)
+                  </option>
+                  <option value="full_name" title="Sort alphabetically by full name">
+                    Full Name (A-Z)
+                  </option>
                 </select>
               </div>
             </div>
@@ -221,130 +224,74 @@ const Members = () => {
           {/* Members Grid */}
           {!loading && !error && members.length > 0 && (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mb-6 sm:mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-8">
                 {members.map((member) => (
-                  <div
+                  <Link
                     key={member.id}
-                    className="bg-white rounded-lg sm:rounded-xl shadow-sm hover:shadow-md active:shadow-lg transition-all duration-200 overflow-hidden border border-gray-200 group"
+                    to={`/users/${member.id}`}
+                    className="group"
                   >
-                    <div className="p-4 sm:p-5 lg:p-6">
-                      {/* Avatar & Basic Info */}
-                      <div className="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
-                        {/* Avatar */}
-                        <div className="flex-shrink-0 relative">
+                    <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-teal-500 hover:shadow-lg transition-all duration-300 text-center h-full">
+                      {/* Avatar */}
+                      <div className="mb-4 flex justify-center">
+                        <div className="relative inline-block">
                           {member.profile_photo_url && member.profile_photo_url.trim() !== '' ? (
-                            <>
-                              <img
-                                src={member.profile_photo_url}
-                                alt={member.username}
-                                crossOrigin="anonymous"
-                                referrerPolicy="no-referrer"
-                                onLoad={(e) => {
-                                  console.log('Image loaded successfully:', member.username);
-                                  e.target.style.display = 'block';
-                                  if (e.target.nextElementSibling) {
-                                    e.target.nextElementSibling.style.display = 'none';
-                                  }
-                                }}
-                                onError={(e) => {
-                                  console.error('Image failed to load for', member.username, member.profile_photo_url);
-                                  e.target.style.display = 'none';
-                                  if (e.target.nextElementSibling) {
-                                    e.target.nextElementSibling.style.display = 'flex';
-                                  }
-                                }}
-                                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-teal-500"
-                                style={{ display: 'none' }}
-                              />
-                              <div
-                                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center text-white text-lg sm:text-xl font-bold border-2 border-teal-500"
-                              >
-                                {getInitials(member.full_name || member.username)}
-                              </div>
-                            </>
-                          ) : (
-                            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center text-white text-lg sm:text-xl font-bold border-2 border-teal-500">
-                              {getInitials(member.full_name || member.username)}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Name & Username */}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate group-hover:text-teal-600:text-teal-400 transition-colors">
-                            {member.full_name || member.username}
-                          </h3>
-                          <p className="text-xs sm:text-sm text-gray-500 truncate">
-                            @{member.username}
-                          </p>
-                          {member.role && member.role !== 'user' && (
-                            <div className="flex items-center gap-1 mt-1">
-                              <ShieldCheckIcon className="h-3 w-3 flex-shrink-0 text-teal-600" />
-                              <span className="inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-teal-100 text-teal-800 capitalize">
-                                {member.role}
-                              </span>
-                            </div>
+                            <img
+                              src={member.profile_photo_url}
+                              alt={member.username}
+                              crossOrigin="anonymous"
+                              referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextElementSibling.style.display = 'flex';
+                              }}
+                              className="w-20 h-20 rounded-full object-cover ring-4 ring-gray-50 group-hover:ring-teal-50 transition-all"
+                            />
+                          ) : null}
+                          <div
+                            className="w-20 h-20 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 text-2xl font-bold ring-4 ring-gray-50 group-hover:ring-teal-100 group-hover:bg-teal-100 transition-all"
+                            style={{ display: member.profile_photo_url && member.profile_photo_url.trim() !== '' ? 'none' : 'flex' }}
+                          >
+                            {getInitials(member.full_name || member.username)}
+                          </div>
+                          {member.role === 'admin' && (
+                            <CheckBadgeIcon className="w-5 h-5 text-red-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
                           )}
                         </div>
                       </div>
 
-                      {/* Stats */}
-                      <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3 sm:mb-4 py-2.5 sm:py-3 border-t border-b border-gray-200">
-                        <div className="text-center">
-                          <div className="flex justify-center mb-1">
-                            <DocumentTextIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-teal-600" />
-                          </div>
-                          <div className="text-xs sm:text-sm font-semibold text-gray-900">
-                            {member.total_contributions || 0}
-                          </div>
-                          <div className="text-[10px] sm:text-xs text-gray-500">
-                            Posts
-                          </div>
+                      {/* Name & Username */}
+                      <div className="mb-3">
+                        <h3 className="text-base font-bold text-gray-900 group-hover:text-teal-600 transition-colors line-clamp-1">
+                          {member.full_name || member.username}
+                        </h3>
+                        <p className="text-sm text-gray-500 line-clamp-1">@{member.username}</p>
+                      </div>
+
+                      {/* Stats Grid */}
+                      <div className="grid grid-cols-3 gap-3 py-3 border-t border-gray-100">
+                        <div>
+                          <div className="text-lg font-bold text-gray-900">{member.total_contributions || 0}</div>
+                          <div className="text-xs text-gray-500">Contributions</div>
                         </div>
-                        <div className="text-center">
-                          <div className="flex justify-center mb-1">
-                            <ChatBubbleLeftRightIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-teal-600" />
-                          </div>
-                          <div className="text-xs sm:text-sm font-semibold text-gray-900">
-                            {member.discussion_count || 0}
-                          </div>
-                          <div className="text-[10px] sm:text-xs text-gray-500">
-                            Discussions
-                          </div>
+                        <div>
+                          <div className="text-lg font-bold text-gray-900">{member.discussion_count || 0}</div>
+                          <div className="text-xs text-gray-500">Discussions</div>
                         </div>
-                        <div className="text-center">
-                          <div className="flex justify-center mb-1">
-                            <ChatBubbleLeftRightIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-teal-600" />
-                          </div>
-                          <div className="text-xs sm:text-sm font-semibold text-gray-900">
-                            {member.chat_count || 0}
-                          </div>
-                          <div className="text-[10px] sm:text-xs text-gray-500">
-                            Messages
-                          </div>
+                        <div>
+                          <div className="text-lg font-bold text-gray-900">{member.reply_count || member.answers_posted || 0}</div>
+                          <div className="text-xs text-gray-500">Answers</div>
                         </div>
                       </div>
 
-                      {/* Additional Info */}
-                      <div className="space-y-2 mb-3 sm:mb-4">
-                        <div className="flex items-center text-xs text-gray-500">
-                          <CalendarIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2 flex-shrink-0" />
-                          <span className="truncate">Joined {formatDate(member.created_at)}</span>
-                        </div>
+                      {/* Joined Date */}
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <p className="text-xs text-gray-500">
+                          Joined {formatDate(member.created_at)}
+                        </p>
                       </div>
-
-                      {/* View Profile Button */}
-                      <Link
-                        to={`/users/${member.id}`}
-                        className="block w-full text-center px-4 py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 active:from-teal-800 active:to-cyan-800 text-white rounded-lg transition-all duration-200 font-medium shadow-sm hover:shadow-md active:shadow-lg group min-h-[44px] flex items-center justify-center text-sm sm:text-base active:scale-98 touch-manipulation"
-                      >
-                        <span className="flex items-center justify-center gap-2">
-                          View Profile
-                          <span className="transform group-hover:translate-x-1 transition-transform">→</span>
-                        </span>
-                      </Link>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
 
@@ -383,7 +330,7 @@ const Members = () => {
                     setSearchQuery('');
                     setPage(1);
                   }}
-                  className="min-h-[44px] px-6 py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 active:from-teal-800 active:to-cyan-800 text-white rounded-lg transition-all duration-200 font-medium shadow-sm hover:shadow-md active:shadow-lg text-sm sm:text-base active:scale-98 touch-manipulation"
+                  className="min-h-[44px] px-6 py-3 bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white rounded-lg transition-colors duration-200 font-medium shadow-sm hover:shadow-md text-sm sm:text-base touch-manipulation"
                 >
                   Clear Search
                 </button>

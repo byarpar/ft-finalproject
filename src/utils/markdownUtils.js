@@ -42,13 +42,27 @@ export const markdownToHtml = (markdown) => {
   if (!markdown) return '';
 
   try {
-    // Convert markdown to HTML
-    const rawHtml = marked.parse(markdown);
+    // Pre-process custom markdown extensions
+    let processedMarkdown = markdown;
 
-    // Sanitize HTML to prevent XSS attacks
+    // Support underline with __ (before marked processes it)
+    processedMarkdown = processedMarkdown.replace(/__([^_]+)__/g, '<u>$1</u>');
+
+    // Convert markdown to HTML
+    const rawHtml = marked.parse(processedMarkdown);
+
+    // Sanitize HTML to prevent XSS attacks while allowing color spans
     const cleanHtml = DOMPurify.sanitize(rawHtml, {
-      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'a', 'ul', 'ol', 'li', 'code', 'pre', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
-      ALLOWED_ATTR: ['href', 'target', 'rel', 'title']
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'a', 'ul', 'ol', 'li', 'code', 'pre', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'div'],
+      ALLOWED_ATTR: ['href', 'target', 'rel', 'title', 'class', 'style'],
+      ALLOWED_STYLES: {
+        '*': {
+          'color': [/^#[0-9A-Fa-f]{6}$/],
+          'background-color': [/^#[0-9A-Fa-f]{6}$/],
+          'padding': [/.*/],
+          'border-radius': [/.*/]
+        }
+      }
     });
 
     return cleanHtml;
@@ -69,9 +83,11 @@ export const stripMarkdown = (markdown) => {
   return markdown
     .replace(/\*\*([^*]+)\*\*/g, '$1') // Bold
     .replace(/\*([^*]+)\*/g, '$1') // Italic
+    .replace(/__([^_]+)__/g, '$1') // Underline
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Links
     .replace(/^[-*+]\s+/gm, '') // List items
     .replace(/^#+\s+/gm, '') // Headers
     .replace(/`([^`]+)`/g, '$1') // Code
+    .replace(/<span[^>]*>([^<]+)<\/span>/g, '$1') // HTML spans (for colors)
     .trim();
 };

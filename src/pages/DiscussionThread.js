@@ -2,22 +2,18 @@ import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useDiscussionThread } from '../hooks/useDiscussionThread';
-import HeroNavbar from '../components/Layout/HeroNavbar';
-import PageLayout from '../components/Layout/PageLayout';
-import SkeletonLoader from '../components/UI/SkeletonLoader';
-import DiscussionActions from '../components/Discussion/DiscussionActions';
-import VoteButtons from '../components/Discussion/VoteButtons';
-import ReplyForm from '../components/Discussion/ReplyForm';
-import ReplyItem from '../components/Discussion/ReplyItem';
-import ImageLightbox from '../components/Discussion/ImageLightbox';
+import { PageLayout } from '../components/LayoutComponents';
+import { SkeletonLoader } from '../components/UIComponents';
+import { DiscussionActions, VoteButtons, ImageLightbox, ReplyForm, ReplyItem } from '../components/DiscussionComponents';
+import { MentionRenderer } from '../components/UIComponents';
 import {
-  ChatBubbleLeftRightIcon, BookmarkIcon, ClockIcon, PencilIcon, TrashIcon,
-  FlagIcon, PhotoIcon, XMarkIcon, MagnifyingGlassPlusIcon, EyeIcon
+  ChatBubbleLeftRightIcon, BookmarkIcon, ClockIcon, EllipsisHorizontalIcon, TrashIcon,
+  FlagIcon, PhotoIcon, XMarkIcon, MagnifyingGlassPlusIcon, EyeIcon, PencilIcon, ShareIcon,
+  QuestionMarkCircleIcon
 } from '@heroicons/react/24/outline';
 import { BookmarkIcon as BookmarkSolidIcon, CheckBadgeIcon } from '@heroicons/react/24/solid';
 import toast from 'react-hot-toast';
 import { formatRelativeDate } from '../utils/dateUtils';
-import { markdownToHtml } from '../utils/markdownUtils';
 
 const MIN_TITLE_LENGTH = 10;
 const MIN_CONTENT_LENGTH = 20;
@@ -78,12 +74,12 @@ const DiscussionThread = () => {
 
     // Validation
     if (!trimmedContent) {
-      toast.error('Reply content cannot be empty');
+      toast.error('Answer content cannot be empty');
       return;
     }
 
     if (trimmedContent.length < MIN_REPLY_LENGTH) {
-      toast.error(`Reply must be at least ${MIN_REPLY_LENGTH} characters long`);
+      toast.error(`Answer must be at least ${MIN_REPLY_LENGTH} characters long`);
       return;
     }
 
@@ -108,12 +104,12 @@ const DiscussionThread = () => {
     const trimmedContent = editContent.trim();
 
     if (!trimmedContent) {
-      toast.error('Reply content cannot be empty');
+      toast.error('Answer content cannot be empty');
       return;
     }
 
     if (trimmedContent.length < MIN_REPLY_LENGTH) {
-      toast.error(`Reply must be at least ${MIN_REPLY_LENGTH} characters long`);
+      toast.error(`Answer must be at least ${MIN_REPLY_LENGTH} characters long`);
       return;
     }
 
@@ -138,13 +134,6 @@ const DiscussionThread = () => {
     setReplyToUsername(answer.author_name);
     setShowReplyBox(true);
     setTimeout(() => document.querySelector('textarea')?.focus(), 100);
-  };
-
-  const handleEditDiscussion = () => {
-    setEditingDiscussion(true);
-    setEditedTitle(discussion.title);
-    setEditedContent(discussion.content);
-    setEditedImages(discussion.images || []);
   };
 
   const handleSaveDiscussionEdit = async () => {
@@ -261,19 +250,18 @@ const DiscussionThread = () => {
       title={`${discussion.title} - Lisu Dictionary`}
       description={discussion.content?.substring(0, 155)}
     >
-      <div className="min-h-screen bg-gray-50">
-        {/* Hero Navigation Bar with Gradient Background */}
-        <section className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800">
-          <HeroNavbar />
+      <div className="min-h-screen bg-white">
+        {/* Hero Navigation Bar with White Background */}
+        <section className="relative bg-white border-b border-gray-200">
 
           {/* Breadcrumb */}
           <div className="relative z-10 max-w-7xl mx-auto px-4 py-4">
             <nav className="flex items-center gap-2 text-sm overflow-x-auto">
-              <Link to="/discussions" className="text-white hover:text-teal-100 font-medium whitespace-nowrap transition-colors">
+              <Link to="/discussions" className="text-gray-700 hover:text-teal-600 font-medium whitespace-nowrap transition-colors">
                 Discussions
               </Link>
-              <span className="text-teal-300">/</span>
-              <span className="text-teal-100 truncate">
+              <span className="text-gray-400">/</span>
+              <span className="text-gray-600 truncate">
                 {typeof discussion.category === 'object' ? discussion.category.name : discussion.category || 'General'}
               </span>
             </nav>
@@ -295,14 +283,43 @@ const DiscussionThread = () => {
 
                     <div className="flex items-center gap-2">
                       {user && user.id === discussion.author_id && !editingDiscussion && (
-                        <>
-                          <button onClick={handleEditDiscussion} className="p-1.5 text-gray-500 hover:text-teal-600 transition-colors" title="Edit">
-                            <PencilIcon className="w-5 h-5" />
+                        <div className="relative group">
+                          <button className="p-1.5 text-gray-500 hover:text-teal-600 transition-colors" title="More options">
+                            <EllipsisHorizontalIcon className="w-5 h-5" />
                           </button>
-                          <button onClick={handleDeleteDiscussion} className="p-1.5 text-gray-500 hover:text-red-600 transition-colors" title="Delete">
-                            <TrashIcon className="w-5 h-5" />
-                          </button>
-                        </>
+                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                            <button
+                              onClick={() => navigate(`/discussions/new?edit=${discussion.id}`)}
+                              className="w-full px-4 py-2.5 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-2 rounded-t-lg"
+                            >
+                              <PencilIcon className="w-4 h-4" />
+                              Edit
+                            </button>
+                            <button
+                              onClick={toggleSave}
+                              className="w-full px-4 py-2.5 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                            >
+                              {discussion.is_saved ? (
+                                <>
+                                  <BookmarkSolidIcon className="w-4 h-4" />
+                                  Unsave
+                                </>
+                              ) : (
+                                <>
+                                  <BookmarkIcon className="w-4 h-4" />
+                                  Save
+                                </>
+                              )}
+                            </button>
+                            <button
+                              onClick={handleDeleteDiscussion}
+                              className="w-full px-4 py-2.5 text-left text-red-600 hover:bg-red-50 flex items-center gap-2 rounded-b-lg"
+                            >
+                              <TrashIcon className="w-4 h-4" />
+                              Delete
+                            </button>
+                          </div>
+                        </div>
                       )}
                       {(!user || user.id !== discussion.author_id) && (
                         <button onClick={() => setShowReportModal(true)} className="p-1.5 text-gray-500 hover:text-red-600 transition-colors" title="Report">
@@ -378,7 +395,7 @@ const DiscussionThread = () => {
                         rows={8}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 resize-none"
                       />
-                      <label className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200">
+                      <label className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-100">
                         <PhotoIcon className="w-5 h-5" />
                         <span>Upload Images</span>
                         <input type="file" accept="image/*" multiple onChange={handleDiscussionImageUpload} className="hidden" />
@@ -407,10 +424,14 @@ const DiscussionThread = () => {
                   ) : (
                     <>
                       <div
-                        className="prose prose-sm sm:prose max-w-none text-gray-700 text-base leading-relaxed break-words"
+                        className="prose prose-sm sm:prose max-w-none text-gray-700 text-base leading-relaxed break-words text-justify"
                         style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
-                        dangerouslySetInnerHTML={{ __html: markdownToHtml(discussion.content) }}
-                      />
+                      >
+                        <MentionRenderer
+                          content={discussion.content}
+                          theme="teal"
+                        />
+                      </div>
                       {discussion.images?.length > 0 && (
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
                           {discussion.images.map((img, idx) => {
@@ -446,15 +467,23 @@ const DiscussionThread = () => {
                         <EyeIcon className="w-4 h-4" />
                         <span>{discussion.views_count || 0}</span>
                       </div>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(window.location.href);
+                          toast.success('Link copied to clipboard!');
+                        }}
+                        className="flex items-center gap-1 text-gray-500 hover:text-teal-600 text-sm transition-colors"
+                        title="copy link"
+                      >
+                        <ShareIcon className="w-4 h-4" />
+
+                      </button>
                     </div>
-                    <button onClick={toggleSave} className={`p-2 rounded-lg transition-colors ${discussion.is_saved ? 'text-teal-600 hover:bg-teal-50' : 'text-gray-400 hover:bg-gray-100'}`}>
-                      {discussion.is_saved ? <BookmarkSolidIcon className="w-5 h-5" /> : <BookmarkIcon className="w-5 h-5" />}
-                    </button>
                   </div>
                 </div>
               </div>
 
-              {/* Replies Section */}
+              {/* Answers Section */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 {user && (
                   <div className="p-6 border-b border-gray-200">
@@ -483,7 +512,7 @@ const DiscussionThread = () => {
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-lg font-semibold text-gray-900">
-                      {answers.length === 0 ? 'Replies' : `${answers.length} ${answers.length === 1 ? 'Reply' : 'Replies'}`}
+                      {answers.length === 0 ? 'Answers' : `${answers.length} ${answers.length === 1 ? 'Answer' : 'Answers'}`}
                     </h2>
                     {answers.length > 1 && (
                       <div className="flex items-center gap-2">
@@ -501,7 +530,7 @@ const DiscussionThread = () => {
                     {sortedAnswers.length === 0 ? (
                       <div className="text-center py-12">
                         <ChatBubbleLeftRightIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                        <p className="text-gray-600">No replies yet. Be the first to respond!</p>
+                        <p className="text-gray-600">No answers yet. Be the first to respond!</p>
                       </div>
                     ) : (
                       sortedAnswers.map(answer => (
@@ -537,20 +566,93 @@ const DiscussionThread = () => {
 
             {/* Sidebar */}
             <div className="lg:col-span-1">
-              <div className="lg:sticky lg:top-8">
-                <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                  <h3 className="font-bold text-lg text-gray-900 mb-4">Related Discussions</h3>
+              <div className="lg:sticky lg:top-8 space-y-6">
+                {/* Related Discussions */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                  <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-teal-50 to-blue-50">
+                    <h3 className="font-bold text-base text-gray-900 flex items-center gap-2">
+                      <ChatBubbleLeftRightIcon className="w-5 h-5 text-teal-600" />
+                      Related Questions
+                    </h3>
+                  </div>
+
                   {relatedDiscussions.length === 0 ? (
-                    <p className="text-sm text-gray-600 text-center py-8">No related discussions found.</p>
+                    <div className="p-8 text-center">
+                      <QuestionMarkCircleIcon className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                      <p className="text-sm text-gray-500">No related discussions found</p>
+                    </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="divide-y divide-gray-100">
                       {relatedDiscussions.map(related => (
-                        <Link key={related.id} to={`/discussions/${related.id}`} className="block p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-teal-500 transition-colors">
-                          <h4 className="font-medium text-sm text-gray-900 mb-2 line-clamp-2">{related.title}</h4>
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <ChatBubbleLeftRightIcon className="w-3.5 h-3.5" />
-                            <span>{related.answers_count || 0} replies</span>
+                        <Link
+                          key={related.id}
+                          to={`/discussions/${related.id}`}
+                          className="block p-4 hover:bg-teal-50 transition-colors group"
+                        >
+                          {/* Title */}
+                          <h4 className="font-semibold text-sm text-gray-900 group-hover:text-teal-600 mb-2 line-clamp-2 leading-tight">
+                            {related.title}
+                          </h4>
+
+                          {/* Author Info */}
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="relative w-5 h-5 flex-shrink-0">
+                              <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                                {(related.author_profile_photo || related.user_data?.display_picture) ? (
+                                  <img
+                                    src={related.author_profile_photo || related.user_data?.display_picture}
+                                    alt={related.author_name || related.user_data?.username}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => { e.target.style.display = 'none'; }}
+                                  />
+                                ) : (
+                                  <span className="text-xs font-bold text-gray-600">
+                                    {((related.author_name || related.user_data?.username || 'A')[0]).toUpperCase()}
+                                  </span>
+                                )}
+                              </div>
+                              {(related.author_role === 'admin' || related.user_data?.role === 'admin') && (
+                                <CheckBadgeIcon className="w-3 h-3 text-red-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
+                              )}
+                            </div>
+                            <span className="text-xs text-gray-600 truncate font-medium">
+                              {related.author_name || related.user_data?.username || 'Anonymous'}
+                            </span>
                           </div>
+
+                          {/* Stats */}
+                          <div className="flex items-center gap-3 text-xs text-gray-500">
+                            <div className="flex items-center gap-1">
+                              <ChatBubbleLeftRightIcon className="w-3.5 h-3.5" />
+                              <span>{related.answers_count || 0}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <EyeIcon className="w-3.5 h-3.5" />
+                              <span>{related.views_count || 0}</span>
+                            </div>
+                            {related.vote_count > 0 && (
+                              <div className="flex items-center gap-1 text-teal-600">
+                                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
+                                </svg>
+                                <span className="font-medium">{related.vote_count}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Tags */}
+                          {related.tags && related.tags.length > 0 && (
+                            <div className="flex gap-1 mt-2 flex-wrap">
+                              {related.tags.slice(0, 2).map((tag, idx) => (
+                                <span
+                                  key={idx}
+                                  className="px-2 py-0.5 bg-teal-100 text-teal-700 rounded-full text-xs"
+                                >
+                                  #{tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </Link>
                       ))}
                     </div>
@@ -570,7 +672,7 @@ const DiscussionThread = () => {
               {!selectedReportReason ? (
                 <div className="space-y-2 mb-6">
                   {['Spam', 'Harassment', 'Inappropriate Content', 'Off-topic', 'Other'].map(reason => (
-                    <button key={reason} onClick={() => reason === 'Other' ? setSelectedReportReason(reason) : handleReport(reason)} className="w-full px-4 py-2.5 text-left bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                    <button key={reason} onClick={() => reason === 'Other' ? setSelectedReportReason(reason) : handleReport(reason)} className="w-full px-4 py-2.5 text-left bg-gray-100 hover:bg-gray-100 rounded-lg transition-colors">
                       {reason}
                     </button>
                   ))}
@@ -588,14 +690,14 @@ const DiscussionThread = () => {
                     <button onClick={() => handleReport('Other')} disabled={!otherReasonText.trim()} className="flex-1 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 text-white rounded-lg font-medium">
                       Submit
                     </button>
-                    <button onClick={() => { setSelectedReportReason(null); setOtherReasonText(''); }} className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium">
+                    <button onClick={() => { setSelectedReportReason(null); setOtherReasonText(''); }} className="px-4 py-2.5 bg-gray-100 hover:bg-gray-300 text-gray-800 rounded-lg font-medium">
                       Back
                     </button>
                   </div>
                 </div>
               )}
               {!selectedReportReason && (
-                <button onClick={() => setShowReportModal(false)} className="w-full px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium">
+                <button onClick={() => setShowReportModal(false)} className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-300 text-gray-800 rounded-lg font-medium">
                   Cancel
                 </button>
               )}

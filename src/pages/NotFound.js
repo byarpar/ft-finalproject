@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { HomeIcon, ArrowLeftIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import PageLayout from '../components/Layout/PageLayout';
+import { PageLayout } from '../components/LayoutComponents';
 
 /**
  * 404 Not Found Error Page
@@ -26,12 +25,6 @@ const NotFound = () => {
       title="404 - Page Not Found"
       description="The page you're looking for doesn't exist."
     >
-      <Helmet>
-        {/* Explicitly tell search engines this is a 404 */}
-        <meta name="prerender-status-code" content="404" />
-        <meta name="robots" content="noindex, nofollow" />
-        <meta http-equiv="status" content="404" />
-      </Helmet>
       <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
         <div className="text-center max-w-2xl">
           {/* 404 Number */}
@@ -57,7 +50,7 @@ const NotFound = () => {
             {/* Go Back Button */}
             <button
               onClick={() => navigate(-1)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300:bg-gray-600 text-gray-900 font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-300:bg-gray-600 text-gray-900 font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
               aria-label="Go back to previous page"
             >
               <ArrowLeftIcon className="w-5 h-5" />
@@ -91,23 +84,14 @@ const NotFound = () => {
               Here are some helpful links instead:
             </p>
             <div className="flex flex-wrap gap-4 justify-center text-sm">
-              <Link to="/" className="text-teal-600 hover:underline">
+              <Link to="/" className="text-teal-600">
                 Home
               </Link>
-              <Link to="/dictionary" className="text-teal-600 hover:underline">
-                Dictionary
+              <Link to="/" className="text-teal-600">
+                Home
               </Link>
-              <Link to="/discussions" className="text-teal-600 hover:underline">
+              <Link to="/discussions" className="text-teal-600">
                 Discussions
-              </Link>
-              <Link to="/about" className="text-teal-600 hover:underline">
-                About
-              </Link>
-              <Link to="/help" className="text-teal-600 hover:underline">
-                Help Center
-              </Link>
-              <Link to="/contact" className="text-teal-600 hover:underline">
-                Contact Us
               </Link>
             </div>
           </div>

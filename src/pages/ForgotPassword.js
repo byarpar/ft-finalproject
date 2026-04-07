@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { EnvelopeIcon, ExclamationCircleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
-import PageLayout from '../components/Layout/PageLayout';
+import { PageLayout } from '../components/LayoutComponents';
 
 /**
  * ForgotPassword Page - Password reset request
@@ -329,7 +329,7 @@ const ForgotPassword = () => {
 
                 {/* Keyboard hint */}
                 <p className="text-xs text-gray-500 text-center">
-                  Press <kbd className="px-1.5 py-0.5 bg-gray-200 rounded text-xs font-mono">Enter</kbd> to send or <kbd className="px-1.5 py-0.5 bg-gray-200 rounded text-xs font-mono">Esc</kbd> to clear
+                  Press <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono">Enter</kbd> to send or <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono">Esc</kbd> to clear
                 </p>
               </form>
 
@@ -345,7 +345,7 @@ const ForgotPassword = () => {
                   Remember your password?{' '}
                   <Link
                     to="/login"
-                    className="text-teal-600 hover:text-teal-700:text-teal-300 underline"
+                    className="text-teal-600 hover:text-teal-700:text-teal-300"
                   >
                     Sign in here
                   </Link>

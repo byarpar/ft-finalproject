@@ -8,10 +8,10 @@ import {
   ChevronUpIcon,
   MagnifyingGlassPlusIcon,
 } from '@heroicons/react/24/outline';
-import VoteButtons from './VoteButtons';
+import { VoteButtons } from '../DiscussionComponents';
 import { formatRelativeDate } from '../../utils/dateUtils';
-import { markdownToHtml } from '../../utils/markdownUtils';
 import { CheckBadgeIcon } from '@heroicons/react/24/solid';
+import { MentionRenderer } from '../UIComponents';
 const ReplyItem = ({
   answer,
   user,
@@ -108,10 +108,12 @@ const ReplyItem = ({
         ) : (
           <>
             <div className="prose prose-sm sm:prose max-w-none mb-2 sm:mb-3">
-              <div
-                className="text-gray-700 text-sm sm:text-base leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: markdownToHtml(answer.content) }}
-              />
+              <div className="text-gray-700 text-sm sm:text-base leading-relaxed text-justify">
+                <MentionRenderer
+                  content={answer.content}
+                  theme="teal"
+                />
+              </div>
             </div>
 
             {answer.images && Array.isArray(answer.images) && answer.images.length > 0 && (
