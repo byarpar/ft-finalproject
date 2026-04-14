@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageLayout } from '../components/LayoutComponents';
 import {
   BellIcon,
@@ -7,57 +7,44 @@ import {
   SparklesIcon
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
+import { notificationsAPI } from '../services/api';
 
 /**
  * Notifications Page
- * Displays user notifications with marking as read/unread and delete options
  */
 const Notifications = () => {
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: 'mention',
-      title: 'You were mentioned in a discussion',
-      message: 'John mentioned you in "Best React Practices"',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      read: false,
-      link: '/discussions/1'
-    },
-    {
-      id: 2,
-      type: 'answer',
-      title: 'New reply to your discussion',
-      message: 'Sarah replied to your question about state management',
-      timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-      read: false,
-      link: '/discussions/2'
-    },
-    {
-      id: 3,
-      type: 'update',
-      title: 'Discussion you\'re following has new activity',
-      message: '"Web Development Tips" has 3 new replies',
-      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-      read: true,
-      link: '/discussions/3'
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [filter]);
+
+  const fetchNotifications = async () => {
+    setLoading(true);
+    try {
+      const params = filter === 'unread' ? { unread_only: true } : {};
+      const res = await notificationsAPI.getNotifications(params);
+      setNotifications(res.data?.notifications || []);
+    } catch {
+      toast.error('Failed to load notifications');
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
-  const [filter, setFilter] = useState('all'); // all, unread, read
-
-  // Format timestamp relative to now
-  const getTimeAgo = (date) => {
-    const now = new Date();
-    const diff = now - date;
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    if (days < 7) return `${days}d ago`;
-    return date.toLocaleDateString();
+  const getTimeAgo = (dateStr) => {
+    if (!dateStr) return '';
+    const diff = Date.now() - new Date(dateStr);
+    const m = Math.floor(diff / 60000);
+    const h = Math.floor(diff / 3600000);
+    const d = Math.floor(diff / 86400000);
+    if (m < 1) return 'Just now';
+    if (m < 60) return `${m}m ago`;
+    if (h < 24) return `${h}h ago`;
+    if (d < 7) return `${d}d ago`;
+    return new Date(dateStr).toLocaleDateString();
   };
 
   // Mark notification as read/unread
@@ -69,40 +56,52 @@ const Notifications = () => {
     );
   };
 
+  // Mark as read
+  const markAsRead = async (id) => {
+    try {
+      await notificationsAPI.markAsRead(id);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+    } catch {
+      toast.error('Failed to mark as read');
+    }
+  };
+
   // Delete notification
-  const deleteNotification = (id) => {
-    setNotifications(prev => prev.filter(notif => notif.id !== id));
-    toast.success('Notification deleted');
+  const deleteNotification = async (id) => {
+    try {
+      await notificationsAPI.deleteNotification(id);
+      setNotifications(prev => prev.filter(n => n.id !== id));
+      toast.success('Notification deleted');
+    } catch {
+      toast.error('Failed to delete notification');
+    }
   };
 
   // Mark all as read
-  const markAllAsRead = () => {
-    setNotifications(prev =>
-      prev.map(notif => ({ ...notif, read: true }))
-    );
-    toast.success('All notifications marked as read');
+  const markAllAsRead = async () => {
+    try {
+      await notificationsAPI.markAllAsRead();
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+      toast.success('All notifications marked as read');
+    } catch {
+      toast.error('Failed to mark all as read');
+    }
   };
 
-  // Filter notifications
-  const filteredNotifications = notifications.filter(notif => {
-    if (filter === 'unread') return !notif.read;
-    if (filter === 'read') return notif.read;
+  const filteredNotifications = notifications.filter(n => {
+    if (filter === 'unread') return !n.is_read;
+    if (filter === 'read') return n.is_read;
     return true;
   });
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
-  // Get notification icon based on type
   const getNotificationIcon = (type) => {
     switch (type) {
-      case 'mention':
-        return 'bg-cyan-100 text-cyan-700';
-      case 'answer':
-        return 'bg-emerald-100 text-emerald-700';
-      case 'update':
-        return 'bg-amber-100 text-amber-700';
-      default:
-        return 'bg-gray-100 text-gray-700';
+      case 'mention': return 'bg-cyan-100 text-cyan-700';
+      case 'answer': return 'bg-emerald-100 text-emerald-700';
+      case 'follow': return 'bg-purple-100 text-purple-700';
+      default: return 'bg-amber-100 text-amber-700';
     }
   };
 
@@ -161,18 +160,25 @@ const Notifications = () => {
 
         {/* Notifications List */}
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-          {filteredNotifications.length === 0 ? (
+          {loading ? (
+            <div className="space-y-3">
+              {[1,2,3].map(i => (
+                <div key={i} className="bg-white rounded-lg shadow-sm p-5 animate-pulse flex gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-gray-200 flex-shrink-0" />
+                  <div className="flex-1"><div className="h-4 bg-gray-200 rounded mb-2 w-2/3" /><div className="h-3 bg-gray-100 rounded w-full" /></div>
+                </div>
+              ))}
+            </div>
+          ) : filteredNotifications.length === 0 ? (
             <div className="bg-white rounded-lg shadow-sm p-8 sm:p-12 text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
                 <SparklesIcon className="w-8 h-8 text-gray-400" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {filter === 'unread' ? 'No unread notifications' : 'No notifications'}
+                {filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
               </h3>
-              <p className="text-gray-600 text-sm">
-                {filter === 'unread'
-                  ? 'You\'re all caught up!'
-                  : 'Check back later for updates on your activity'}
+              <p className="text-gray-500 text-sm">
+                {filter === 'unread' ? "You're all caught up!" : 'Check back later for updates'}
               </p>
             </div>
           ) : (
@@ -180,53 +186,31 @@ const Notifications = () => {
               {filteredNotifications.map(notif => (
                 <div
                   key={notif.id}
-                  className={`bg-white rounded-lg shadow-sm p-4 sm:p-5 border-l-4 transition-all hover:shadow-md ${notif.read
-                    ? 'border-gray-200'
-                    : 'border-teal-500 bg-teal-50'
-                    }`}
+                  className={`bg-white rounded-lg shadow-sm p-4 sm:p-5 border-l-4 transition-all hover:shadow-md ${notif.is_read ? 'border-gray-200' : 'border-teal-500 bg-teal-50'}`}
                 >
                   <div className="flex gap-4">
-                    {/* Icon */}
                     <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${getNotificationIcon(notif.type)}`}>
                       {notif.type === 'mention' && <BellIcon className="w-5 h-5" />}
                       {notif.type === 'answer' && <CheckIcon className="w-5 h-5" />}
-                      {notif.type === 'update' && <SparklesIcon className="w-5 h-5" />}
+                      {(notif.type === 'follow' || !['mention','answer'].includes(notif.type)) && <SparklesIcon className="w-5 h-5" />}
                     </div>
-
-                    {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
-                          <h3 className={`text-sm sm:text-base font-semibold ${notif.read ? 'text-gray-700' : 'text-gray-900'}`}>
-                            {notif.title}
-                          </h3>
-                          <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                            {notif.message}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-2">
-                            {getTimeAgo(notif.timestamp)}
-                          </p>
+                          <h3 className={`text-sm sm:text-base font-semibold ${notif.is_read ? 'text-gray-700' : 'text-gray-900'}`}>{notif.title}</h3>
+                          {notif.message && <p className="text-sm text-gray-600 mt-1">{notif.message}</p>}
+                          <p className="text-xs text-gray-400 mt-2">{getTimeAgo(notif.created_at)}</p>
                         </div>
-                        {!notif.read && (
-                          <div className="flex-shrink-0 w-2.5 h-2.5 bg-gradient-to-br from-teal-500 to-teal-600 rounded-full mt-1 shadow-sm" />
-                        )}
+                        {!notif.is_read && <div className="flex-shrink-0 w-2.5 h-2.5 bg-teal-500 rounded-full mt-1" />}
                       </div>
                     </div>
-
-                    {/* Actions */}
                     <div className="flex-shrink-0 flex gap-2">
-                      <button
-                        onClick={() => toggleRead(notif.id)}
-                        className="p-2 text-gray-400 hover:text-teal-700 hover:bg-teal-50 rounded-md transition-colors"
-                        title={notif.read ? 'Mark as unread' : 'Mark as read'}
-                      >
-                        <CheckIcon className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => deleteNotification(notif.id)}
-                        className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
-                        title="Delete notification"
-                      >
+                      {!notif.is_read && (
+                        <button onClick={() => markAsRead(notif.id)} className="p-2 text-gray-400 hover:text-teal-700 hover:bg-teal-50 rounded-md transition-colors" title="Mark as read">
+                          <CheckIcon className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button onClick={() => deleteNotification(notif.id)} className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors" title="Delete">
                         <TrashIcon className="w-4 h-4" />
                       </button>
                     </div>

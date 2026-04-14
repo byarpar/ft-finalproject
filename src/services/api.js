@@ -169,6 +169,21 @@ export const usersAPI = {
   getUserFollowing: (userId, params = {}) => api.get(`/users/${userId}/following`, { params }).then(res => res.data),
 };
 
+// Notifications API
+export const notificationsAPI = {
+  getNotifications: (params = {}) => api.get('/notifications', { params }).then(res => res.data),
+  markAsRead: (id) => api.put(`/notifications/${id}/read`).then(res => res.data),
+  markAllAsRead: () => api.put('/notifications/read-all').then(res => res.data),
+  deleteNotification: (id) => api.delete(`/notifications/${id}`).then(res => res.data),
+};
 
+// Messages API
+export const messagesAPI = {
+  getConversations: () => api.get('/messages/conversations').then(res => res.data),
+  getOrCreateConversation: (userId) => api.get(`/messages/conversations/${userId}`).then(res => res.data),
+  getMessages: (conversationId, params = {}) => api.get(`/messages/${conversationId}`, { params }).then(res => res.data),
+  sendMessage: (conversationId, content) => api.post(`/messages/${conversationId}`, { content }).then(res => res.data),
+  deleteMessage: (messageId) => api.delete(`/messages/message/${messageId}`).then(res => res.data),
+};
 
 export default api;
