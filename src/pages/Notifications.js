@@ -162,7 +162,7 @@ const Notifications = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           {loading ? (
             <div className="space-y-3">
-              {[1,2,3].map(i => (
+              {[1, 2, 3].map(i => (
                 <div key={i} className="bg-white rounded-lg shadow-sm p-5 animate-pulse flex gap-4">
                   <div className="w-10 h-10 rounded-lg bg-gray-200 flex-shrink-0" />
                   <div className="flex-1"><div className="h-4 bg-gray-200 rounded mb-2 w-2/3" /><div className="h-3 bg-gray-100 rounded w-full" /></div>
@@ -192,7 +192,7 @@ const Notifications = () => {
                     <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${getNotificationIcon(notif.type)}`}>
                       {notif.type === 'mention' && <BellIcon className="w-5 h-5" />}
                       {notif.type === 'answer' && <CheckIcon className="w-5 h-5" />}
-                      {(notif.type === 'follow' || !['mention','answer'].includes(notif.type)) && <SparklesIcon className="w-5 h-5" />}
+                      {(notif.type === 'follow' || !['mention', 'answer'].includes(notif.type)) && <SparklesIcon className="w-5 h-5" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
