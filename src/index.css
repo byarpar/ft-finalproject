@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -99,7 +101,7 @@
 
 @layer base {
   html {
-    font-family: Inter, system-ui, sans-serif;
+    font-family: 'Manrope', Inter, system-ui, sans-serif;
     /* Prevent horizontal scrolling */
     overflow-x: hidden;
     /* Better text rendering on Android */
@@ -118,6 +120,17 @@
     text-size-adjust: 100%;
   }
 
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Manrope', Inter, system-ui, sans-serif;
+    letter-spacing: -0.015em;
+    text-transform: capitalize;
+  }
+
   /* Android-specific optimizations */
   * {
     box-sizing: border-box;
@@ -127,6 +140,26 @@
 }
 
 @layer components {
+
+  /* Global typography utilities for consistent titles and subtitles */
+  .app-title {
+    @apply font-extrabold tracking-tight leading-tight;
+    text-transform: capitalize;
+  }
+
+  .app-subtitle {
+    @apply font-medium leading-relaxed;
+  }
+
+  .app-text-title {
+    @apply font-semibold tracking-tight;
+    text-transform: capitalize;
+  }
+
+  .app-label-uppercase {
+    @apply text-xs font-semibold uppercase;
+    letter-spacing: 0.08em;
+  }
 
   /* Simplified Button Styles */
   .btn {
@@ -260,6 +293,11 @@
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
     will-change: transform;
+  }
+
+  /* Unified avatar sizing across the app */
+  .avatar-unified {
+    @apply w-12 h-12 rounded-full object-cover overflow-hidden flex items-center justify-center flex-shrink-0;
   }
 }
 

@@ -41,9 +41,9 @@ export const AuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (email, password, recaptchaToken = null) => {
     try {
-      const response = await authAPI.login(email, password);
+      const response = await authAPI.login(email, password, recaptchaToken);
 
       // authAPI.login already extracts .data, so response is the actual data object
       const { user: userData, token: authToken } = response.data;
@@ -54,19 +54,20 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true, user: userData };
     } catch (error) {
-      // The error.response.data is the full error object from backend
-      const fullErrorResponse = error.response?.data;
+      // Normalize backend error shape to preserve validation flags.
+      const fullErrorResponse = error.response?.data || {};
+      const nestedError = fullErrorResponse?.error || {};
 
-      // Extract error details from the backend response structure
-      const errorInfo = fullErrorResponse?.error || {};
-      const errorMessage = errorInfo.message || fullErrorResponse?.message || 'Login failed';
-      const errorDetails = errorInfo.details || null;
-      const errorData = errorInfo.data || {};
+      const errorMessage = nestedError.message || fullErrorResponse.message || 'Login failed';
+      const errorCode = nestedError.code || fullErrorResponse.code || null;
+      const errorDetails = nestedError.details || fullErrorResponse.details || null;
+      const errorData = nestedError.data || fullErrorResponse.data || errorDetails || {};
 
       return {
         success: false,
         error: {
           message: errorMessage,
+          code: errorCode,
           details: errorDetails,
           data: errorData
         }
@@ -74,12 +75,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (email, password, full_name, username = null) => {
+  const register = async (email, password, full_name, username = null, recaptchaToken = null) => {
     try {
       const userData = {
         email,
         password,
         full_name,
+        recaptchaToken,
         ...(username && { username })
       };
 

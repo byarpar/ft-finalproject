@@ -24,7 +24,6 @@ import {
 } from '@heroicons/react/24/outline';
 import { ExclamationCircleIcon } from '@heroicons/react/24/solid';
 import admin from '../../services/adminAPI';
-import { discussionsAPI } from '../../services/api';
 
 const DiscussionsManagement = () => {
   const [activeTab, setActiveTab] = useState('all-threads');
@@ -75,69 +74,26 @@ const DiscussionsManagement = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await discussionsAPI.getCategories();
-      if (response.success && response.data && response.data.categories) {
-        // Convert object to array
-        const categoriesData = response.data.categories;
-        let categoriesList = [];
+      const res = await admin.getCategoriesAndTags();
+      const d = res?.data || res;
 
-        if (Array.isArray(categoriesData)) {
-          // If it's already an array
-          categoriesList = categoriesData
-            .filter(cat => cat && cat.id && cat.id !== 'all' && cat.name)
-            .map(cat => ({
-              id: cat.id,
-              name: cat.name,
-              icon: cat.icon,
-              color: cat.color,
-              count: cat.count || 0
-            }));
-        } else {
-          // If it's an object, convert to array
-          categoriesList = Object.entries(categoriesData)
-            .filter(([key, cat]) => key !== 'all' && cat && cat.name)
-            .map(([key, cat]) => ({
-              id: key,
-              name: cat.name,
-              icon: cat.icon,
-              color: cat.color,
-              count: cat.count || 0
-            }));
-        }
+      // Map categories from analytics data
+      if (d?.categories?.length) {
+        setCategories(d.categories.map(cat => ({
+          id: cat.category || 'general',
+          name: cat.category || 'General',
+          count: cat.discussion_count || 0,
+          totalViews: cat.total_views || 0,
+          totalAnswers: cat.total_answers || 0,
+        })));
+      }
 
-        setCategories(categoriesList);
-      } else {
-        // Use default categories as fallback
-        setCategories([
-          { id: 'general', name: 'General Discussion', icon: 'ChatBubbleLeftRightIcon', color: '#9CA3AF' },
-          { id: 'frontend', name: 'Frontend Development', icon: 'CodeBracketIcon', color: '#60A5FA' },
-          { id: 'backend', name: 'Backend Development', icon: 'ServerIcon', color: '#34D399' },
-          { id: 'devops', name: 'DevOps & Infrastructure', icon: 'CloudIcon', color: '#FBBF24' },
-          { id: 'mobile', name: 'Mobile Development', icon: 'DevicePhoneMobileIcon', color: '#A78BFA' },
-          { id: 'databases', name: 'Databases', icon: 'CircleStackIcon', color: '#F87171' },
-          { id: 'security', name: 'Security', icon: 'ShieldCheckIcon', color: '#F472B6' },
-          { id: 'ai-ml', name: 'AI & Machine Learning', icon: 'CpuChipIcon', color: '#10B981' },
-          { id: 'other', name: 'Other', icon: 'EllipsisHorizontalIcon', color: '#6B7280' },
-        ]);
+      // Populate tags from top tags
+      if (d?.topTags?.length) {
+        setTags(d.topTags.map(t => ({ name: t.tag, count: t.count })));
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
-      // Use default categories from your backend if API fails
-      setCategories([
-        { id: 'general', name: 'General Discussion', icon: 'ChatBubbleLeftRightIcon', color: '#9CA3AF' },
-        { id: 'programming', name: 'Programming', icon: 'CodeBracketIcon', color: '#EC4899' },
-        { id: 'web-development', name: 'Web Development', icon: 'GlobeAltIcon', color: '#F59E0B' },
-        { id: 'cybersecurity', name: 'Cybersecurity', icon: 'LockClosedIcon', color: '#EF4444' },
-        { id: 'data-science', name: 'Data Science', icon: 'ChartBarIcon', color: '#10B981' },
-        { id: 'machine-learning', name: 'Machine Learning', icon: 'SparklesIcon', color: '#3B82F6' },
-        { id: 'cloud-computing', name: 'Cloud Computing', icon: 'CloudIcon', color: '#06B6D4' },
-        { id: 'networking', name: 'Networking', icon: 'LinkIcon', color: '#F97316' },
-        { id: 'database-systems', name: 'Database Systems', icon: 'CubeIcon', color: '#14B8A6' },
-        { id: 'devops', name: 'DevOps', icon: 'RocketLaunchIcon', color: '#FF6B6B' },
-        { id: 'iot', name: 'IoT', icon: 'WiFiIcon', color: '#14B8A6' },
-        { id: 'blockchain-technology', name: 'Blockchain', icon: 'LinkIcon', color: '#F59E0B' },
-        { id: 'other', name: 'Other', icon: 'EllipsisHorizontalIcon', color: '#6B7280' },
-      ]);
+      console.error('Error fetching categories/tags:', error);
     }
   };
 
@@ -223,7 +179,7 @@ const DiscussionsManagement = () => {
             author: {
               id: discussion.author_id,
               name: discussion.author_name || 'Unknown',
-              avatar: null,
+              avatar: discussion.author_avatar || discussion.profile_photo_url || discussion.user_data?.display_picture || null,
             },
             category: typeof discussion.category === 'object' && discussion.category !== null
               ? discussion.category.name
@@ -277,22 +233,14 @@ const DiscussionsManagement = () => {
 
   const fetchStats = async () => {
     try {
-      // Fetch recent discussions count
-      const [recent24h, recent7d] = await Promise.all([
-        admin.getAllDiscussions({
-          dateRange: 'today',
-          limit: 1,
-        }),
-        admin.getAllDiscussions({
-          dateRange: 'week',
-          limit: 1,
-        }),
-      ]);
-
+      const res = await admin.getDiscussionStats();
+      const d = res?.data || res;
       setStats({
-        newThreads24h: recent24h.data?.pagination?.total || 0,
-        newThreads7d: recent7d.data?.pagination?.total || 0,
-        mostActiveThread: 'Grammar Q&A', // This would need a specific endpoint
+        newThreads24h: d?.new24h || 0,
+        newThreads7d: d?.new7d || 0,
+        mostActiveThread: d?.mostActiveThread?.title || null,
+        lockedCount: d?.lockedCount || 0,
+        pinnedCount: d?.pinnedCount || 0,
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -574,8 +522,8 @@ const DiscussionsManagement = () => {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Discussions Management</h1>
-        <p className="mt-2 text-gray-600">
+        <h1 className="app-title text-3xl text-gray-900">Discussions Management</h1>
+        <p className="app-subtitle mt-2 text-gray-600">
           Monitor and moderate discussions, resolve user reports, and maintain healthy community interactions.
         </p>
       </div>
@@ -894,7 +842,22 @@ const DiscussionsManagement = () => {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                            {thread.author?.avatar ? (
+                              <img
+                                src={thread.author.avatar}
+                                alt={thread.author?.name || 'Unknown'}
+                                className="avatar-unified"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  const fallback = e.currentTarget.nextElementSibling;
+                                  if (fallback) fallback.style.display = 'flex';
+                                }}
+                              />
+                            ) : null}
+                            <div
+                              className="avatar-unified bg-gray-300"
+                              style={{ display: thread.author?.avatar ? 'none' : 'flex' }}
+                            >
                               <UserCircleIcon className="w-5 h-5 text-gray-600" />
                             </div>
                             <span className="text-sm text-gray-900">{thread.author?.name || 'Unknown'}</span>
@@ -1268,9 +1231,10 @@ const DiscussionsManagement = () => {
                         <ChatBubbleLeftRightIcon className="w-6 h-6 text-gray-600" />
                       </div>
                       <div>
-                        <h3 className="font-medium text-gray-900">{category.name}</h3>
+                        <h3 className="font-medium text-gray-900 capitalize">{category.name}</h3>
                         <p className="text-sm text-gray-500">
-                          {category.count || 0} thread{category.count !== 1 ? 's' : ''}
+                          {category.count || 0} discussion{category.count !== 1 ? 's' : ''}
+                          {category.totalViews ? ` · ${(category.totalViews).toLocaleString()} views` : ''}
                         </p>
                       </div>
                     </div>
@@ -1322,7 +1286,7 @@ const DiscussionsManagement = () => {
                   <div key={idx} className="group flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-full hover:bg-teal-100:bg-teal-900/30 transition-colors">
                     <TagIcon className="w-4 h-4 text-gray-600 group-hover:text-teal-600:text-teal-400" />
                     <span className="text-sm font-medium text-gray-700 group-hover:text-teal-700:text-teal-300">
-                      {tag.name || tag.tag_name}
+                      #{tag.name}
                     </span>
                     <span className="text-xs text-gray-500">
                       ({tag.count || 0})

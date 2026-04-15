@@ -69,6 +69,21 @@ export const admin = {
   // Moderation History
   getModerationHistory: (params = {}) => adminAPI.get('/admin/moderation-history', { params }).then(res => res.data),
 
+  // Analytics
+  getAnalytics: (timeRange = '30days') => adminAPI.get('/admin/analytics', { params: { timeRange } }).then(res => res.data),
+
+  // Categories & Tags
+  getCategoriesAndTags: () => adminAPI.get('/admin/categories-tags').then(res => res.data),
+
+  // Discussion stats
+  getDiscussionStats: () => adminAPI.get('/admin/discussion-stats').then(res => res.data),
+
+  // Single user with stats
+  getUser: (id) => adminAPI.get(`/admin/users/${id}`).then(res => res.data),
+
+  // System info
+  getSystemInfo: () => adminAPI.get('/admin/system-info').then(res => res.data),
+
   // Words Import/Export
   importWords: (formData) => adminAPI.post('/admin/words/import', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },

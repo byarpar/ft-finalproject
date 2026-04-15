@@ -54,7 +54,7 @@ const Discussions = () => {
 
       const response = await discussionsAPI.getDiscussions({
         page,
-        limit: 12,
+        limit: 8,
         category: selectedCategory !== 'all' ? selectedCategory : undefined,
         search: searchQuery || undefined,
         sortBy
@@ -255,11 +255,11 @@ const Discussions = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center min-h-[280px] sm:min-h-[320px]">
               <div className="space-y-6 relative z-10 text-center sm:text-left">
                 <div>
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight text-white drop-shadow-lg">
+                  <h1 className="app-title text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-4 text-white drop-shadow-lg">
                     Questions &
                     <span className="block text-white">Answers</span>
                   </h1>
-                  <p className="text-base sm:text-lg md:text-xl text-white/90 leading-relaxed max-w-lg mx-auto sm:mx-0 drop-shadow-md">
+                  <p className="app-subtitle text-base sm:text-lg md:text-xl text-white/90 max-w-lg mx-auto sm:mx-0 drop-shadow-md">
                     Ask questions and get help from the Lisu learning community
                   </p>
                 </div>
@@ -466,7 +466,7 @@ const Discussions = () => {
                                       }}
                                       className="cursor-pointer relative"
                                     >
-                                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                                      <div className="avatar-unified bg-gray-100">
                                         {discussion.user_data?.display_picture ? (
                                           <img
                                             src={discussion.user_data.display_picture}
@@ -484,7 +484,7 @@ const Discussions = () => {
                                         <CheckBadgeIcon className="w-4 h-4 text-red-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
                                       )}
                                     </div>
-                                    <div className="text-xs text-gray-500">
+                                    <div className="app-label-uppercase text-gray-500">
                                       {formatRelativeDate(discussion.updated_at || discussion.created_at)}
                                     </div>
                                   </div>
@@ -607,7 +607,7 @@ const Discussions = () => {
                                       }}
                                       className="cursor-pointer relative"
                                     >
-                                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                                      <div className="avatar-unified bg-gray-100">
                                         {discussion.user_data?.display_picture ? (
                                           <img
                                             src={discussion.user_data.display_picture}
@@ -625,7 +625,7 @@ const Discussions = () => {
                                         <CheckBadgeIcon className="w-4 h-4 text-red-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
                                       )}
                                     </div>
-                                    <div className="text-xs text-gray-500">
+                                    <div className="app-label-uppercase text-gray-500">
                                       {formatRelativeDate(discussion.updated_at || discussion.created_at)}
                                     </div>
                                   </div>
@@ -808,7 +808,7 @@ const Discussions = () => {
                           >
                             <div className="flex gap-3">
                               <div className="relative flex-shrink-0">
-                                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                                <div className="avatar-unified bg-gray-100">
                                   {discussion.user_data?.display_picture ? (
                                     <img
                                       src={discussion.user_data.display_picture}
@@ -860,7 +860,7 @@ const Discussions = () => {
                             className="flex flex-col items-center group"
                           >
                             <div className="relative w-16 h-16 mb-2">
-                              <div className="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center overflow-hidden group-hover:ring-2 group-hover:ring-teal-500 transition-all">
+                              <div className="avatar-unified bg-teal-100 group-hover:ring-2 group-hover:ring-teal-500 transition-all">
                                 {member.avatar && !member.avatarError ? (
                                   <img
                                     src={member.avatar}

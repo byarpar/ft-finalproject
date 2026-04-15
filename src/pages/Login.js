@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import ReCAPTCHA from 'react-google-recaptcha';
 import {
   BookOpenIcon,
   GlobeAltIcon,
@@ -51,6 +52,8 @@ const Login = () => {
   });
   const [loading, setLoading] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState(null);
+  const recaptchaRef = useRef(null);
 
   // Custom hooks for form management
   const { showPassword, togglePasswordVisibility } = usePasswordToggle();
@@ -68,8 +71,8 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Get the page user was trying to access - default to search for dictionary app
-  const from = location.state?.from?.pathname || '/search';
+  // Get the page user was trying to access; default to home discussions page
+  const from = location.state?.from?.pathname || '/';
   const redirectMessage = location.state?.message;
 
   // Focus email input on mount
@@ -146,6 +149,10 @@ const Login = () => {
       password: validateField('password', formData.password)
     };
 
+    if (!recaptchaToken) {
+      newErrors.recaptcha = 'Please complete the reCAPTCHA verification';
+    }
+
     // Remove empty error messages
     Object.keys(newErrors).forEach(key => {
       if (!newErrors[key]) delete newErrors[key];
@@ -155,6 +162,18 @@ const Login = () => {
     markAllTouched();
 
     return Object.keys(newErrors).length === 0;
+  };
+
+  const handleGoogleOAuth = () => {
+    if (!recaptchaToken) {
+      setErrors((prev) => ({
+        ...prev,
+        recaptcha: 'Please complete the reCAPTCHA verification before using Google login.'
+      }));
+      return;
+    }
+
+    handleGoogleAuth(recaptchaToken, 'login');
   };
 
   /**
@@ -177,7 +196,7 @@ const Login = () => {
     clearAllErrors();
 
     try {
-      const result = await login(formData.email, formData.password);
+      const result = await login(formData.email, formData.password, recaptchaToken);
 
       if (result.success) {
         // Show success state briefly before navigation
@@ -219,7 +238,8 @@ const Login = () => {
 
         // If account not found (and not deleted), highlight the email field
         if (errorData.accountNotFound && !errorData.accountDeleted) {
-          newErrors.email = 'No account found with this email';
+          newErrors.email = 'No account found with this email. Please register first.';
+          newErrors.general = 'No account found with this email. Please register first.';
           emailInputRef.current?.focus();
 
           // Still check if this is a deleted account (as a fallback)
@@ -234,12 +254,20 @@ const Login = () => {
           newErrors.unverifiedEmail = errorData.email || formData.email;
           setErrors(newErrors);
         }
+
+        // Always request a fresh token after a failed attempt.
+        setRecaptchaToken(null);
+        recaptchaRef.current?.reset();
       }
     } catch (error) {
       console.error('Login error:', error);
       setErrors({
         general: error.message || 'Network error. Unable to connect to server. Please check your connection and try again.'
       });
+
+      // Network or server errors can leave the token stale; force a new challenge.
+      setRecaptchaToken(null);
+      recaptchaRef.current?.reset();
     } finally {
       setLoading(false);
     }
@@ -260,7 +288,13 @@ const Login = () => {
     setFormData,
     clearAllErrors,
     resetTouched,
-    emailInputRef
+    emailInputRef,
+    () => {
+      if (recaptchaRef.current) {
+        recaptchaRef.current.reset();
+        setRecaptchaToken(null);
+      }
+    }
   );
 
   /**
@@ -577,6 +611,30 @@ const Login = () => {
                 </div>
               </div>
 
+              {/* reCAPTCHA */}
+              <div>
+                <div className="flex justify-center">
+                  <ReCAPTCHA
+                    ref={recaptchaRef}
+                    sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY || ''}
+                    onChange={(token) => {
+                      setRecaptchaToken(token);
+                      if (token && errors.recaptcha) {
+                        const nextErrors = { ...errors };
+                        delete nextErrors.recaptcha;
+                        setErrors(nextErrors);
+                      }
+                    }}
+                    onExpired={() => {
+                      setRecaptchaToken(null);
+                      setErrors((prev) => ({ ...prev, recaptcha: 'reCAPTCHA expired. Please verify again.' }));
+                    }}
+                    theme="light"
+                  />
+                </div>
+                <FieldError error={errors.recaptcha} />
+              </div>
+
               {/* Log In Button */}
               <div className="pt-2">
                 <button
@@ -624,7 +682,7 @@ const Login = () => {
               {/* Social Login Buttons */}
               <div className="space-y-3 pt-2">
                 <GoogleOAuthButton
-                  onClick={handleGoogleAuth}
+                  onClick={handleGoogleOAuth}
                   text="Continue with Google"
                   disabled={loading}
                 />

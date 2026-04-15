@@ -122,10 +122,10 @@ const Members = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center min-h-[280px] sm:min-h-[320px]">
               <div className="space-y-6 relative z-10 text-center sm:text-left">
                 <div>
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight text-white drop-shadow-lg">
+                  <h1 className="app-title text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-4 text-white drop-shadow-lg">
                     Community Members
                   </h1>
-                  <p className="text-base sm:text-lg md:text-xl text-white/90 leading-relaxed max-w-lg mx-auto sm:mx-0 drop-shadow-md">
+                  <p className="app-subtitle text-base sm:text-lg md:text-xl text-white/90 max-w-lg mx-auto sm:mx-0 drop-shadow-md">
                     Connect with fellow Lisu language learners and speakers
                   </p>
                 </div>
@@ -245,11 +245,11 @@ const Members = () => {
                                 e.target.style.display = 'none';
                                 e.target.nextElementSibling.style.display = 'flex';
                               }}
-                              className="w-20 h-20 rounded-full object-cover ring-4 ring-gray-50 group-hover:ring-teal-50 transition-all"
+                              className="avatar-unified ring-4 ring-gray-50 group-hover:ring-teal-50 transition-all"
                             />
                           ) : null}
                           <div
-                            className="w-20 h-20 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 text-2xl font-bold ring-4 ring-gray-50 group-hover:ring-teal-100 group-hover:bg-teal-100 transition-all"
+                            className="avatar-unified bg-teal-50 text-teal-600 text-2xl font-bold ring-4 ring-gray-50 group-hover:ring-teal-100 group-hover:bg-teal-100 transition-all"
                             style={{ display: member.profile_photo_url && member.profile_photo_url.trim() !== '' ? 'none' : 'flex' }}
                           >
                             {getInitials(member.full_name || member.username)}

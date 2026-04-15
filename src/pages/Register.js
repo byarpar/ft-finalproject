@@ -106,6 +106,13 @@ const Register = () => {
     fullNameInputRef.current?.focus();
   }, []);
 
+  useEffect(() => {
+    if (location.state?.error) {
+      setErrors((prev) => ({ ...prev, general: location.state.error }));
+      navigate(location.pathname, { replace: true, state: { email: location.state?.email || formData.email } });
+    }
+  }, [location.state, location.pathname, navigate, setErrors, formData.email]);
+
   /**
    * Field validator - uses shared validation utilities
    */
@@ -176,6 +183,18 @@ const Register = () => {
     }
   };
 
+  const handleGoogleOAuth = () => {
+    if (!recaptchaToken) {
+      setErrors((prev) => ({
+        ...prev,
+        recaptcha: 'Please complete the reCAPTCHA verification before using Google sign up.'
+      }));
+      return;
+    }
+
+    handleGoogleAuth(recaptchaToken, 'register');
+  };
+
   /**
    * Handle form submission
    */
@@ -201,7 +220,7 @@ const Register = () => {
     clearAllErrors();
 
     try {
-      const result = await register(formData.email, formData.password, formData.full_name);
+      const result = await register(formData.email, formData.password, formData.full_name, null, recaptchaToken);
 
       if (result.success) {
         toast.success('Account created successfully! Please check your email for verification code.', {
@@ -300,7 +319,7 @@ const Register = () => {
       <div className="min-h-screen flex flex-col lg:flex-row">
         {/* Left Side - Visual Storytelling / Branding Block (55-60%) */}
         <div
-          className="lg:w-[58%] relative overflow-hidden flex items-center justify-center p-8 lg:p-12 min-h-[400px] lg:min-h-screen"
+          className="lg:w-[58%] relative overflow-hidden flex items-center justify-center p-8 lg:p-8 min-h-[400px] lg:min-h-screen"
           style={{
             backgroundImage: 'linear-gradient(to bottom right, rgba(15, 118, 110, 0.92), rgba(13, 148, 136, 0.88)), url(/images/hero/lisu-people.jpg)',
             backgroundSize: 'cover',
@@ -386,10 +405,10 @@ const Register = () => {
         </div>
 
         {/* Right Side - Registration Form (40-45%) */}
-        <div className="lg:w-[42%] bg-gray-50 flex items-center justify-center p-6 lg:p-8 py-12 overflow-y-auto">
-          <div className="w-full max-w-md my-auto">
+        <div className="lg:w-[42%] bg-gray-50 flex items-center justify-center p-6 lg:p-8 min-h-screen lg:min-h-0 transition-colors duration-200">
+          <div className="w-full max-w-md">
             {/* Heading */}
-            <div className="mb-6">
+            <div className="mb-8">
               <h2 className="text-3xl font-bold text-gray-900">
                 Create Your Account
               </h2>
@@ -496,7 +515,7 @@ const Register = () => {
                     aria-required="true"
                     aria-invalid={errors.password ? 'true' : 'false'}
                     aria-describedby={errors.password ? 'password-error' : 'password-hint'}
-                    className={`w-full px-4 py-3 pr-12 border ${errors.password ? 'border-red-500' : 'border-gray-300'} text-sm rounded-lg focus:ring-2 focus:ring-teal-500:ring-teal-400 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-400`}
+                    className={`w-full px-4 py-2 pr-12 border ${errors.password ? 'border-red-500' : 'border-gray-300'} text-sm rounded-lg focus:ring-2 focus:ring-teal-500:ring-teal-400 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-400`}
                     placeholder="Enter a strong password"
                   />
                   {/* Show/Hide Password Toggle */}
@@ -549,7 +568,7 @@ const Register = () => {
                     aria-required="true"
                     aria-invalid={errors.confirmPassword ? 'true' : 'false'}
                     aria-describedby={errors.confirmPassword ? 'confirm-password-error' : undefined}
-                    className={`w-full px-4 py-3 pr-12 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} text-sm rounded-lg focus:ring-2 focus:ring-teal-500:ring-teal-400 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-400`}
+                    className={`w-full px-4 py-2 pr-12 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} text-sm rounded-lg focus:ring-2 focus:ring-teal-500:ring-teal-400 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-400`}
                     placeholder="Re-enter your password"
                   />
                   {/* Show/Hide Password Toggle */}
@@ -612,7 +631,7 @@ const Register = () => {
                 <div className="flex justify-center">
                   <ReCAPTCHA
                     ref={recaptchaRef}
-                    sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY || "6Lew1_IrAAAAADRERW8rY4BRUD21XFQc-LI4MJUE"}
+                    sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY || ''}
                     onChange={handleRecaptchaChange}
                     onExpired={() => {
                       setRecaptchaToken(null);
@@ -634,7 +653,7 @@ const Register = () => {
                   type="submit"
                   disabled={loading}
                   aria-busy={loading}
-                  className="w-full px-6 py-3 bg-teal-600 hover:bg-teal-700:bg-teal-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2:ring-offset-gray-900 disabled:hover:bg-teal-600 disabled:hover:shadow-md"
+                  className="w-full px-6 py-3.5 bg-teal-600 hover:bg-teal-700:bg-teal-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2:ring-offset-gray-900 disabled:hover:bg-teal-600 disabled:hover:shadow-md"
                 >
                   {loading ? (
                     <span className="flex items-center justify-center" aria-live="polite">
@@ -667,7 +686,7 @@ const Register = () => {
               {/* Social Login Buttons */}
               <div className="space-y-2 pt-1">
                 <GoogleOAuthButton
-                  onClick={handleGoogleAuth}
+                  onClick={handleGoogleOAuth}
                   text="Sign up with Google"
                   disabled={loading}
                 />

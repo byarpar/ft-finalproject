@@ -1,9 +1,42 @@
 import axios from 'axios';
 
+const resolveCompanionBackendUrl = (hostname) => {
+  if (!hostname || typeof hostname !== 'string') return null;
+
+  // For public tunnel/custom domains, map frontend subdomain to backend.
+  if (hostname.endsWith('.lisudictionar.com') && hostname.includes('frontend')) {
+    return `https://${hostname.replace('frontend', 'backend')}/api`;
+  }
+
+  return null;
+};
+
+const resolveApiBaseUrl = () => {
+  const envBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+
+  try {
+    const parsed = new URL(envBaseUrl);
+
+    // When app is opened on LAN, localhost should resolve to the current host machine.
+    if (parsed.hostname === 'localhost' && typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+      const companionBackend = resolveCompanionBackendUrl(window.location.hostname);
+      if (companionBackend) {
+        return companionBackend;
+      }
+
+      parsed.hostname = window.location.hostname;
+    }
+
+    return parsed.toString().replace(/\/$/, '');
+  } catch (error) {
+    return envBaseUrl;
+  }
+};
+
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:3001/api',
-  timeout: 10000,
+  baseURL: resolveApiBaseUrl(),
+  timeout: 30000,
   withCredentials: true,
 });
 
@@ -47,7 +80,7 @@ api.interceptors.response.use(
 
 // Authentication API
 export const authAPI = {
-  login: (email, password) => api.post('/auth/login', { email, password }).then(res => res.data),
+  login: (email, password, recaptchaToken = null) => api.post('/auth/login', { email, password, recaptchaToken }).then(res => res.data),
   register: (userData) => api.post('/auth/register', userData).then(res => res.data),
   verifyToken: (token) => api.get('/auth/verify', {
     headers: { Authorization: `Bearer ${token}` }

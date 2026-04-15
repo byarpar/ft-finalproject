@@ -52,8 +52,18 @@ export const checkAccountDeletionStatus = async (email, setErrors) => {
 /**
  * Redirect to Google OAuth for authentication
  */
-export const handleGoogleAuth = () => {
-  window.location.href = `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001'}/api/auth/google`;
+export const handleGoogleAuth = (recaptchaToken = null, mode = 'login') => {
+  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+  const oauthMode = mode === 'register' ? 'register' : 'login';
+
+  if (recaptchaToken) {
+    const query = new URLSearchParams({ recaptchaToken, mode: oauthMode }).toString();
+    window.location.href = `${backendUrl}/api/auth/google?${query}`;
+    return;
+  }
+
+  const query = new URLSearchParams({ mode: oauthMode }).toString();
+  window.location.href = `${backendUrl}/api/auth/google?${query}`;
 };
 
 /**

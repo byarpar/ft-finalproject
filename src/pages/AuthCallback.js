@@ -41,12 +41,21 @@ const AuthCallback = () => {
         return;
       }
 
+      // Unregistered Google account: send user to register first.
+      if (error === 'account_not_found') {
+        const message = searchParams.get('message') || 'No account found. Please register first, then login with Google.';
+        navigate('/register', { state: { email, error: message } });
+        return;
+      }
+
       // Redirect to login with error message
+      const backendMessage = searchParams.get('message');
       const errorMessages = {
-        authentication_failed: 'Google authentication failed. Please try again.',
-        oauth_failed: 'OAuth login failed. Please try again.',
-        access_denied: 'Access was denied. Please try again.',
-        invalid_request: 'Invalid authentication request.',
+        authentication_failed: backendMessage || 'Google authentication failed. Please try again.',
+        oauth_failed: backendMessage || 'OAuth login failed. Please try again.',
+        access_denied: backendMessage || 'Access was denied. Please try again.',
+        invalid_request: backendMessage || 'Invalid authentication request.',
+        account_not_found: searchParams.get('message') || 'No account found. Please register first, then login with Google.',
         account_deleted_permanent: searchParams.get('message') || 'This account has been permanently deleted. Please create a new account.',
         account_deleted: searchParams.get('message') || 'This account has been deleted. If you wish to use this service again, please create a new account.',
       };

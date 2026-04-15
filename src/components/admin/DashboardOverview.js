@@ -1,387 +1,243 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import adminAPI from '../../services/adminAPI';
-import { StatCard } from '../AdminComponents';
 import {
   UsersIcon,
-  BookOpenIcon,
   ChatBubbleLeftRightIcon,
-  ClockIcon,
+  DocumentTextIcon,
+  EyeIcon,
+  FlagIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  ArrowPathIcon,
+  ExclamationTriangleIcon,
   CheckCircleIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
-import { Line, Doughnut } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-} from 'chart.js';
 
-// Register ChartJS components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
+// --- Helpers ---
+const fmt = (n) => Number(n || 0).toLocaleString();
+
+const timeAgo = (dateStr) => {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+};
+
+// --- Mini sparkline (7 bars) ---
+const Sparkline = ({ data, valueKey, color = '#14b8a6' }) => {
+  if (!data?.length) return null;
+  const vals = data.map(d => Number(d[valueKey]) || 0);
+  const max = Math.max(...vals, 1);
+  return (
+    <svg viewBox={`0 0 ${data.length * 10} 24`} className="w-full h-6">
+      {vals.map((v, i) => {
+        const h = Math.max(2, (v / max) * 22);
+        return <rect key={i} x={i * 10 + 1} y={24 - h} width={8} height={h} rx={2} fill={color} fillOpacity={0.7} />;
+      })}
+    </svg>
+  );
+};
+
+// --- Stat card ---
+const Tile = ({ title, value, sub, subLabel, up, icon: Icon, iconBg, sparkData, sparkKey, sparkColor }) => (
+  <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex flex-col gap-3">
+    <div className="flex items-start justify-between">
+      <div>
+        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{title}</p>
+        <p className="text-2xl font-bold text-gray-900 mt-1">{fmt(value)}</p>
+      </div>
+      <div className={`p-2.5 rounded-lg ${iconBg}`}>
+        <Icon className="w-5 h-5 text-white" />
+      </div>
+    </div>
+    {sparkData && <Sparkline data={sparkData} valueKey={sparkKey} color={sparkColor} />}
+    {sub !== undefined && (
+      <div className="flex items-center gap-1">
+        {up ? <ArrowUpIcon className="w-3 h-3 text-green-500" /> : <ArrowDownIcon className="w-3 h-3 text-red-500" />}
+        <span className={`text-xs font-semibold ${up ? 'text-green-600' : 'text-red-600'}`}>+{fmt(sub)}</span>
+        <span className="text-xs text-gray-400">{subLabel}</span>
+      </div>
+    )}
+  </div>
 );
 
+// --- Avatar ---
+const Avatar = ({ url, name }) => {
+  const initials = (name || '?').charAt(0).toUpperCase();
+  return url
+    ? <img src={url} alt={name} className="avatar-unified" />
+    : <div className="avatar-unified bg-teal-500 text-white text-xs font-bold">{initials}</div>;
+};
+
+// --- Main Component ---
 const DashboardOverview = () => {
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState(null);
+  const [data, setData] = useState(null);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchDashboardStats();
-  }, []);
-
-  const fetchDashboardStats = async () => {
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      const response = await adminAPI.getDashboardStats();
-
-      if (response.success && response.data?.dashboard) {
-        setStats(response.data.dashboard);
-      }
+      const res = await adminAPI.getDashboardStats();
+      const dashboard = res?.data?.dashboard || res?.dashboard || null;
+      setData(dashboard);
     } catch (err) {
-      console.error('Error fetching dashboard stats:', err);
-      setError(err.message || 'Failed to load dashboard statistics');
+      setError(err?.response?.data?.message || err.message || 'Failed to load dashboard');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const o = data?.overview || {};
+  const weekly = data?.weeklyActivity || [];
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+      <div className="space-y-6 animate-pulse">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(8)].map((_, i) => <div key={i} className="h-28 bg-gray-100 rounded-xl" />)}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="h-64 bg-gray-100 rounded-xl" />
+          <div className="h-64 bg-gray-100 rounded-xl" />
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-800">{error}</p>
-        <button
-          onClick={fetchDashboardStats}
-          className="mt-2 text-sm text-red-600"
-        >
-          Try again
+      <div className="bg-red-50 border border-red-200 rounded-xl p-6 flex items-center gap-4">
+        <ExclamationTriangleIcon className="w-6 h-6 text-red-500 shrink-0" />
+        <div>
+          <p className="font-medium text-red-800">Failed to load dashboard</p>
+          <p className="text-sm text-red-600 mt-0.5">{error}</p>
+        </div>
+        <button onClick={load} className="ml-auto flex items-center gap-1 text-sm text-red-700 hover:text-red-900">
+          <ArrowPathIcon className="w-4 h-4" /> Retry
         </button>
       </div>
     );
   }
 
-  const overview = stats?.overview || {};
-
-  // Chart data
-  const activityChartData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    datasets: [
-      {
-        label: 'New Registrations',
-        data: [12, 19, 15, 25, 22, 30, 28],
-        borderColor: 'rgb(20, 184, 166)',
-        backgroundColor: 'rgba(20, 184, 166, 0.1)',
-        fill: true,
-        tension: 0.4,
-      },
-      {
-        label: 'New Word Submissions',
-        data: [5, 9, 12, 15, 10, 18, 14],
-        borderColor: 'rgb(59, 130, 246)',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        fill: true,
-        tension: 0.4,
-      },
-    ],
-  };
-
-  const partOfSpeechData = {
-    labels: stats?.part_of_speech_distribution?.map(item => item.part_of_speech || 'Unknown') || [],
-    datasets: [
-      {
-        label: 'Words by Part of Speech',
-        data: stats?.part_of_speech_distribution?.map(item => item.count) || [],
-        backgroundColor: [
-          'rgba(20, 184, 166, 0.8)',
-          'rgba(59, 130, 246, 0.8)',
-          'rgba(16, 185, 129, 0.8)',
-          'rgba(245, 158, 11, 0.8)',
-          'rgba(239, 68, 68, 0.8)',
-          'rgba(139, 92, 246, 0.8)',
-        ],
-        borderWidth: 0,
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: {
-          color: 'rgb(156, 163, 175)',
-          padding: 15,
-        },
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        grid: {
-          color: 'rgba(156, 163, 175, 0.1)',
-        },
-        ticks: {
-          color: 'rgb(156, 163, 175)',
-        },
-      },
-      x: {
-        grid: {
-          display: false,
-        },
-        ticks: {
-          color: 'rgb(156, 163, 175)',
-        },
-      },
-    },
-  };
-
-  const doughnutOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'right',
-        labels: {
-          color: 'rgb(156, 163, 175)',
-          padding: 15,
-        },
-      },
-    },
-  };
-
   return (
     <div className="space-y-6">
-      {/* Welcome Message */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Welcome, Super Admin!
-        </h1>
-        <p className="text-gray-600">
-          Here's what's happening with your Lisu Dictionary today.
-        </p>
+      {/* Welcome + refresh */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="app-title text-2xl text-gray-900">Dashboard</h1>
+          <p className="app-subtitle text-sm text-gray-500 mt-0.5">Live overview of your platform</p>
+        </div>
+        <button onClick={load} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-teal-600 border border-gray-200 hover:border-teal-400 rounded-lg px-3 py-1.5 transition-colors">
+          <ArrowPathIcon className="w-4 h-4" /> Refresh
+        </button>
       </div>
 
-      {/* Key Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="New Users (24h)"
-          value={45}
-          change={12}
-          changeType="increase"
-          icon={UsersIcon}
-          color="teal"
-        />
-        <StatCard
-          title="Pending Words"
-          value={128}
-          alert="Needs Review"
-          icon={ClockIcon}
-          color="yellow"
-        />
-        <StatCard
-          title="Total Words"
-          value={overview.total_words}
-          change={5}
-          changeType="increase"
-          icon={BookOpenIcon}
-          color="blue"
-        />
-        <StatCard
-          title="Active Discussions"
-          value={350}
-          change={8}
-          changeType="increase"
-          icon={ChatBubbleLeftRightIcon}
-          color="green"
-        />
+      {/* Primary Stat Tiles */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Tile title="Total Users" value={o.total_users} sub={o.new_users_24h} subLabel="new today" up iconBg="bg-teal-500" icon={UsersIcon} sparkData={weekly} sparkKey="new_users" sparkColor="#14b8a6" />
+        <Tile title="Total Discussions" value={o.total_discussions} sub={o.new_discussions_24h} subLabel="new today" up iconBg="bg-blue-500" icon={DocumentTextIcon} sparkData={weekly} sparkKey="new_discussions" sparkColor="#3b82f6" />
+        <Tile title="Total Answers" value={o.total_answers} sub={o.new_answers_24h} subLabel="new today" up iconBg="bg-purple-500" icon={ChatBubbleLeftRightIcon} />
+        <Tile title="Page Views" value={o.total_views} iconBg="bg-orange-500" icon={EyeIcon} />
       </div>
 
-      {/* Additional Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="Total Users"
-          value={overview.total_users}
-          icon={UsersIcon}
-          color="purple"
-        />
-        <StatCard
-          title="Active Users"
-          value={overview.active_users}
-          icon={CheckCircleIcon}
-          color="green"
-        />
-        <StatCard
-          title="Inactive Users"
-          value={overview.inactive_users}
-          icon={XCircleIcon}
-          color="red"
-        />
-        <StatCard
-          title="Etymology Entries"
-          value={overview.total_etymology}
-          icon={BookOpenIcon}
-          color="orange"
-        />
+      {/* Secondary Tiles */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Tile title="Active Users" value={o.active_users} iconBg="bg-green-500" icon={CheckCircleIcon} />
+        <Tile title="Inactive Users" value={o.inactive_users} iconBg="bg-gray-400" icon={XCircleIcon} />
+        <Tile title="Pending Reports" value={o.pending_reports} iconBg="bg-red-500" icon={FlagIcon} />
+        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex flex-col justify-center items-center gap-1">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Engagement Rate</p>
+          <p className="text-2xl font-bold text-teal-600">
+            {o.total_users > 0 ? Math.round((o.active_users / o.total_users) * 100) : 0}%
+          </p>
+          <p className="text-xs text-gray-400">active / total users</p>
+        </div>
       </div>
 
-      {/* Charts Row */}
+      {/* Recent Users + Recent Discussions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Website Activity Chart */}
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Website Activity
-          </h3>
-          <div className="h-64">
-            <Line data={activityChartData} options={chartOptions} />
+        {/* Recent Registrations */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 className="font-semibold text-gray-900">Recent Registrations</h3>
+            <span className="text-xs text-gray-400">Last 5 users</span>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {data?.recentUsers?.length ? data.recentUsers.map((u) => (
+              <div key={u.id} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors">
+                <Avatar url={u.profile_photo_url} name={u.username} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{u.username}</p>
+                  <p className="text-xs text-gray-400 truncate">{u.email}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${u.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                    {u.role}
+                  </span>
+                  <p className="text-xs text-gray-400 mt-0.5">{timeAgo(u.created_at)}</p>
+                </div>
+              </div>
+            )) : (
+              <p className="text-sm text-gray-400 text-center py-8">No recent registrations</p>
+            )}
           </div>
         </div>
 
-        {/* Part of Speech Distribution */}
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Words by Part of Speech
-          </h3>
-          <div className="h-64">
-            {stats?.part_of_speech_distribution?.length > 0 ? (
-              <Doughnut data={partOfSpeechData} options={doughnutOptions} />
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                No data available
+        {/* Recent Discussions */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 className="font-semibold text-gray-900">Recent Discussions</h3>
+            <span className="text-xs text-gray-400">Last 5 posts</span>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {data?.recentDiscussions?.length ? data.recentDiscussions.map((d) => (
+              <div key={d.id} className="flex items-start gap-3 px-5 py-3 hover:bg-gray-50 transition-colors">
+                <Avatar url={d.author_avatar} name={d.author} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 line-clamp-1">{d.title}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    by <span className="text-gray-600">{d.author}</span> · {timeAgo(d.created_at)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-400 shrink-0">
+                  <span className="flex items-center gap-0.5"><EyeIcon className="w-3 h-3" />{d.views_count}</span>
+                  <span className="flex items-center gap-0.5"><ChatBubbleLeftRightIcon className="w-3 h-3" />{d.answers_count}</span>
+                </div>
               </div>
+            )) : (
+              <p className="text-sm text-gray-400 text-center py-8">No recent discussions</p>
             )}
           </div>
         </div>
       </div>
 
-      {/* Pending Reviews Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Pending Word Contributions */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Pending Word Contributions
-            </h3>
+      {/* Pending Reports */}
+      {data?.recentReports?.length > 0 && (
+        <div className="bg-white rounded-xl border border-red-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-red-100 flex items-center gap-2">
+            <FlagIcon className="w-4 h-4 text-red-500" />
+            <h3 className="font-semibold text-gray-900">Pending Reports</h3>
+            <span className="ml-auto text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">{o.pending_reports} pending</span>
           </div>
-          <div className="divide-y divide-gray-200">
-            {[1, 2, 3].map((item) => (
-              <div key={item} className="px-6 py-4 hover:bg-gray-50:bg-gray-700/50">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">
-                      ꓞꓳꓽ • To Teach
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Submitted by <span className="font-medium">JohnDoe</span> • 2 hours ago
-                    </p>
-                  </div>
-                  <div className="flex space-x-2 ml-4">
-                    <button className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded-md transition-colors">
-                      Approve
-                    </button>
-                    <button className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded-md transition-colors">
-                      Reject
-                    </button>
-                  </div>
+          <div className="divide-y divide-gray-50">
+            {data.recentReports.map((r) => (
+              <div key={r.id} className="flex items-center gap-3 px-5 py-3">
+                <ExclamationTriangleIcon className="w-4 h-4 text-yellow-500 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{r.discussion_title || 'Deleted discussion'}</p>
+                  <p className="text-xs text-gray-400">
+                    Reported by <span className="text-gray-600">{r.reporter || 'Unknown'}</span> · {r.reason} · {timeAgo(r.created_at)}
+                  </p>
                 </div>
-              </div>
-            ))}
-          </div>
-          <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
-            <button className="text-sm text-teal-600 ">
-              View all pending contributions →
-            </button>
-          </div>
-        </div>
-
-        {/* Recent User Registrations */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Recent User Registrations
-            </h3>
-          </div>
-          <div className="divide-y divide-gray-200">
-            {[1, 2, 3].map((item) => (
-              <div key={item} className="px-6 py-4 hover:bg-gray-50:bg-gray-700/50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center text-white font-medium">
-                      UN
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        Username{item}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        user{item}@example.com
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-gray-500">
-                      {item} hour{item > 1 ? 's' : ''} ago
-                    </p>
-                    <button className="text-xs text-teal-600  mt-1">
-                      View Profile
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
-            <button className="text-sm text-teal-600 ">
-              View all users →
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Searches */}
-      {stats?.recent_searches?.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Popular Searches (Last 24h)
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {stats.recent_searches.map((search, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-md"
-              >
-                <span className="text-sm text-gray-700 truncate">
-                  {search.search_term}
-                </span>
-                <span className="ml-2 text-xs font-medium text-teal-600">
-                  {search.search_count}
-                </span>
+                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full shrink-0 capitalize">{r.status}</span>
               </div>
             ))}
           </div>
@@ -389,69 +245,22 @@ const DashboardOverview = () => {
       )}
 
       {/* System Status */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            System Status
-          </h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Database</span>
-              <span className="flex items-center text-sm font-medium text-green-600">
-                <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                Online
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+        <h3 className="font-semibold text-gray-900 mb-4">System Status</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[
+            { label: 'Database', status: 'Online' },
+            { label: 'API Server', status: 'Operational' },
+            { label: 'Auth Service', status: 'Running' },
+          ].map((svc) => (
+            <div key={svc.label} className="flex items-center justify-between px-4 py-3 bg-green-50 rounded-lg border border-green-100">
+              <span className="text-sm text-gray-700">{svc.label}</span>
+              <span className="flex items-center gap-1.5 text-sm font-medium text-green-700">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                {svc.status}
               </span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">API Server</span>
-              <span className="flex items-center text-sm font-medium text-green-600">
-                <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                Operational
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Search Service</span>
-              <span className="flex items-center text-sm font-medium text-green-600">
-                <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                Running
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Server Load
-          </h3>
-          <div className="space-y-3">
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-gray-600">CPU Usage</span>
-                <span className="text-sm font-medium text-gray-900">45%</span>
-              </div>
-              <div className="w-full bg-gray-100 rounded-full h-2">
-                <div className="bg-teal-500 h-2 rounded-full" style={{ width: '45%' }}></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-gray-600">Memory</span>
-                <span className="text-sm font-medium text-gray-900">62%</span>
-              </div>
-              <div className="w-full bg-gray-100 rounded-full h-2">
-                <div className="bg-blue-500 h-2 rounded-full" style={{ width: '62%' }}></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-gray-600">Disk Space</span>
-                <span className="text-sm font-medium text-gray-900">38%</span>
-              </div>
-              <div className="w-full bg-gray-100 rounded-full h-2">
-                <div className="bg-green-500 h-2 rounded-full" style={{ width: '38%' }}></div>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </div>

@@ -180,13 +180,16 @@ const UserProfile = () => {
 
   // Components
   const PageWrapper = ({ children }) => (
-    <PageLayout fullWidth={true} background="">
-      <section className="relative bg-teal-600">
-      </section>
-      <div className="bg-white min-h-screen">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {children}
-        </div>
+    <PageLayout
+      title={profile?.username || 'User Profile'}
+      description={profile?.bio ? profile.bio.substring(0, 100) : 'Community member profile'}
+      headerIcon={<QuestionMarkCircleIcon className="w-6 h-6 text-white" />}
+      showHeader={true}
+      fullWidth={true}
+      background="bg-gray-50"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {children}
       </div>
     </PageLayout>
   );
@@ -220,7 +223,7 @@ const UserProfile = () => {
       <div className="p-6">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
           {/* Profile Image */}
-          <div className="w-24 h-24 rounded-full border-2 border-gray-200 overflow-hidden bg-gray-100 relative">
+          <div className="avatar-unified border-2 border-gray-200 bg-gray-100 relative">
             {/* Fallback avatar - always show */}
             <img
               src={`https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || profile?.username || 'User')}&size=96&background=0891b2&color=ffffff`}
@@ -328,7 +331,7 @@ const UserProfile = () => {
                   Ask Question
                 </button>
                 <button
-                  onClick={() => navigate(`/chat?user=${profile.username}`)}
+                  onClick={() => navigate(`/messages?userId=${profile.id}&user=${profile.username}`)}
                   className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   <ChatBubbleLeftIcon className="w-4 h-4" />

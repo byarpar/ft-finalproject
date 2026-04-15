@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
 import admin from '../../services/adminAPI';
 import { Pagination } from '../UIComponents';
 import {
@@ -10,6 +10,13 @@ import {
   UserCircleIcon,
   CheckCircleIcon,
   XCircleIcon,
+  ArrowLeftIcon,
+  ChatBubbleLeftRightIcon,
+  DocumentTextIcon,
+  ShieldCheckIcon,
+  ClockIcon,
+  ArrowPathIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 
 const UsersManagement = () => {
@@ -31,6 +38,19 @@ const UsersList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
+  const [stats, setStats] = useState(null);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await admin.getDashboardStats();
+      const d = res?.data?.dashboard?.overview || {};
+      setStats(d);
+    } catch (e) { /* non-critical */ }
+  }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   useEffect(() => {
     fetchUsers();
@@ -110,13 +130,31 @@ const UsersList = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Users Management
-        </h1>
-        <p className="text-gray-600">
-          Manage user accounts, roles, and permissions
-        </p>
+        <h1 className="app-title text-2xl text-gray-900 mb-1">Users Management</h1>
+        <p className="app-subtitle text-sm text-gray-500">Manage user accounts, roles, and permissions</p>
       </div>
+
+      {/* Stat tiles */}
+      {stats && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm flex items-center gap-3">
+            <div className="p-2 bg-teal-500 rounded-lg"><UserCircleIcon className="w-5 h-5 text-white" /></div>
+            <div><p className="text-xs text-gray-500">Total Users</p><p className="text-xl font-bold text-gray-900">{Number(stats.total_users || 0).toLocaleString()}</p></div>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm flex items-center gap-3">
+            <div className="p-2 bg-green-500 rounded-lg"><CheckCircleIcon className="w-5 h-5 text-white" /></div>
+            <div><p className="text-xs text-gray-500">Active</p><p className="text-xl font-bold text-gray-900">{Number(stats.active_users || 0).toLocaleString()}</p></div>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm flex items-center gap-3">
+            <div className="p-2 bg-gray-400 rounded-lg"><XCircleIcon className="w-5 h-5 text-white" /></div>
+            <div><p className="text-xs text-gray-500">Inactive</p><p className="text-xl font-bold text-gray-900">{Number(stats.inactive_users || 0).toLocaleString()}</p></div>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm flex items-center gap-3">
+            <div className="p-2 bg-blue-500 rounded-lg"><ClockIcon className="w-5 h-5 text-white" /></div>
+            <div><p className="text-xs text-gray-500">New Today</p><p className="text-xl font-bold text-gray-900">{Number(stats.new_users_24h || 0).toLocaleString()}</p></div>
+          </div>
+        </div>
+      )}
 
       {/* Search and Filters */}
       <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
@@ -234,7 +272,22 @@ const UsersList = () => {
                   <tr key={user.id} className="hover:bg-gray-50:bg-gray-700/50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center text-white font-medium">
+                        {user.profile_photo_url ? (
+                          <img
+                            src={user.profile_photo_url}
+                            alt={user.username || user.email || 'User'}
+                            className="avatar-unified"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const fallback = e.currentTarget.nextElementSibling;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className="avatar-unified bg-teal-500 text-white font-medium"
+                          style={{ display: user.profile_photo_url ? 'none' : 'flex' }}
+                        >
                           {(user.username || user.email)?.[0]?.toUpperCase()}
                         </div>
                         <div className="ml-3">
@@ -322,10 +375,189 @@ const UsersList = () => {
 };
 
 const UserDetail = () => {
+  const { userId } = useParams();
+  const navigate = useNavigate();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [role, setRole] = useState('');
+  const [isActive, setIsActive] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await admin.getUser(userId);
+      const d = res?.data || res;
+      setData(d);
+      setRole(d?.user?.role || 'user');
+      setIsActive(d?.user?.is_active ?? true);
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Failed to load user');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await Promise.all([
+        admin.updateUserRole(userId, role),
+        admin.updateUserStatus(userId, isActive),
+      ]);
+      await load();
+    } catch (err) {
+      alert('Failed to save changes');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Delete this user? This cannot be undone.')) return;
+    try {
+      await admin.deleteUser(userId);
+      navigate('/admin/users');
+    } catch (err) {
+      alert('Failed to delete user');
+    }
+  };
+
+  if (loading) return (
+    <div className="space-y-4 animate-pulse">
+      <div className="h-8 w-48 bg-gray-100 rounded" />
+      <div className="h-40 bg-gray-100 rounded-xl" />
+      <div className="grid grid-cols-3 gap-4">{[...Array(3)].map((_, i) => <div key={i} className="h-24 bg-gray-100 rounded-xl" />)}</div>
+    </div>
+  );
+
+  if (error) return (
+    <div className="bg-red-50 border border-red-200 rounded-xl p-6 flex items-center gap-4">
+      <ExclamationTriangleIcon className="w-6 h-6 text-red-500 shrink-0" />
+      <div>
+        <p className="font-medium text-red-800">Failed to load user</p>
+        <p className="text-sm text-red-600">{error}</p>
+      </div>
+      <button onClick={load} className="ml-auto text-sm text-red-700 flex items-center gap-1">
+        <ArrowPathIcon className="w-4 h-4" /> Retry
+      </button>
+    </div>
+  );
+
+  const user = data?.user || {};
+  const stats = data?.stats || {};
+  const joined = user.created_at ? new Date(user.created_at).toLocaleDateString() : '—';
+  const lastLogin = user.last_login ? new Date(user.last_login).toLocaleString() : 'Never';
+
   return (
-    <div>
-      <h2 className="text-2xl font-bold text-gray-900">User Details</h2>
-      <p className="text-gray-600 mt-2">User detail page coming soon...</p>
+    <div className="space-y-6">
+      {/* Back */}
+      <button onClick={() => navigate('/admin/users')} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-teal-600">
+        <ArrowLeftIcon className="w-4 h-4" /> Back to Users
+      </button>
+
+      {/* Profile Card */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex flex-col sm:flex-row gap-5 items-start">
+        {user.profile_photo_url
+          ? <img src={user.profile_photo_url} alt={user.username} className="avatar-unified shrink-0" />
+          : <div className="avatar-unified bg-teal-500 text-white text-2xl font-bold shrink-0">
+            {(user.username || '?')[0].toUpperCase()}
+          </div>
+        }
+        <div className="flex-1 min-w-0">
+          <h2 className="text-xl font-bold text-gray-900">{user.username || '—'}</h2>
+          <p className="text-sm text-gray-500">{user.email}</p>
+          {user.bio && <p className="text-sm text-gray-600 mt-2">{user.bio}</p>}
+          <div className="flex flex-wrap gap-4 mt-3 text-xs text-gray-500">
+            <span>Joined: {joined}</span>
+            <span>Last login: {lastLogin}</span>
+            {user.location && <span>📍 {user.location}</span>}
+          </div>
+        </div>
+        <div className="flex gap-2 shrink-0">
+          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}>
+            {user.is_active ? 'Active' : 'Inactive'}
+          </span>
+          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 capitalize">
+            {user.role}
+          </span>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm text-center">
+          <DocumentTextIcon className="w-6 h-6 text-blue-500 mx-auto mb-1" />
+          <p className="text-2xl font-bold text-gray-900">{stats.discussionsStarted || 0}</p>
+          <p className="text-xs text-gray-500">Discussions</p>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm text-center">
+          <ChatBubbleLeftRightIcon className="w-6 h-6 text-purple-500 mx-auto mb-1" />
+          <p className="text-2xl font-bold text-gray-900">{stats.answersPosted || 0}</p>
+          <p className="text-xs text-gray-500">Answers</p>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm text-center">
+          <ShieldCheckIcon className="w-6 h-6 text-teal-500 mx-auto mb-1" />
+          <p className="text-2xl font-bold text-gray-900">{stats.reputation || 0}</p>
+          <p className="text-xs text-gray-500">Reputation</p>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm text-center">
+          <CheckCircleIcon className="w-6 h-6 text-green-500 mx-auto mb-1" />
+          <p className="text-2xl font-bold text-gray-900">{stats.favoritesCount || 0}</p>
+          <p className="text-xs text-gray-500">Favorites</p>
+        </div>
+      </div>
+
+      {/* Edit Panel */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <h3 className="font-semibold text-gray-900 mb-4">Edit Account</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <select
+              value={role}
+              onChange={e => setRole(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-teal-500"
+            >
+              <option value="user">User</option>
+              <option value="moderator">Moderator</option>
+              <option value="admin">Admin</option>
+              <option value="super_admin">Super Admin</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select
+              value={isActive ? 'active' : 'inactive'}
+              onChange={e => setIsActive(e.target.value === 'active')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-teal-500"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 mt-5">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+          >
+            {saving ? 'Saving…' : 'Save Changes'}
+          </button>
+          <button
+            onClick={handleDelete}
+            className="px-5 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-sm font-medium transition-colors"
+          >
+            Delete User
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

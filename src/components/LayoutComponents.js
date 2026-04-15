@@ -1,10 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import PropTypes from 'prop-types';
 import toast from 'react-hot-toast';
 import useMobileDetect from '../hooks/useMobileDetect';
 import useClickOutside from '../hooks/useClickOutside';
+import { notificationsAPI } from '../services/api';
 import {
   EnvelopeIcon,
   HeartIcon,
@@ -32,15 +33,41 @@ import {
  */
 export const NavigationLinks = ({ isActive }) => {
   const { user } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const fetchUnreadCount = useCallback(async () => {
+    if (!user) {
+      setUnreadCount(0);
+      return;
+    }
+
+    try {
+      const res = await notificationsAPI.getNotifications({ page: 1, limit: 1 });
+      const payload = res?.data || res || {};
+      const unread = Number(payload.unreadCount || 0);
+      setUnreadCount(Number.isFinite(unread) ? unread : 0);
+    } catch {
+      // Keep navbar quiet on transient failures.
+      setUnreadCount(0);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchUnreadCount();
+
+    if (!user) return undefined;
+    const timer = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(timer);
+  }, [fetchUnreadCount, user]);
 
   // helper for link styling
-  const linkClass = (path) => `px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${isActive(path)
-    ? 'bg-teal-50 text-teal-700'
-    : 'text-gray-700 hover:text-teal-600 hover:bg-gray-50'
+  const linkClass = (path) => `px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${isActive(path)
+    ? 'bg-emerald-100 text-emerald-900 shadow-sm'
+    : 'text-slate-700 hover:text-emerald-700 hover:bg-emerald-50'
     }`;
 
   return (
-    <div className="hidden md:flex items-center gap-2">
+    <div className="hidden lg:flex items-center gap-2">
       <Link
         to="/discussions"
         className={linkClass('/discussions')}
@@ -61,14 +88,19 @@ export const NavigationLinks = ({ isActive }) => {
         <>
           <Link
             to="/notifications"
-            className="p-2 text-gray-700 hover:text-teal-600 hover:bg-teal-50 rounded-md transition-colors"
+            className="relative p-2 text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors"
             title="Notifications"
           >
             <BellIcon className="w-5 h-5" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
           </Link>
           <Link
             to="/discussions/new"
-            className="p-2 text-gray-700 hover:text-teal-600 hover:bg-teal-50 rounded-md transition-colors"
+            className="p-2 text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors"
             title="Ask Question"
           >
             <QuestionMarkCircleIcon className="w-5 h-5" />
@@ -81,36 +113,68 @@ export const NavigationLinks = ({ isActive }) => {
 
 /**
  * PageLayout Component
- * Universal page layout wrapper with consistent structure
+ * Universal page layout wrapper with consistent structure.
+ * When showHeader=true, renders a teal gradient banner with title, icon and optional actions.
  */
 export const PageLayout = ({
   children,
   title,
   description,
+  headerIcon = null,
+  headerActions = null,
+  showHeader = false,
   className = '',
   fullWidth = false,
   background = 'bg-white'
 }) => {
   return (
-    <>
-      <div
-        className={`min-h-screen ${background} transition-colors duration-300`}
-        role="main"
-      >
-        <div className={fullWidth ? '' : 'container mx-auto px-4 sm:px-6 lg:px-8'}>
-          <div className={className}>
-            {children}
+    <div
+      className={`min-h-screen ${background} transition-colors duration-300`}
+      role="main"
+    >
+      {/* Teal gradient page header banner */}
+      {showHeader && title && (
+        <div className="bg-gradient-to-r from-teal-700 to-teal-600">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-4">
+                {headerIcon && (
+                  <div className="w-12 h-12 bg-white/15 rounded-xl flex items-center justify-center flex-shrink-0">
+                    {headerIcon}
+                  </div>
+                )}
+                <div>
+                  <h1 className="app-title text-2xl sm:text-3xl text-white">{title}</h1>
+                  {description && (
+                    <p className="app-subtitle mt-1 text-teal-100 text-sm sm:text-base max-w-2xl">{description}</p>
+                  )}
+                </div>
+              </div>
+              {headerActions && (
+                <div className="flex items-center gap-3 flex-shrink-0 mt-1">
+                  {headerActions}
+                </div>
+              )}
+            </div>
           </div>
         </div>
+      )}
+
+      {/* Content area */}
+      <div className={fullWidth ? className : `container mx-auto px-4 sm:px-6 lg:px-8 ${className}`}>
+        {children}
       </div>
-    </>
+    </div>
   );
 };
 
 PageLayout.propTypes = {
   children: PropTypes.node.isRequired,
-  title: PropTypes.string.isRequired,
+  title: PropTypes.string,
   description: PropTypes.string,
+  headerIcon: PropTypes.node,
+  headerActions: PropTypes.node,
+  showHeader: PropTypes.bool,
   className: PropTypes.string,
   fullWidth: PropTypes.bool,
   background: PropTypes.string
@@ -127,32 +191,58 @@ export const MobileMenu = ({
   handleLogout
 }) => {
   const { user } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const fetchUnreadCount = useCallback(async () => {
+    if (!user) {
+      setUnreadCount(0);
+      return;
+    }
+
+    try {
+      const res = await notificationsAPI.getNotifications({ page: 1, limit: 1 });
+      const payload = res?.data || res || {};
+      const unread = Number(payload.unreadCount || 0);
+      setUnreadCount(Number.isFinite(unread) ? unread : 0);
+    } catch {
+      setUnreadCount(0);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchUnreadCount();
+  }, [fetchUnreadCount]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed top-16 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-sm border-t border-white/20 shadow-lg">
-      <div className="px-4 pt-2 pb-2 space-y-1">
+    <div
+      className={`absolute top-full left-0 right-0 z-40 md:hidden bg-slate-50/95 backdrop-blur-md border-t border-emerald-100 shadow-xl max-h-[calc(100vh-6.5rem)] overflow-y-auto transition-all duration-200 ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}
+      role="dialog"
+      aria-label="Mobile navigation"
+    >
+      <div className="px-4 pt-3 pb-3 space-y-1">
+        <p className="px-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">Explore</p>
         <Link
           to="/discussions"
           onClick={() => setIsOpen(false)}
-          className={`flex items-center px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/discussions')
-            ? 'bg-teal-50 text-teal-700'
-            : 'text-gray-700 hover:bg-gray-50'
+          className={`flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 ${isActive('/discussions')
+            ? 'bg-emerald-100 text-emerald-900'
+            : 'text-slate-700 hover:bg-emerald-50'
             }`}
         >
-          <QuestionMarkCircleIcon className="w-5 h-5 mr-3 text-gray-500" />
+          <QuestionMarkCircleIcon className="w-5 h-5 mr-3 text-slate-500" />
           Bee Forum
         </Link>
         <Link
           to="/users"
           onClick={() => setIsOpen(false)}
           className={`flex items-center px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/users')
-            ? 'bg-teal-50 text-teal-700'
-            : 'text-gray-700 hover:bg-gray-50'
+            ? 'bg-emerald-100 text-emerald-900'
+            : 'text-slate-700 hover:bg-emerald-50'
             }`}
         >
-          <UserGroupIcon className="w-5 h-5 mr-3 text-gray-500" />
+          <UserGroupIcon className="w-5 h-5 mr-3 text-slate-500" />
           Members
         </Link>
         {user && (
@@ -161,49 +251,60 @@ export const MobileMenu = ({
               to="/notifications"
               onClick={() => setIsOpen(false)}
               className={`flex items-center px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${isActive('/notifications')
-                ? 'bg-teal-50 text-teal-700'
-                : 'text-gray-700 hover:bg-gray-50'
+                ? 'bg-emerald-100 text-emerald-900'
+                : 'text-slate-700 hover:bg-emerald-50'
                 }`}
             >
-              <BellIcon className="w-5 h-5 mr-3 text-gray-500" />
+              <div className="relative mr-3">
+                <BellIcon className="w-5 h-5 text-slate-500" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </div>
               Notifications
             </Link>
             <Link
               to="/discussions/new"
               onClick={() => setIsOpen(false)}
-              className="flex items-center px-4 py-2.5 text-sm font-medium text-teal-600 hover:bg-teal-50 rounded-md"
+              className="flex items-center px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 rounded-md"
             >
-              <QuestionMarkCircleIcon className="w-5 h-5 mr-3 text-teal-500" />
+              <QuestionMarkCircleIcon className="w-5 h-5 mr-3 text-emerald-600" />
               + New Discussion
             </Link>
           </>
         )}
       </div>
       {user ? (
-        <div className="px-4 py-4 border-t border-gray-200">
+        <div className="px-4 py-4 border-t border-emerald-100">
+          <p className="px-2 pb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">Account</p>
           <div className="space-y-1">
-            <Link to={`/users/${user.id}`} onClick={() => setIsOpen(false)} className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
-              <UserIcon className="w-5 h-5 mr-3 text-gray-400" />My Profile
+            <Link to={`/users/${user.id}`} onClick={() => setIsOpen(false)} className="flex items-center px-4 py-3 text-sm text-slate-700 hover:bg-emerald-50 rounded-xl">
+              <UserIcon className="w-5 h-5 mr-3 text-slate-400" />My Profile
             </Link>
-            <Link to="/settings" onClick={() => setIsOpen(false)} className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
-              <Cog6ToothIcon className="w-5 h-5 mr-3 text-gray-400" />Settings
+            <Link to="/messages" onClick={() => setIsOpen(false)} className="flex items-center px-4 py-3 text-sm text-slate-700 hover:bg-emerald-50 rounded-xl">
+              <ChatBubbleLeftRightIcon className="w-5 h-5 mr-3 text-slate-400" />Messages
+            </Link>
+            <Link to="/settings" onClick={() => setIsOpen(false)} className="flex items-center px-4 py-3 text-sm text-slate-700 hover:bg-emerald-50 rounded-xl">
+              <Cog6ToothIcon className="w-5 h-5 mr-3 text-slate-400" />Settings
             </Link>
             {user.role === 'admin' && (
-              <Link to="/admin" onClick={() => setIsOpen(false)} className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
-                <ChartPieIcon className="w-5 h-5 mr-3 text-gray-400" />Admin Dashboard
+              <Link to="/admin" onClick={() => setIsOpen(false)} className="flex items-center px-4 py-3 text-sm text-slate-700 hover:bg-emerald-50 rounded-xl">
+                <ChartPieIcon className="w-5 h-5 mr-3 text-slate-400" />Admin Dashboard
               </Link>
             )}
-            <button onClick={handleLogout} className="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-md">
+            <button onClick={handleLogout} className="flex items-center w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-xl">
               <ArrowRightOnRectangleIcon className="w-5 h-5 mr-3 text-red-500" />Sign Out
             </button>
           </div>
         </div>
       ) : (
-        <div className="px-4 py-4 border-t border-gray-200 space-y-2">
-          <Link to="/login" onClick={() => setIsOpen(false)} className="block w-full text-center px-4 py-2.5 text-sm font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-md transition-colors">
+        <div className="px-4 py-4 border-t border-emerald-100 space-y-2">
+          <Link to="/login" onClick={() => setIsOpen(false)} className="block w-full text-center px-4 py-3 text-sm font-semibold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 rounded-xl transition-colors">
             Log In
           </Link>
-          <Link to="/register" onClick={() => setIsOpen(false)} className="block w-full text-center px-4 py-2.5 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-md transition-colors">
+          <Link to="/register" onClick={() => setIsOpen(false)} className="block w-full text-center px-4 py-3 text-sm font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl transition-colors">
             Sign Up
           </Link>
         </div>
@@ -318,16 +419,17 @@ export const UserActions = ({
       {!user ? (
         <>
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/login" className="px-4 py-2 text-sm font-medium text-white hover:text-teal-100 transition-colors">
+            <Link to="/login" className="px-4 py-2 text-sm font-medium text-white hover:text-emerald-100 transition-colors">
               Log In
             </Link>
-            <Link to="/register" className="px-4 py-2 text-sm font-medium bg-white text-teal-600 rounded-md hover:bg-teal-50 transition-colors">
+            <Link to="/register" className="px-4 py-2 text-sm font-medium bg-white text-emerald-700 rounded-md hover:bg-emerald-50 transition-colors">
               Sign Up
             </Link>
           </div>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden p-2 text-white hover:bg-white/10 rounded-md transition-colors"
+            className="md:hidden w-10 h-10 flex items-center justify-center text-white hover:bg-white/15 rounded-lg transition-colors"
+            aria-label={isOpen ? 'Close menu' : 'Open menu'}
           >
             {isOpen ? <XMarkIcon className="w-5 h-5" /> : <Bars3Icon className="w-5 h-5" />}
           </button>
@@ -335,43 +437,44 @@ export const UserActions = ({
       ) : (
         <>
           <div className="hidden md:flex items-center gap-2">
-            <Link to="/discussions" className="p-2 text-white hover:bg-white/10 rounded-md transition-colors">
+            <Link to="/discussions" className="p-2 text-white hover:bg-white/15 rounded-md transition-colors">
               <ChatBubbleLeftRightIcon className="w-5 h-5" />
             </Link>
           </div>
           <div className="relative" ref={userDropdownRef}>
             <button
               onClick={() => setUserProfileDropdownOpen(!userProfileDropdownOpen)}
-              className="flex items-center gap-2 p-2 text-white hover:bg-white/10 rounded-md transition-colors"
+              className="flex items-center gap-2 px-2.5 py-2 text-white hover:bg-white/15 rounded-lg transition-colors"
+              aria-label="Open user menu"
             >
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-teal-400 to-teal-600 flex items-center justify-center text-white text-sm font-bold">
+              <div className="avatar-unified bg-gradient-to-r from-emerald-400 to-teal-600 text-white text-sm font-bold ring-2 ring-white/50">
                 {user.username?.[0]?.toUpperCase() || '?'}
               </div>
               <span className="hidden sm:inline text-sm font-medium">{user.username}</span>
             </button>
 
             {userProfileDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                <Link to={`/users/${user.id}`} className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+              <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-slate-100 py-1.5 z-50">
+                <Link to={`/users/${user.id}`} className="flex items-center px-4 py-2.5 text-sm text-slate-700 hover:bg-emerald-50">
                   <UserIcon className="w-4 h-4 mr-3" />
                   My Profile
                 </Link>
-                <Link to="/messages" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <Link to="/messages" className="flex items-center px-4 py-2.5 text-sm text-slate-700 hover:bg-emerald-50">
                   <ChatBubbleLeftRightIcon className="w-4 h-4 mr-3" />
                   Messages
                 </Link>
-                <Link to="/settings" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <Link to="/settings" className="flex items-center px-4 py-2.5 text-sm text-slate-700 hover:bg-emerald-50">
                   <Cog6ToothIcon className="w-4 h-4 mr-3" />
                   Settings
                 </Link>
                 {user.role === 'admin' && (
-                  <Link to="/admin" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  <Link to="/admin" className="flex items-center px-4 py-2.5 text-sm text-slate-700 hover:bg-emerald-50">
                     <ChartPieIcon className="w-4 h-4 mr-3" />
                     Admin Dashboard
                   </Link>
                 )}
-                <hr className="my-1" />
-                <button onClick={handleLogout} className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                <hr className="my-1 border-slate-100" />
+                <button onClick={handleLogout} className="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">
                   <ArrowRightOnRectangleIcon className="w-4 h-4 mr-3" />
                   Sign Out
                 </button>
@@ -380,7 +483,8 @@ export const UserActions = ({
           </div>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden p-2 text-white hover:bg-white/10 rounded-md transition-colors"
+            className="md:hidden w-10 h-10 flex items-center justify-center text-white hover:bg-white/15 rounded-lg transition-colors"
+            aria-label={isOpen ? 'Close menu' : 'Open menu'}
           >
             {isOpen ? <XMarkIcon className="w-5 h-5" /> : <Bars3Icon className="w-5 h-5" />}
           </button>
@@ -405,6 +509,19 @@ export const Navbar = () => {
 
   const userDropdownRef = useRef(null);
   const isMobile = useMobileDetect();
+
+  useEffect(() => {
+    setIsOpen(false);
+    setUserProfileDropdownOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isMobile) return undefined;
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobile, isOpen]);
 
   // marks link active when pathname matches or is a sub-route
   const isActive = (path) => {
@@ -433,33 +550,37 @@ export const Navbar = () => {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="relative w-8 h-8 flex items-center justify-center">
-            <img src="/logo.png" alt="Modern Discussion Forum Logo" className="w-8 h-8 object-contain drop-shadow-lg" />
+    <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-emerald-800 via-teal-700 to-cyan-700 border-b border-white/15 shadow-lg relative backdrop-blur-sm">
+      {isOpen && <div className="md:hidden fixed inset-0 top-[88px] bg-slate-900/20" onClick={() => setIsOpen(false)} aria-hidden="true" />}
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-2">
+        <Link to="/" className="flex items-center gap-2 group min-w-0">
+          <div className="relative w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center flex-shrink-0">
+            <img src="/logo.png" alt="Modern Discussion Forum Logo" className="w-7 h-7 sm:w-8 sm:h-8 object-contain drop-shadow-lg" />
           </div>
-          <span className="text-xl font-bold text-gray-900 group-hover:text-teal-600 transition-colors">
+          <span className="hidden sm:inline text-lg lg:text-xl font-bold text-white group-hover:text-emerald-100 transition-colors truncate">
             Modern Discussion Forum
+          </span>
+          <span className="sm:hidden text-base font-bold text-white group-hover:text-emerald-100 transition-colors truncate">
+            Forum
           </span>
         </Link>
 
-        <div className="flex items-center gap-4 flex-1 justify-center px-4">
-          <form onSubmit={handleSearch} className="hidden sm:block w-full max-w-xs">
+        <div className="hidden md:flex items-center gap-4 flex-1 justify-center px-4">
+          <form onSubmit={handleSearch} className="w-full max-w-xs">
             <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-700/70 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search discussions..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full pl-10 pr-3 py-2 bg-white/95 border border-white/60 rounded-xl text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-transparent"
               />
             </div>
           </form>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <NavigationLinks isActive={isActive} />
           <UserActions
             user={user}
@@ -472,6 +593,21 @@ export const Navbar = () => {
             isMobile={isMobile}
           />
         </div>
+      </div>
+
+      <div className="md:hidden px-3 pb-2">
+        <form onSubmit={handleSearch} className="w-full">
+          <div className="relative">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-700/70 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search discussions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-3 py-2.5 bg-white/95 border border-white/60 rounded-xl text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-transparent"
+            />
+          </div>
+        </form>
       </div>
 
       <MobileMenu

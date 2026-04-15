@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Components
 import { Navbar, Footer } from './components/LayoutComponents';
@@ -28,15 +28,57 @@ import Settings from './pages/Settings';
 import Notifications from './pages/Notifications';
 import Messages from './pages/Messages';
 
+/**
+ * PageLoadingBar — thin teal progress bar shown on every route change.
+ * Renders inside the Router so it can access useLocation.
+ */
+const PageLoadingBar = () => {
+  const location = useLocation();
+  const [visible, setVisible] = useState(false);
+  const [width, setWidth] = useState(0);
 
+  const animate = useCallback(() => {
+    setVisible(true);
+    setWidth(0);
+    // Quick jump to 70%, then slowly inch towards 95%
+    const t1 = setTimeout(() => setWidth(70), 20);
+    const t2 = setTimeout(() => setWidth(90), 300);
+    const t3 = setTimeout(() => {
+      setWidth(100);
+      const t4 = setTimeout(() => {
+        setVisible(false);
+        setWidth(0);
+      }, 300);
+      return () => clearTimeout(t4);
+    }, 700);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, []);
 
-// Create a component to handle conditional content layout
+  useEffect(() => {
+    const cleanup = animate();
+    return cleanup;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
+  if (!visible) return null;
+
+  return (
+    <div className="fixed top-0 left-0 right-0 z-[9999] h-0.5">
+      <div
+        className="h-full bg-teal-500 transition-all ease-out shadow-[0_0_8px_rgba(20,184,166,0.8)]"
+        style={{ width: `${width}%`, transitionDuration: width === 100 ? '200ms' : '600ms' }}
+      />
+    </div>
+  );
+};
+
 const ConditionalContent = () => {
   const location = useLocation();
   const isAdminPage = location.pathname.startsWith('/admin');
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
+      <PageLoadingBar />
       {/* Render navbar only for non-admin pages */}
       {!isAdminPage && <Navbar />}
 
@@ -100,6 +142,12 @@ const ConditionalContent = () => {
             </PrivateRoute>
           } />
 
+          <Route path="/chat" element={
+            <PrivateRoute>
+              <Messages />
+            </PrivateRoute>
+          } />
+
           {/* Admin Routes - All nested routes handled within AdminDashboard */}
           <Route path="/admin/*" element={
             <AdminRoute>
@@ -142,11 +190,35 @@ function App() {
     <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID || ''}>
       <AuthProvider>
         <Router>
-          <ConditionalContent />
+          <AppBootLoader />
         </Router>
       </AuthProvider>
     </GoogleOAuthProvider>
   );
 }
+
+/**
+ * AppBootLoader — waits for AuthContext to finish verifying the token
+ * then renders the main app. Prevents content flash on first load.
+ */
+const AppBootLoader = () => {
+  const { loading: authLoading } = useAuth();
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative w-12 h-12">
+            <div className="absolute inset-0 rounded-full border-4 border-teal-100" />
+            <div className="absolute inset-0 rounded-full border-4 border-t-teal-600 animate-spin" />
+          </div>
+          <p className="text-sm text-gray-500 font-medium">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <ConditionalContent />;
+};
 
 export default App;

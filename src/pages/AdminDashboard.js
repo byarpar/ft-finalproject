@@ -248,7 +248,7 @@ const AdminDashboard = () => {
             <div className="p-4 border-t border-teal-600">
               <div className="flex items-center space-x-3 mb-3">
                 <div
-                  className="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center flex-shrink-0"
+                  className="avatar-unified bg-teal-500"
                   aria-hidden="true"
                 >
                   <UserCircleIcon className="w-6 h-6" />

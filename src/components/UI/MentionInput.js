@@ -253,10 +253,10 @@ const MentionInput = forwardRef(({
                         <img
                           src={user.profile_photo_url}
                           alt={user.username}
-                          className="w-8 h-8 rounded-full object-cover bg-gray-100"
+                          className="avatar-unified bg-gray-100"
                         />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center">
+                        <div className="avatar-unified bg-teal-100">
                           <span className="text-teal-600 font-medium text-sm">
                             {(user.full_name || user.username).charAt(0).toUpperCase()}
                           </span>
