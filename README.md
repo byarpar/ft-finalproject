@@ -1,6 +1,11 @@
 # A Modern Discussion Forum — Frontend
 
-React SPA for A Modern Discussion Forum — a full-stack developer community discussion platform built as a BSc/MSc Computer Science final-year project.
+> **Final Year Project** — BSc Computer Science
+
+| Presenter | Student ID | Role |
+|-----------|------------|------|
+| Yuya Moe Thet | THE24639283 | Security & Backend Development |
+| Byar Par | PAR24639286 | Front & Backend Development |
 
 [![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4.18-38bdf8.svg)](https://tailwindcss.com/)
@@ -8,9 +13,47 @@ React SPA for A Modern Discussion Forum — a full-stack developer community dis
 
 ---
 
+## Problem Statement
+
+Developer communities are scattered across multiple platforms, making it difficult to find reliable programming discussions in one place. Many existing forums have outdated interfaces and poor user experience. Login systems are also vulnerable to brute force attacks, putting user accounts at risk.
+
+**Who benefits:** Developers · Computer Science Students · Tech Communities · Website Administrators
+
+---
+
+## Project Aim
+
+To develop a modern and secure online discussion forum where developers can share knowledge, ask questions, and collaborate safely.
+
+### Objectives
+
+- Develop a responsive web forum using modern technologies
+- Implement user registration and login authentication
+- Enable users to create and interact with discussion posts
+- Provide Google OAuth login functionality
+- Protect the login system using Fail2Ban to prevent brute force attacks
+- Monitor and block malicious IP addresses automatically
+
+---
+
+## Role Allocation
+
+**Yuya Moe Thet (THE24639283) — Security & Backend Development**
+- Configure Fail2Ban for brute force protection
+- Setup and manage server security
+- Assist with backend API development
+
+**Byar Par (PAR24639286) — Front & Backend Development**
+- Develop user interface using React.js
+- Design responsive layout with Tailwind CSS
+- Implement login and forum pages
+- Connect frontend to backend APIs
+
+---
+
 ## Overview
 
-**A Modern Discussion Forum** lowers contribution barriers for developers of all experience levels while maintaining discourse quality through architectural design rather than moderation rules.
+**A Modern Discussion Forum** provides a centralized platform for developers to share knowledge with a modern, responsive interface built with React.js and Tailwind CSS.
 
 **Key frontend features:**
 - Threaded discussions with voting, @mentions, and markdown rendering (DOMPurify-sanitised)

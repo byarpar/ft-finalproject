@@ -182,14 +182,25 @@ const UserProfile = () => {
   const PageWrapper = ({ children }) => (
     <PageLayout
       title={profile?.username || 'User Profile'}
-      description={profile?.bio ? profile.bio.substring(0, 100) : 'Community member profile'}
-      headerIcon={<QuestionMarkCircleIcon className="w-6 h-6 text-white" />}
-      showHeader={true}
       fullWidth={true}
-      background="bg-gray-50"
+      background=""
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
+      <div className="min-h-screen bg-gray-50">
+        <section className="border-b border-gray-200 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+            <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-3">
+              <Link to="/discussions" className="hover:text-teal-600 transition-colors">Form Questions</Link>
+              <span>/</span>
+              <span className="text-gray-700 font-medium">Members</span>
+            </nav>
+            <h1 className="app-title text-3xl sm:text-4xl text-gray-900">
+              {profile?.username || 'User Profile'}
+            </h1>
+          </div>
+        </section>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {children}
+        </div>
       </div>
     </PageLayout>
   );

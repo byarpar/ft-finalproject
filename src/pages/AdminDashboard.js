@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
   HomeIcon,
@@ -39,6 +39,7 @@ import { ReportsAnalytics } from '../components/AdminComponents';
 const AdminDashboard = () => {
   const { user, logout, loading: authLoading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
   const [searchQuery, setSearchQuery] = useState('');
   // eslint-disable-next-line no-unused-vars
@@ -57,8 +58,21 @@ const AdminDashboard = () => {
    */
   const handleSearch = useCallback((e) => {
     e.preventDefault();
-    // TODO: Implement global admin search
-  }, []);
+    const query = searchQuery.trim();
+    if (!query) return;
+
+    const targetBase = location.pathname.startsWith('/admin/users')
+      ? '/admin/users'
+      : '/admin/discussions';
+
+    navigate(`${targetBase}?search=${encodeURIComponent(query)}`);
+  }, [location.pathname, navigate, searchQuery]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const searchFromUrl = params.get('search') || '';
+    setSearchQuery(searchFromUrl);
+  }, [location.search]);
 
   // Handle responsive sidebar on window resize
   useEffect(() => {
@@ -79,7 +93,6 @@ const AdminDashboard = () => {
     return (
       <PageLayout
         title="Admin Dashboard - Loading"
-        description="Loading admin dashboard..."
         fullWidth={true}
         background=""
       >
@@ -180,7 +193,6 @@ const AdminDashboard = () => {
   return (
     <PageLayout
       title="Admin Dashboard - Modern Discussion Forum"
-      description="Administrative interface for managing Modern Discussion Forum users, content, and system settings"
       fullWidth={true}
       background=""
     >
@@ -284,7 +296,7 @@ const AdminDashboard = () => {
               <div className="flex items-center space-x-4 flex-1">
                 <button
                   onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors"
+                  className="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors"
                   aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
                   aria-expanded={sidebarOpen}
                 >
@@ -321,7 +333,7 @@ const AdminDashboard = () => {
                   href="/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center space-x-1 px-3 py-2 text-sm text-gray-600 hover:text-teal-600:text-teal-400 rounded-lg hover:bg-gray-100:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="flex items-center space-x-1 px-3 py-2 text-sm text-gray-600 hover:text-teal-600 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500"
                   aria-label="View public site (opens in new tab)"
                 >
                   <GlobeAltIcon className="w-5 h-5" aria-hidden="true" />
@@ -330,7 +342,7 @@ const AdminDashboard = () => {
 
                 {/* Notifications */}
                 <button
-                  className="relative p-2 text-gray-600 hover:bg-gray-100:bg-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500"
                   aria-label={notifications.length > 0 ? `${notifications.length} unread notifications` : 'Notifications'}
                 >
                   <BellIcon className="w-6 h-6" aria-hidden="true" />

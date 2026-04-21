@@ -235,7 +235,6 @@ const ForgotPassword = () => {
     return (
       <PageLayout
         title="Check Your Email - Lisu Dictionary"
-        description="Password reset link has been sent to your email address."
         background="bg-gray-50"
         fullWidth
       >
@@ -295,7 +294,6 @@ const ForgotPassword = () => {
   return (
     <PageLayout
       title="Forgot Password - Lisu Dictionary"
-      description="Reset your Lisu Dictionary password. Enter your email address to receive a password reset link."
       fullWidth={true}
       background="bg-gray-50"
     >

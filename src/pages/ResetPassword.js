@@ -211,7 +211,6 @@ const ResetPassword = () => {
     return (
       <PageLayout
         title="Password Reset Successful - Lisu Dictionary"
-        description="Your password has been successfully reset. You can now log in with your new password."
         background="bg-gradient-to-br from-gray-50 to-green-50"
         fullWidth
       >
@@ -276,7 +275,6 @@ const ResetPassword = () => {
   return (
     <PageLayout
       title="Reset Password - Lisu Dictionary"
-      description="Set a new password for your Lisu Dictionary account."
       fullWidth={true}
       background=""
     >

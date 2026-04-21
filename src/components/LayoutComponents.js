@@ -88,7 +88,7 @@ export const NavigationLinks = ({ isActive }) => {
         <>
           <Link
             to="/notifications"
-            className="relative p-2 text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors"
+            className={`relative p-2 rounded-lg transition-all duration-200 ${isActive('/notifications') ? 'bg-emerald-100 text-emerald-900' : 'text-slate-700 hover:text-emerald-700 hover:bg-emerald-50'}`}
             title="Notifications"
           >
             <BellIcon className="w-5 h-5" />
@@ -100,7 +100,7 @@ export const NavigationLinks = ({ isActive }) => {
           </Link>
           <Link
             to="/discussions/new"
-            className="p-2 text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors"
+            className="p-2 text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-all duration-200"
             title="Ask Question"
           >
             <QuestionMarkCircleIcon className="w-5 h-5" />
@@ -134,7 +134,7 @@ export const PageLayout = ({
     >
       {/* Teal gradient page header banner */}
       {showHeader && title && (
-        <div className="bg-gradient-to-r from-teal-700 to-teal-600">
+        <div className="bg-teal-600">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-4">
@@ -145,9 +145,6 @@ export const PageLayout = ({
                 )}
                 <div>
                   <h1 className="app-title text-2xl sm:text-3xl text-white">{title}</h1>
-                  {description && (
-                    <p className="app-subtitle mt-1 text-teal-100 text-sm sm:text-base max-w-2xl">{description}</p>
-                  )}
                 </div>
               </div>
               {headerActions && (
@@ -332,7 +329,7 @@ export const Footer = () => {
   };
 
   return (
-    <footer className="bg-gradient-to-r from-teal-800 to-teal-900 text-teal-50 border-t border-teal-700">
+    <footer className="bg-teal-800 text-teal-50 border-t border-teal-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           <div className="space-y-4">
@@ -437,15 +434,18 @@ export const UserActions = ({
       ) : (
         <>
           <div className="hidden md:flex items-center gap-2">
-            <Link to="/discussions" className="p-2 text-white hover:bg-white/15 rounded-md transition-colors">
+            <Link to="/messages" className="p-2 text-white hover:bg-white/15 rounded-md transition-colors">
               <ChatBubbleLeftRightIcon className="w-5 h-5" />
             </Link>
           </div>
           <div className="relative" ref={userDropdownRef}>
             <button
               onClick={() => setUserProfileDropdownOpen(!userProfileDropdownOpen)}
+              onKeyDown={(e) => e.key === 'Escape' && setUserProfileDropdownOpen(false)}
               className="flex items-center gap-2 px-2.5 py-2 text-white hover:bg-white/15 rounded-lg transition-colors"
               aria-label="Open user menu"
+              aria-expanded={userProfileDropdownOpen}
+              aria-haspopup="true"
             >
               <div className="avatar-unified bg-gradient-to-r from-emerald-400 to-teal-600 text-white text-sm font-bold ring-2 ring-white/50">
                 {user.username?.[0]?.toUpperCase() || '?'}
@@ -527,8 +527,11 @@ export const Navbar = () => {
   const isActive = (path) => {
     const { pathname } = location;
     if (path === '/users') {
-      // both '/users' and legacy '/discussions/members' should highlight
       return pathname === '/users' || pathname.startsWith('/users/') || pathname === '/discussions/members';
+    }
+    if (path === '/discussions') {
+      // exact match only — don't highlight Forum when creating a new discussion
+      return pathname === '/discussions' || (pathname.startsWith('/discussions/') && pathname !== '/discussions/new');
     }
     return pathname === path || pathname.startsWith(`${path}/`);
   };
@@ -550,7 +553,7 @@ export const Navbar = () => {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-emerald-800 via-teal-700 to-cyan-700 border-b border-white/15 shadow-lg relative backdrop-blur-sm">
+    <div className="fixed top-0 left-0 right-0 z-50 bg-teal-700 border-b border-white/15 shadow-lg relative backdrop-blur-sm">
       {isOpen && <div className="md:hidden fixed inset-0 top-[88px] bg-slate-900/20" onClick={() => setIsOpen(false)} aria-hidden="true" />}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-2">
         <Link to="/" className="flex items-center gap-2 group min-w-0">

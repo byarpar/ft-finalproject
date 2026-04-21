@@ -312,7 +312,6 @@ const Register = () => {
   return (
     <PageLayout
       title="Create Account - Lisu Dictionary"
-      description="Join the Lisu Dictionary community. Create your account to contribute, learn, and connect with others preserving the Lisu language."
       fullWidth
       background="bg-gray-50"
     >
