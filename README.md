@@ -120,7 +120,6 @@ frontend/
 │   ├── hooks/
 │   │   ├── useAuthForm.js
 │   │   ├── useClickOutside.js
-│   │   ├── useDebounce.js
 │   │   ├── useDiscussionThread.js
 │   │   └── useMobileDetect.js
 │   ├── pages/
@@ -144,15 +143,11 @@ frontend/
 │   │   └── ServerError.js
 │   ├── services/
 │   │   ├── api.js                   # Axios instance — Bearer token interceptor
-│   │   ├── adminAPI.js
-│   │   └── userService.js
+│   │   └── adminAPI.js
 │   ├── utils/
 │   │   ├── dateUtils.js
 │   │   ├── formHandlers.js
-│   │   ├── imageUtils.js            # normalizeImages() / normalizeAnswerImages()
-│   │   ├── markdownUtils.js         # Marked + DOMPurify sanitisation
 │   │   ├── mentionUtils.js          # extractMentions() + normalizeMentions()
-│   │   ├── navigationHelpers.js
 │   │   └── validation.js
 │   ├── App.js
 │   ├── index.js
