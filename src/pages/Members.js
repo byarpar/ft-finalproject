@@ -4,7 +4,9 @@ import { usersAPI } from '../services/api';
 import { Pagination } from '../components/UIComponents';
 import {
   MagnifyingGlassIcon,
-  UserGroupIcon
+  UserGroupIcon,
+  Squares2X2Icon,
+  ListBulletIcon
 } from '@heroicons/react/24/outline';
 import { CheckBadgeIcon } from '@heroicons/react/24/solid';
 import toast from 'react-hot-toast';
@@ -29,6 +31,7 @@ const Members = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState('DESC');
+  const [viewMode, setViewMode] = useState('grid');
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
 
@@ -98,55 +101,28 @@ const Members = () => {
   return (
     <PageLayout
       title="Community Members - Lisu Dictionary"
-      description="Connect with the Lisu Dictionary community. Meet fellow learners, native speakers, and language enthusiasts passionate about preserving the Lisu language."
       fullWidth={true}
       background=""
     >
-      <div className="min-h-screen bg-white">
-        {/* Header Section - Oxford Dictionary Style */}
-        <section className="relative overflow-hidden">
-          {/* Background Pattern */}
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{
-              backgroundImage: "url('https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=2532&auto=format&fit=crop')",
-            }}
-          />
-          {/* Enhanced overlay for better text readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-teal-900/90 via-teal-800/75 to-teal-700/60 sm:bg-gradient-to-r sm:from-teal-800/85 sm:via-teal-700/60 sm:to-teal-600/40" />
-
-
-
-          {/* Main Hero Content */}
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center min-h-[280px] sm:min-h-[320px]">
-              <div className="space-y-6 relative z-10 text-center sm:text-left">
-                <div>
-                  <h1 className="app-title text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-4 text-white drop-shadow-lg">
-                    Community Members
-                  </h1>
-                  <p className="app-subtitle text-base sm:text-lg md:text-xl text-white/90 max-w-lg mx-auto sm:mx-0 drop-shadow-md">
-                    Connect with fellow Lisu language learners and speakers
-                  </p>
-                </div>
-              </div>
-
-              <div className="relative lg:block hidden" />
-            </div>
-          </div>
-
-          {/* Bottom Wave */}
-          <div className="absolute bottom-0 left-0 right-0">
-            <svg className="w-full h-12 md:h-16" viewBox="0 0 1440 80" fill="none" preserveAspectRatio="none">
-              <path d="M0,32 Q360,64 720,32 T1440,32 L1440,80 L0,80 Z" className="fill-gray-50" />
-            </svg>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header Section - Title Only */}
+        <section className="border-b border-gray-200 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+            <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-3">
+              <Link to="/discussions" className="hover:text-teal-600 transition-colors">Form Questions</Link>
+              <span>/</span>
+              <span className="text-gray-700 font-medium">Members</span>
+            </nav>
+            <h1 className="app-title text-3xl sm:text-4xl md:text-5xl text-gray-900 text-center sm:text-left">
+              Community Members
+            </h1>
           </div>
         </section>
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
           {/* Search & Filter Section */}
-          <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-5 md:p-6 mb-4 sm:mb-6 lg:mb-8 border border-gray-200">
+          <div className="bg-white rounded-lg shadow-sm p-4 sm:p-5 md:p-6 mb-4 sm:mb-6 lg:mb-8 border border-gray-200">
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               {/* Search Bar */}
               <form onSubmit={handleSearch} className="flex-1">
@@ -195,6 +171,33 @@ const Members = () => {
                     Full Name (A-Z)
                   </option>
                 </select>
+
+                <div className="flex items-center rounded-lg border border-gray-300 bg-white p-1">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('grid')}
+                    className={`inline-flex items-center justify-center rounded-md p-2 transition-colors ${viewMode === 'grid'
+                      ? 'bg-teal-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    aria-label="Grid view"
+                    title="Grid view"
+                  >
+                    <Squares2X2Icon className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('list')}
+                    className={`inline-flex items-center justify-center rounded-md p-2 transition-colors ${viewMode === 'list'
+                      ? 'bg-teal-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    aria-label="List view"
+                    title="List view"
+                  >
+                    <ListBulletIcon className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -221,79 +224,145 @@ const Members = () => {
             </div>
           )}
 
-          {/* Members Grid */}
+          {/* Members Display */}
           {!loading && !error && members.length > 0 && (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-8">
-                {members.map((member) => (
-                  <Link
-                    key={member.id}
-                    to={`/users/${member.id}`}
-                    className="group"
-                  >
-                    <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-teal-500 hover:shadow-lg transition-all duration-300 text-center h-full">
-                      {/* Avatar */}
-                      <div className="mb-4 flex justify-center">
-                        <div className="relative inline-block">
-                          {member.profile_photo_url && member.profile_photo_url.trim() !== '' ? (
-                            <img
-                              src={member.profile_photo_url}
-                              alt={member.username}
-                              crossOrigin="anonymous"
-                              referrerPolicy="no-referrer"
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                                e.target.nextElementSibling.style.display = 'flex';
-                              }}
-                              className="avatar-unified ring-4 ring-gray-50 group-hover:ring-teal-50 transition-all"
-                            />
-                          ) : null}
-                          <div
-                            className="avatar-unified bg-teal-50 text-teal-600 text-2xl font-bold ring-4 ring-gray-50 group-hover:ring-teal-100 group-hover:bg-teal-100 transition-all"
-                            style={{ display: member.profile_photo_url && member.profile_photo_url.trim() !== '' ? 'none' : 'flex' }}
-                          >
-                            {getInitials(member.full_name || member.username)}
+              {viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-8">
+                  {members.map((member) => (
+                    <Link
+                      key={member.id}
+                      to={`/users/${member.id}`}
+                      className="group"
+                    >
+                      <div className="bg-white rounded-lg p-6 border border-gray-200 hover:border-teal-500 hover:shadow-sm transition-all duration-300 text-center h-full">
+                        {/* Avatar */}
+                        <div className="mb-4 flex justify-center">
+                          <div className="relative inline-block">
+                            {member.profile_photo_url && member.profile_photo_url.trim() !== '' ? (
+                              <img
+                                src={member.profile_photo_url}
+                                alt={member.username}
+                                crossOrigin="anonymous"
+                                referrerPolicy="no-referrer"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                  e.target.nextElementSibling.style.display = 'flex';
+                                }}
+                                className="avatar-unified ring-4 ring-gray-50 group-hover:ring-teal-50 transition-all"
+                              />
+                            ) : null}
+                            <div
+                              className="avatar-unified bg-teal-50 text-teal-600 text-2xl font-bold ring-4 ring-gray-50 group-hover:ring-teal-100 group-hover:bg-teal-100 transition-all"
+                              style={{ display: member.profile_photo_url && member.profile_photo_url.trim() !== '' ? 'none' : 'flex' }}
+                            >
+                              {getInitials(member.full_name || member.username)}
+                            </div>
+                            {member.role === 'admin' && (
+                              <CheckBadgeIcon className="w-5 h-5 text-red-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
+                            )}
                           </div>
-                          {member.role === 'admin' && (
-                            <CheckBadgeIcon className="w-5 h-5 text-red-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
-                          )}
                         </div>
-                      </div>
 
-                      {/* Name & Username */}
-                      <div className="mb-3">
-                        <h3 className="text-base font-bold text-gray-900 group-hover:text-teal-600 transition-colors line-clamp-1">
-                          {member.full_name || member.username}
-                        </h3>
-                        <p className="text-sm text-gray-500 line-clamp-1">@{member.username}</p>
-                      </div>
+                        {/* Name & Username */}
+                        <div className="mb-3">
+                          <h3 className="text-base font-bold text-gray-900 group-hover:text-teal-600 transition-colors line-clamp-1">
+                            {member.full_name || member.username}
+                          </h3>
+                          <p className="text-sm text-gray-500 line-clamp-1">@{member.username}</p>
+                        </div>
 
-                      {/* Stats Grid */}
-                      <div className="grid grid-cols-3 gap-3 py-3 border-t border-gray-100">
-                        <div>
-                          <div className="text-lg font-bold text-gray-900">{member.total_contributions || 0}</div>
-                          <div className="text-xs text-gray-500">Contributions</div>
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-3 gap-3 py-3 border-t border-gray-100">
+                          <div>
+                            <div className="text-lg font-bold text-gray-900">{member.total_contributions || 0}</div>
+                            <div className="text-xs text-gray-500">Contributions</div>
+                          </div>
+                          <div>
+                            <div className="text-lg font-bold text-gray-900">{member.discussion_count || 0}</div>
+                            <div className="text-xs text-gray-500">Discussions</div>
+                          </div>
+                          <div>
+                            <div className="text-lg font-bold text-gray-900">{member.reply_count || member.answers_posted || 0}</div>
+                            <div className="text-xs text-gray-500">Answers</div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="text-lg font-bold text-gray-900">{member.discussion_count || 0}</div>
-                          <div className="text-xs text-gray-500">Discussions</div>
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold text-gray-900">{member.reply_count || member.answers_posted || 0}</div>
-                          <div className="text-xs text-gray-500">Answers</div>
-                        </div>
-                      </div>
 
-                      {/* Joined Date */}
-                      <div className="mt-3 pt-3 border-t border-gray-100">
-                        <p className="text-xs text-gray-500">
-                          Joined {formatDate(member.created_at)}
-                        </p>
+                        {/* Joined Date */}
+                        <div className="mt-3 pt-3 border-t border-gray-100">
+                          <p className="text-xs text-gray-500">
+                            Joined {formatDate(member.created_at)}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-3 mb-8">
+                  {members.map((member) => (
+                    <Link
+                      key={member.id}
+                      to={`/users/${member.id}`}
+                      className="group block"
+                    >
+                      <div className="bg-white rounded-lg p-4 border border-gray-200 hover:border-teal-500 hover:shadow-sm transition-all duration-200">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="relative inline-block flex-shrink-0">
+                              {member.profile_photo_url && member.profile_photo_url.trim() !== '' ? (
+                                <img
+                                  src={member.profile_photo_url}
+                                  alt={member.username}
+                                  crossOrigin="anonymous"
+                                  referrerPolicy="no-referrer"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextElementSibling.style.display = 'flex';
+                                  }}
+                                  className="avatar-unified"
+                                />
+                              ) : null}
+                              <div
+                                className="avatar-unified bg-teal-50 text-teal-600 text-lg font-bold"
+                                style={{ display: member.profile_photo_url && member.profile_photo_url.trim() !== '' ? 'none' : 'flex' }}
+                              >
+                                {getInitials(member.full_name || member.username)}
+                              </div>
+                              {member.role === 'admin' && (
+                                <CheckBadgeIcon className="w-5 h-5 text-red-600 absolute -bottom-1 -right-1 bg-white rounded-full" />
+                              )}
+                            </div>
+
+                            <div className="min-w-0">
+                              <h3 className="text-base font-bold text-gray-900 group-hover:text-teal-600 transition-colors truncate">
+                                {member.full_name || member.username}
+                              </h3>
+                              <p className="text-sm text-gray-500 truncate">@{member.username}</p>
+                              <p className="text-xs text-gray-500 mt-1">Joined {formatDate(member.created_at)}</p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-3 sm:gap-5 text-center sm:min-w-[260px]">
+                            <div>
+                              <div className="text-base font-bold text-gray-900">{member.total_contributions || 0}</div>
+                              <div className="text-xs text-gray-500">Contributions</div>
+                            </div>
+                            <div>
+                              <div className="text-base font-bold text-gray-900">{member.discussion_count || 0}</div>
+                              <div className="text-xs text-gray-500">Discussions</div>
+                            </div>
+                            <div>
+                              <div className="text-base font-bold text-gray-900">{member.reply_count || member.answers_posted || 0}</div>
+                              <div className="text-xs text-gray-500">Answers</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
 
               {/* Pagination */}
               {pagination && pagination.total_pages > 1 && (
@@ -310,7 +379,7 @@ const Members = () => {
 
           {/* Empty State */}
           {!loading && !error && members.length === 0 && (
-            <div className="text-center py-12 sm:py-16 lg:py-20 bg-white rounded-lg sm:rounded-xl border border-gray-200 px-4">
+            <div className="text-center py-12 sm:py-16 lg:py-20 bg-white rounded-lg border border-gray-200 px-4">
               <div className="flex justify-center mb-3 sm:mb-4">
                 <div className="bg-gray-100 p-4 sm:p-5 lg:p-6 rounded-full">
                   <UserGroupIcon className="h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16 text-gray-400" />

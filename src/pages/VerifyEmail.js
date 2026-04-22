@@ -261,7 +261,6 @@ const VerifyEmail = () => {
   return (
     <PageLayout
       title="Verify Email - Lisu Dictionary"
-      description="Verify your email address to activate your Lisu Dictionary account and access all features."
       fullWidth={true}
       background=""
     >

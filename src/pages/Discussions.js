@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { discussionsAPI, usersAPI } from '../services/api';
 import { Pagination } from '../components/UIComponents';
@@ -10,7 +10,10 @@ import {
   EyeIcon,
   QuestionMarkCircleIcon,
   Squares2X2Icon,
-  ListBulletIcon
+  ListBulletIcon,
+  ArrowUpIcon,
+  XCircleIcon,
+  PlusIcon
 } from '@heroicons/react/24/outline';
 import {
   BookmarkIcon as BookmarkSolidIcon,
@@ -47,6 +50,9 @@ const Discussions = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [layoutView, setLayoutView] = useState('grid'); // 'grid' or 'list'
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  const location = useLocation();
 
   const fetchDiscussions = useCallback(async () => {
     try {
@@ -197,6 +203,25 @@ const Discussions = () => {
     fetchDiscussions();
   }, [fetchDiscussions]);
 
+  // URL sync — no trailing "?" when no params
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('search', searchQuery);
+    if (selectedCategory !== 'all') params.set('category', selectedCategory);
+    if (sortBy !== 'latest') params.set('sort', sortBy);
+    if (page > 1) params.set('page', String(page));
+    const qs = params.toString();
+    const newPath = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    window.history.replaceState(null, '', newPath);
+  }, [searchQuery, selectedCategory, sortBy, page]);
+
+  // Back-to-top visibility
+  useEffect(() => {
+    const onScroll = () => setShowBackToTop(window.scrollY > 400);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   const handleSaveDiscussion = async (discussionId, isSaved) => {
     if (!user) {
       toast.error('Please login to save discussions');
@@ -231,70 +256,31 @@ const Discussions = () => {
   return (
     <PageLayout
       title="Community Discussions - Lisu Dictionary"
-      description="Join discussions about Lisu language, culture, and translations. Share knowledge and connect with the community."
       fullWidth={true}
       background=""
     >
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-teal-50 transition-colors duration-200">
-        {/* Header Section - Oxford Dictionary Style */}
-        <section className="relative overflow-hidden">
-          {/* Background Pattern */}
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{
-              backgroundImage: 'url("/images/hero/Discussions.png")',
-            }}
-          />
-          {/* Enhanced overlay for better text readability on mobile */}
-          <div className="absolute inset-0 bg-gradient-to-b from-gray-900/90 via-gray-800/75 to-gray-700/60 sm:bg-gradient-to-r sm:from-gray-800/85 sm:via-gray-700/60 sm:to-gray-600/40" />
-
-
-
-          {/* Main Hero Content */}
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center min-h-[280px] sm:min-h-[320px]">
-              <div className="space-y-6 relative z-10 text-center sm:text-left">
-                <div>
-                  <h1 className="app-title text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-4 text-white drop-shadow-lg">
-                    Questions &
-                    <span className="block text-white">Answers</span>
-                  </h1>
-                  <p className="app-subtitle text-base sm:text-lg md:text-xl text-white/90 max-w-lg mx-auto sm:mx-0 drop-shadow-md">
-                    Ask questions and get help from the Lisu learning community
-                  </p>
-                </div>
-
-                <div className="pt-4">
-                  <Link
-                    to={user ? "/discussions/new" : "/login"}
-                    onClick={() => {
-                      if (!user) {
-                        toast.error('Please login to ask a question');
-                      }
-                    }}
-                    className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-base rounded-xl transition-colors shadow-xl"
-                  >
-                    <QuestionMarkCircleIcon className="w-5 h-5" />
-                    Ask Question
-                  </Link>
-                </div>
-              </div>
-
-              <div className="relative lg:block hidden" />
-            </div>
-          </div>
-
-          {/* Bottom Wave */}
-          <div className="absolute bottom-0 left-0 right-0">
-            <svg className="w-full h-12 md:h-16" viewBox="0 0 1440 80" fill="none" preserveAspectRatio="none">
-              <path d="M0,32 Q360,64 720,32 T1440,32 L1440,80 L0,80 Z" className="fill-gray-50" />
-            </svg>
+      <div className="min-h-screen bg-gray-50 transition-colors duration-200">
+        {/* Header Section - Title Only */}
+        <section className="border-b border-gray-200 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 flex items-center justify-between">
+            <h1 className="app-title text-3xl sm:text-4xl md:text-5xl text-gray-900">
+              Form Questions
+            </h1>
+            {user && (
+              <Link
+                to="/discussions/new"
+                className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors"
+              >
+                <PlusIcon className="w-4 h-4" />
+                Ask Question
+              </Link>
+            )}
           </div>
         </section>
 
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-          {/* Unique Filtering Section - Card-Based Design */}
-          <div className="mb-6 space-y-4">
+          {/* Sticky Filtering Section */}
+          <div className="sticky top-14 z-30 bg-gray-50 -mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8 px-3 sm:px-4 md:px-6 lg:px-8 pb-4 mb-6 space-y-3 pt-2">
             {/* Category Pills - Horizontal Scroll */}
             <div className="bg-white rounded-lg border border-gray-200 p-4">
               <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide">
@@ -317,6 +303,47 @@ const Discussions = () => {
                 })}
               </div>
             </div>
+
+            {/* Search & Controls Row */}
+            {/* Active Filter Chips */}
+            {(searchQuery || selectedCategory !== 'all' || sortBy !== 'latest') && (
+              <div className="flex flex-wrap items-center gap-2 px-1">
+                <span className="text-xs text-gray-500 font-medium">Active filters:</span>
+                {selectedCategory !== 'all' && (
+                  <button
+                    onClick={() => { setSelectedCategory('all'); setPage(1); }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-teal-100 text-teal-800 text-xs font-medium rounded-full border border-teal-200 hover:bg-teal-200 transition-colors"
+                  >
+                    Category: {selectedCategory}
+                    <XCircleIcon className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {sortBy !== 'latest' && (
+                  <button
+                    onClick={() => { setSortBy('latest'); setPage(1); }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full border border-blue-200 hover:bg-blue-200 transition-colors"
+                  >
+                    Sort: {sortBy === 'popular' ? 'Most Popular' : sortBy === 'views' ? 'Most Viewed' : 'Newest First'}
+                    <XCircleIcon className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {searchQuery && (
+                  <button
+                    onClick={() => { setSearchQuery(''); setPage(1); }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full border border-purple-200 hover:bg-purple-200 transition-colors"
+                  >
+                    Search: "{searchQuery}"
+                    <XCircleIcon className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                <button
+                  onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSortBy('latest'); setPage(1); }}
+                  className="text-xs text-gray-500 hover:text-red-600 underline ml-1 transition-colors"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
 
             {/* Search & Controls Row */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
@@ -402,7 +429,7 @@ const Discussions = () => {
                 </button>
               </div>
             ) : discussions.length === 0 ? (
-              <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-sm p-12 sm:p-16 text-center border-2 border-dashed border-gray-300">
+              <div className="bg-white rounded-lg shadow-sm p-12 sm:p-16 text-center border border-gray-200 border-dashed">
                 <div className="max-w-md mx-auto">
                   <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-teal-100 to-cyan-100 flex items-center justify-center">
                     <ChatBubbleLeftRightIcon className="w-10 h-10 text-teal-600" />
@@ -418,7 +445,7 @@ const Discussions = () => {
                   {user && !searchQuery && (
                     <Link
                       to="/discussions/new"
-                      className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white rounded-xl font-semibold shadow-lg transition-colors"
+                      className="inline-flex items-center gap-2 px-8 py-3.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-semibold shadow-sm transition-colors"
                     >
                       <QuestionMarkCircleIcon className="w-5 h-5" />
                       Ask Your Question
@@ -452,7 +479,7 @@ const Discussions = () => {
                             className="block"
                           >
                             <article
-                              className="bg-white rounded-xl border-2 border-gray-200 hover:border-teal-500 overflow-hidden transition-all cursor-pointer h-full flex flex-col"
+                              className="bg-white rounded-lg border border-gray-200 hover:border-teal-500 hover:shadow-md overflow-hidden transition-all cursor-pointer h-full flex flex-col"
                             >
                               <div className="p-4 flex-1 flex flex-col">
                                 {/* Meta Row */}
@@ -513,10 +540,10 @@ const Discussions = () => {
                                   {discussion.title}
                                 </h3>
 
-                                {/* Content Preview */}
-                                <div className="text-sm text-gray-600 mb-3 line-clamp-6 prose prose-sm max-w-none text-justify flex-1">
+                                {/* Content Preview - compact in grid */}
+                                <div className="text-sm text-gray-500 mb-3 line-clamp-3 prose prose-sm max-w-none flex-1">
                                   <MentionRenderer
-                                    content={(discussion.content || '').substring(0, 400) + ((discussion.content || '').length > 400 ? '...' : '')}
+                                    content={(discussion.content || '').substring(0, 200) + ((discussion.content || '').length > 200 ? '...' : '')}
                                     theme="teal"
                                     renderMarkdown={true}
                                   />
@@ -593,7 +620,7 @@ const Discussions = () => {
                             className="block"
                           >
                             <article
-                              className="bg-white rounded-xl border-2 border-gray-200 hover:border-teal-500 overflow-hidden transition-all cursor-pointer"
+                              className="bg-white rounded-lg border border-gray-200 hover:border-teal-500 overflow-hidden transition-all cursor-pointer"
                             >
                               <div className="p-4">
                                 {/* Meta Row */}
@@ -927,6 +954,28 @@ const Discussions = () => {
           )}
         </div>
       </div>
+
+      {/* Mobile FAB — Ask Question */}
+      {user && (
+        <Link
+          to="/discussions/new"
+          className="md:hidden fixed bottom-6 right-6 z-40 w-14 h-14 bg-teal-600 hover:bg-teal-700 text-white rounded-full shadow-lg flex items-center justify-center transition-colors"
+          aria-label="Ask a question"
+        >
+          <PlusIcon className="w-6 h-6" />
+        </Link>
+      )}
+
+      {/* Back-to-Top */}
+      {showBackToTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className={`fixed ${user ? 'bottom-24 md:bottom-6' : 'bottom-6'} right-6 z-40 w-10 h-10 bg-white border border-gray-200 text-gray-600 hover:bg-teal-50 hover:text-teal-600 hover:border-teal-300 rounded-full shadow-md flex items-center justify-center transition-all`}
+          aria-label="Back to top"
+        >
+          <ArrowUpIcon className="w-4 h-4" />
+        </button>
+      )}
     </PageLayout>
   );
 };

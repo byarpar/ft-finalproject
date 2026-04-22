@@ -305,7 +305,6 @@ const Login = () => {
   return (
     <PageLayout
       title="Log In - Modern Discussion Forum"
-      description="Log in to your Modern Discussion Forum account to access personalized features, contribute to the developer community, and continue your coding journey."
       fullWidth
       background="bg-gray-50"
     >

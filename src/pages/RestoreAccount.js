@@ -108,7 +108,6 @@ const RestoreAccount = () => {
   return (
     <PageLayout
       title="Restore Account - Lisu Dictionary"
-      description="Restore your deleted Lisu Dictionary account within the grace period."
       background="bg-gradient-to-br from-blue-50 to-indigo-50"
       fullWidth
     >

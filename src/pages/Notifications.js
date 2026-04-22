@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { PageLayout } from '../components/LayoutComponents';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   BellIcon,
   CheckIcon,
@@ -191,246 +191,255 @@ const Notifications = () => {
   return (
     <PageLayout
       title="Notifications"
-      description="Stay up to date with activity, replies, and mentions"
-      headerIcon={<BellIcon className="w-6 h-6 text-white" />}
-      headerActions={
-        <div className="flex items-center gap-3">
-          <button
-            onClick={fetchNotifications}
-            className="px-3 py-2 text-sm font-medium text-white border border-white/40 hover:bg-white/10 rounded-lg transition-colors"
-            title="Refresh notifications"
-          >
-            <ArrowPathIcon className="w-4 h-4" />
-          </button>
-          {unreadCount > 0 && (
-            <span className="px-2.5 py-1 bg-white/20 text-white text-sm font-semibold rounded-full">
-              {unreadCount} unread
-            </span>
-          )}
-          {unreadCount > 0 && (
-            <button
-              onClick={markAllAsRead}
-              className="px-4 py-2 text-sm font-medium text-white border border-white/40 hover:bg-white/10 rounded-lg transition-colors"
-            >
-              Mark all read
-            </button>
-          )}
-        </div>
-      }
-      showHeader={true}
       fullWidth={true}
-      background="bg-gray-50"
+      background=""
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm">
-            <p className="text-xs text-gray-500">Total</p>
-            <p className="text-xl font-bold text-gray-900 mt-1">{notifications.length}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm">
-            <p className="text-xs text-gray-500">Unread</p>
-            <p className="text-xl font-bold text-teal-700 mt-1">{unreadCount}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm">
-            <p className="text-xs text-gray-500">Read</p>
-            <p className="text-xl font-bold text-gray-700 mt-1">{readCount}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm">
-            <p className="text-xs text-gray-500">Read Rate</p>
-            <p className="text-xl font-bold text-emerald-700 mt-1">
-              {notifications.length ? Math.round((readCount / notifications.length) * 100) : 0}%
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Sticky toolbar */}
-      <div className="bg-white border-b border-gray-200 sticky top-14 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex gap-1 overflow-x-auto">
-            {[
-              { key: 'all', label: 'All' },
-              { key: 'unread', label: 'Unread', count: unreadCount },
-              { key: 'read', label: 'Read' },
-            ].map(({ key, label, count }) => (
-              <button
-                key={key}
-                onClick={() => setFilter(key)}
-                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${filter === key
-                  ? 'bg-teal-600 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-              >
-                {label}
-                {count > 0 && (
-                  <span className={`px-1.5 py-0.5 rounded-full text-xs font-semibold ${filter === key ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-600'}`}>
-                    {count}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-            <div className="relative w-full sm:w-64">
-              <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search notifications"
-                className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-teal-400"
-              />
-            </div>
-            <div className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="bg-transparent text-sm text-gray-700 focus:outline-none"
-              >
-                <option value="all">All types</option>
-                <option value="mention">Mention</option>
-                <option value="answer">Answer</option>
-                <option value="reply">Reply</option>
-                <option value="vote">Vote</option>
-                <option value="follow">Follow</option>
-                <option value="system">System</option>
-              </select>
-            </div>
-            <div className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
-              <ArrowsUpDownIcon className="w-4 h-4 text-gray-400" />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="bg-transparent text-sm text-gray-700 focus:outline-none"
-              >
-                <option value="newest">Newest first</option>
-                <option value="oldest">Oldest first</option>
-                <option value="unread-first">Unread first</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Notifications List */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {loading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white rounded-lg shadow-sm p-5 animate-pulse flex gap-4">
-                <div className="w-10 h-10 rounded-lg bg-gray-200 flex-shrink-0" />
-                <div className="flex-1">
-                  <div className="h-4 bg-gray-200 rounded mb-2 w-2/3" />
-                  <div className="h-3 bg-gray-100 rounded w-full" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : sortedNotifications.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm p-8 sm:p-12 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-              <SparklesIcon className="w-8 h-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {filter === 'unread' ? 'No unread notifications' : 'No notifications found'}
-            </h3>
-            <p className="text-gray-500 text-sm">
-              {query ? 'Try a different search keyword' : filter === 'unread' ? "You're all caught up!" : 'Check back later for updates'}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-5">
-            {['Today', 'This Week', 'Earlier'].map((section) => (
-              grouped[section]?.length ? (
-                <div key={section}>
-                  <div className="flex items-center gap-2 mb-3">
-                    {section === 'Today' ? <BoltIcon className="w-4 h-4 text-teal-600" /> : <ClockIcon className="w-4 h-4 text-gray-400" />}
-                    <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">{section}</h3>
-                    <span className="text-xs text-gray-400">{grouped[section].length}</span>
-                  </div>
-
-                  <div className="space-y-3 sm:space-y-4">
-                    {grouped[section].map(notif => (
-                      (() => {
-                        const relatedPath = resolveRelatedPath(notif);
-                        return (
-                          <div
-                            key={notif.id}
-                            className={`bg-white rounded-lg shadow-sm p-4 sm:p-5 border-l-4 transition-all hover:shadow-md ${notif.is_read ? 'border-gray-200' : 'border-teal-500'}`}
-                          >
-                            <div className="flex gap-4">
-                              <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${getNotificationIcon(notif.type)}`}>
-                                {notif.type === 'mention' && <BellIcon className="w-5 h-5" />}
-                                {(notif.type === 'answer' || notif.type === 'reply' || notif.type === 'vote') && <CheckIcon className="w-5 h-5" />}
-                                {(notif.type === 'follow' || !['mention', 'answer', 'reply', 'vote'].includes(notif.type)) && <SparklesIcon className="w-5 h-5" />}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-start justify-between gap-2">
-                                  <div className="flex-1">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                      <h3 className={`text-sm sm:text-base font-semibold ${notif.is_read ? 'text-gray-700' : 'text-gray-900'}`}>{notif.title}</h3>
-                                      {!notif.is_read && <span className="flex-shrink-0 w-2 h-2 bg-teal-500 rounded-full" />}
-                                      <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 text-gray-600 uppercase tracking-wide">{notif.type || 'update'}</span>
-                                    </div>
-                                    {notif.message && <p className="text-sm text-gray-600 mt-1">{notif.message}</p>}
-                                    <p className="text-xs text-gray-400 mt-2">{getTimeAgo(notif.created_at)}</p>
-                                    {relatedPath && (
-                                      <button
-                                        onClick={() => navigate(relatedPath)}
-                                        className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-teal-700 hover:text-teal-800"
-                                      >
-                                        View related
-                                        <ArrowTopRightOnSquareIcon className="w-3.5 h-3.5" />
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex-shrink-0 flex gap-1">
-                                {!notif.is_read && (
-                                  <button onClick={() => markAsRead(notif.id)} className="p-2 text-gray-400 hover:text-teal-700 hover:bg-teal-50 rounded-md transition-colors" title="Mark as read">
-                                    <CheckIcon className="w-4 h-4" />
-                                  </button>
-                                )}
-                                <button onClick={() => deleteNotification(notif.id)} className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors" title="Delete">
-                                  <TrashIcon className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })()
-                    ))}
-                  </div>
-                </div>
-              ) : null
-            ))}
-
-            <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <p className="text-xs text-gray-500">
-                Showing page {pagination.page} of {pagination.totalPages} ({pagination.total} total)
-              </p>
+      <div className="min-h-screen bg-gray-50">
+        <section className="border-b border-gray-200 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+            <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-3">
+              <Link to="/discussions" className="hover:text-teal-600 transition-colors">Form Questions</Link>
+              <span>/</span>
+              <span className="text-gray-700 font-medium">Notifications</span>
+            </nav>
+            <div className="flex items-center justify-between">
+              <h1 className="app-title text-3xl sm:text-4xl text-gray-900">Notifications</h1>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
-                  disabled={!pagination.hasPrev || loading}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                  onClick={fetchNotifications}
+                  className="p-2 text-gray-500 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                  title="Refresh notifications"
                 >
-                  <ChevronLeftIcon className="w-4 h-4" />
-                  Prev
+                  <ArrowPathIcon className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-                  disabled={!pagination.hasNext || loading}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50"
-                >
-                  Next
-                  <ChevronRightIcon className="w-4 h-4" />
-                </button>
+                {unreadCount > 0 && (
+                  <span className="px-2.5 py-1 bg-teal-100 text-teal-700 text-sm font-semibold rounded-full">
+                    {unreadCount} unread
+                  </span>
+                )}
+                {unreadCount > 0 && (
+                  <button
+                    onClick={markAllAsRead}
+                    className="px-3 py-1.5 text-sm font-medium text-teal-700 border border-teal-300 hover:bg-teal-50 rounded-lg transition-colors"
+                  >
+                    Mark all read
+                  </button>
+                )}
               </div>
             </div>
           </div>
-        )}
+        </section>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="bg-white rounded-lg border border-gray-200 px-4 py-3 shadow-sm">
+              <p className="text-xs text-gray-500">Total</p>
+              <p className="text-xl font-bold text-gray-900 mt-1">{notifications.length}</p>
+            </div>
+            <div className="bg-white rounded-lg border border-gray-200 px-4 py-3 shadow-sm">
+              <p className="text-xs text-gray-500">Unread</p>
+              <p className="text-xl font-bold text-teal-700 mt-1">{unreadCount}</p>
+            </div>
+            <div className="bg-white rounded-lg border border-gray-200 px-4 py-3 shadow-sm">
+              <p className="text-xs text-gray-500">Read</p>
+              <p className="text-xl font-bold text-gray-700 mt-1">{readCount}</p>
+            </div>
+            <div className="bg-white rounded-lg border border-gray-200 px-4 py-3 shadow-sm">
+              <p className="text-xs text-gray-500">Read Rate</p>
+              <p className="text-xl font-bold text-emerald-700 mt-1">
+                {notifications.length ? Math.round((readCount / notifications.length) * 100) : 0}%
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Sticky toolbar */}
+        <div className="bg-white border-b border-gray-200 sticky top-14 z-40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex gap-1 overflow-x-auto">
+              {[
+                { key: 'all', label: 'All' },
+                { key: 'unread', label: 'Unread', count: unreadCount },
+                { key: 'read', label: 'Read' },
+              ].map(({ key, label, count }) => (
+                <button
+                  key={key}
+                  onClick={() => setFilter(key)}
+                  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${filter === key
+                    ? 'bg-teal-600 text-white'
+                    : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                >
+                  {label}
+                  {count > 0 && (
+                    <span className={`px-1.5 py-0.5 rounded-full text-xs font-semibold ${filter === key ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+              <div className="relative w-full sm:w-64">
+                <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search notifications"
+                  className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-teal-400"
+                />
+              </div>
+              <div className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                  className="bg-transparent text-sm text-gray-700 focus:outline-none"
+                >
+                  <option value="all">All types</option>
+                  <option value="mention">Mention</option>
+                  <option value="answer">Answer</option>
+                  <option value="reply">Reply</option>
+                  <option value="vote">Vote</option>
+                  <option value="follow">Follow</option>
+                  <option value="system">System</option>
+                </select>
+              </div>
+              <div className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+                <ArrowsUpDownIcon className="w-4 h-4 text-gray-400" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="bg-transparent text-sm text-gray-700 focus:outline-none"
+                >
+                  <option value="newest">Newest first</option>
+                  <option value="oldest">Oldest first</option>
+                  <option value="unread-first">Unread first</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Notifications List */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          {loading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="bg-white rounded-lg shadow-sm p-5 animate-pulse flex gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-gray-200 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="h-4 bg-gray-200 rounded mb-2 w-2/3" />
+                    <div className="h-3 bg-gray-100 rounded w-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : sortedNotifications.length === 0 ? (
+            <div className="bg-white rounded-lg shadow-sm p-8 sm:p-12 text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                <SparklesIcon className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {filter === 'unread' ? 'No unread notifications' : 'No notifications found'}
+              </h3>
+              <p className="text-gray-500 text-sm">
+                {query ? 'Try a different search keyword' : filter === 'unread' ? "You're all caught up!" : 'Check back later for updates'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {['Today', 'This Week', 'Earlier'].map((section) => (
+                grouped[section]?.length ? (
+                  <div key={section}>
+                    <div className="flex items-center gap-2 mb-3">
+                      {section === 'Today' ? <BoltIcon className="w-4 h-4 text-teal-600" /> : <ClockIcon className="w-4 h-4 text-gray-400" />}
+                      <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">{section}</h3>
+                      <span className="text-xs text-gray-400">{grouped[section].length}</span>
+                    </div>
+
+                    <div className="space-y-3 sm:space-y-4">
+                      {grouped[section].map(notif => (
+                        (() => {
+                          const relatedPath = resolveRelatedPath(notif);
+                          return (
+                            <div
+                              key={notif.id}
+                              className={`bg-white rounded-lg shadow-sm p-4 sm:p-5 border-l-4 transition-all hover:shadow-md ${notif.is_read ? 'border-gray-200' : 'border-teal-500'}`}
+                            >
+                              <div className="flex gap-4">
+                                <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${getNotificationIcon(notif.type)}`}>
+                                  {notif.type === 'mention' && <BellIcon className="w-5 h-5" />}
+                                  {(notif.type === 'answer' || notif.type === 'reply' || notif.type === 'vote') && <CheckIcon className="w-5 h-5" />}
+                                  {(notif.type === 'follow' || !['mention', 'answer', 'reply', 'vote'].includes(notif.type)) && <SparklesIcon className="w-5 h-5" />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="flex-1">
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        <h3 className={`text-sm sm:text-base font-semibold ${notif.is_read ? 'text-gray-700' : 'text-gray-900'}`}>{notif.title}</h3>
+                                        {!notif.is_read && <span className="flex-shrink-0 w-2 h-2 bg-teal-500 rounded-full" />}
+                                        <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 text-gray-600 uppercase tracking-wide">{notif.type || 'update'}</span>
+                                      </div>
+                                      {notif.message && <p className="text-sm text-gray-600 mt-1">{notif.message}</p>}
+                                      <p className="text-xs text-gray-400 mt-2">{getTimeAgo(notif.created_at)}</p>
+                                      {relatedPath && (
+                                        <button
+                                          onClick={() => navigate(relatedPath)}
+                                          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-teal-700 hover:text-teal-800"
+                                        >
+                                          View related
+                                          <ArrowTopRightOnSquareIcon className="w-3.5 h-3.5" />
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex-shrink-0 flex gap-1">
+                                  {!notif.is_read && (
+                                    <button onClick={() => markAsRead(notif.id)} className="p-2 text-gray-400 hover:text-teal-700 hover:bg-teal-50 rounded-md transition-colors" title="Mark as read">
+                                      <CheckIcon className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                  <button onClick={() => deleteNotification(notif.id)} className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors" title="Delete">
+                                    <TrashIcon className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()
+                      ))}
+                    </div>
+                  </div>
+                ) : null
+              ))}
+
+              <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <p className="text-xs text-gray-500">
+                  Showing page {pagination.page} of {pagination.totalPages} ({pagination.total} total)
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
+                    disabled={!pagination.hasPrev || loading}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    <ChevronLeftIcon className="w-4 h-4" />
+                    Prev
+                  </button>
+                  <button
+                    onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                    disabled={!pagination.hasNext || loading}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Next
+                    <ChevronRightIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </PageLayout>
   );

@@ -23,7 +23,6 @@ const NotFound = () => {
   return (
     <PageLayout
       title="404 - Page Not Found"
-      description="The page you're looking for doesn't exist."
     >
       <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
         <div className="text-center max-w-2xl">
@@ -50,7 +49,7 @@ const NotFound = () => {
             {/* Go Back Button */}
             <button
               onClick={() => navigate(-1)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-300:bg-gray-600 text-gray-900 font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
               aria-label="Go back to previous page"
             >
               <ArrowLeftIcon className="w-5 h-5" />
@@ -84,9 +83,6 @@ const NotFound = () => {
               Here are some helpful links instead:
             </p>
             <div className="flex flex-wrap gap-4 justify-center text-sm">
-              <Link to="/" className="text-teal-600">
-                Home
-              </Link>
               <Link to="/" className="text-teal-600">
                 Home
               </Link>

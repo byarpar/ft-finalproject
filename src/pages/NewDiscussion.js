@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { discussionsAPI } from '../services/api';
 import {
@@ -462,25 +462,46 @@ const NewDiscussion = () => {
     }
   }, [formData.title, formData.content, navigate]);
 
+  // Cmd+Enter / Ctrl+Enter to submit
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        if (!isSubmitting) handleSubmit(e);
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [handleSubmit, isSubmitting]);
+
   if (loading) {
     return (
       <PageLayout
         title="Ask a Question"
-        description="Share a question or start a discussion with the community."
-        headerIcon={<PlusIcon className="w-6 h-6 text-white" />}
-        showHeader={true}
         fullWidth={true}
-        background="bg-gray-50"
+        background=""
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <SkeletonLoader variant="form-field" count={5} />
-              </div>
+        <div className="min-h-screen bg-gray-50">
+          <section className="border-b border-gray-200 bg-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+              <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-3">
+                <Link to="/discussions" className="hover:text-teal-600 transition-colors">Form Questions</Link>
+                <span>/</span>
+                <span className="text-gray-700 font-medium">Ask a Question</span>
+              </nav>
+              <h1 className="app-title text-3xl sm:text-4xl text-gray-900">Ask a Question</h1>
             </div>
-            <div className="lg:col-span-1">
-              <SkeletonLoader variant="card" count={1} />
+          </section>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <SkeletonLoader variant="form-field" count={5} />
+                </div>
+              </div>
+              <div className="lg:col-span-1">
+                <SkeletonLoader variant="card" count={1} />
+              </div>
             </div>
           </div>
         </div>
@@ -491,621 +512,633 @@ const NewDiscussion = () => {
   return (
     <PageLayout
       title={editMode ? 'Edit Discussion' : 'Ask a Question'}
-      description={editMode ? 'Update your discussion with the community.' : 'Share a question or start a discussion with the community.'}
-      headerIcon={<PlusIcon className="w-6 h-6 text-white" />}
-      headerActions={user && (
-        <p className="text-sm text-teal-100">
-          Posting as <span className="font-semibold text-white">{user.username || user.email}</span>
-        </p>
-      )}
-      showHeader={true}
       fullWidth={true}
-      background="bg-gray-50"
+      background=""
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Main Content - Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Main Form (70%) */}
-          <div className="lg:col-span-2">
-            <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="p-6 space-y-6">
-                {/* Title Input */}
-                <div>
-                  <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-                    Question Title <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="title"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    placeholder="What's your question? Be specific and clear"
-                    maxLength={200}
-                    disabled={isSubmitting}
-                    className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent placeholder-gray-400 disabled:opacity-50"
-                    required
-                  />
-                  <div className="mt-2 flex items-center justify-between text-xs">
-                    <span className={`${formData.title.length < MIN_TITLE_LENGTH ? 'text-red-500' :
-                      formData.title.length < 50 ? 'text-yellow-500' :
-                        'text-green-500'
-                      }`}>
-                      {formData.title.length < MIN_TITLE_LENGTH && `Minimum ${MIN_TITLE_LENGTH} characters`}
-                      {formData.title.length >= MIN_TITLE_LENGTH && formData.title.length < 50 && 'Good length'}
-                      {formData.title.length >= 50 && 'Excellent!'}
-                    </span>
-                    <span className="text-gray-500">
-                      {formData.title.length}/{MAX_TITLE_LENGTH}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Category Selector */}
-                <div>
-                  <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
-                    Category <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    id="category"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    disabled={isSubmitting}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50"
-                    required
-                  >
-                    <option value="">Select a category</option>
-                    {Array.isArray(categories) && categories
-                      .filter(cat => !['all', 'home', 'members', 'community-chat'].includes(cat.id))
-                      .map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-
-                {/* Tags Input */}
-                <div>
-                  <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
-                    Tags <span className="text-red-500">*</span>
-                  </label>
-                  <div className="flex gap-2 mb-2">
+      <div className="min-h-screen bg-gray-50">
+        {/* Header — title only, matches Discussions page */}
+        <section className="border-b border-gray-200 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+            <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-3">
+              <Link to="/discussions" className="hover:text-teal-600 transition-colors">Form Questions</Link>
+              <span>/</span>
+              <span className="text-gray-700 font-medium">{editMode ? 'Edit Discussion' : 'Ask a Question'}</span>
+            </nav>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="app-title text-3xl sm:text-4xl text-gray-900">
+                  {editMode ? 'Edit Discussion' : 'Ask a Question'}
+                </h1>
+                {user && (
+                  <p className="mt-1 text-sm text-gray-500">
+                    Posting as <span className="font-medium text-gray-700">{user.username || user.email}</span>
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Main Content - Two Column Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column - Main Form (70%) */}
+            <div className="lg:col-span-2">
+              <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div className="p-6 space-y-6">
+                  {/* Title Input */}
+                  <div>
+                    <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+                      Question Title <span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="text"
-                      id="tags"
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      placeholder="Add keywords like #question, #javascript, #python"
-                      maxLength={30}
-                      disabled={isSubmitting || formData.tags.length >= MAX_TAGS}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent placeholder-gray-400 disabled:opacity-50"
+                      id="title"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleChange}
+                      placeholder="What's your question? Be specific and clear"
+                      maxLength={200}
+                      disabled={isSubmitting}
+                      className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent placeholder-gray-400 disabled:opacity-50"
+                      required
                     />
-                    <button
-                      type="button"
-                      onClick={() => handleAddTag()}
-                      disabled={isSubmitting || !tagInput.trim() || formData.tags.length >= MAX_TAGS}
-                      className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <PlusIcon className="w-5 h-5" />
-                    </button>
+                    <div className="mt-2 flex items-center justify-between text-xs">
+                      <span className={`${formData.title.length < MIN_TITLE_LENGTH ? 'text-red-500' :
+                        formData.title.length < 50 ? 'text-yellow-500' :
+                          'text-green-500'
+                        }`}>
+                        {formData.title.length < MIN_TITLE_LENGTH && `Minimum ${MIN_TITLE_LENGTH} characters`}
+                        {formData.title.length >= MIN_TITLE_LENGTH && formData.title.length < 50 && 'Good length'}
+                        {formData.title.length >= 50 && 'Excellent!'}
+                      </span>
+                      <span className="text-gray-500">
+                        {formData.title.length}/{MAX_TITLE_LENGTH}
+                      </span>
+                    </div>
                   </div>
 
-                  {suggestedTags.length > 0 && formData.tags.length < MAX_TAGS && (
-                    <div className="mb-2">
-                      <p className="text-xs text-gray-500 mb-2">Suggested tags:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {suggestedTags
-                          .filter(tag => !formData.tags.includes(tag.replace('#', '')))
-                          .map((tag, index) => (
-                            <button
-                              key={index}
-                              type="button"
-                              onClick={() => handleAddTag(tag)}
-                              className="px-3 py-1 text-xs bg-gray-100 hover:bg-teal-100:bg-teal-900/30 text-gray-700 hover:text-teal-700:text-teal-300 rounded-full transition-colors"
-                            >
-                              {tag}
-                            </button>
-                          ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {formData.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {formData.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="inline-flex items-center gap-2 px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-sm"
-                        >
-                          <TagIcon className="w-3 h-3" />
-                          #{tag}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveTag(tag)}
-                            disabled={isSubmitting}
-                            className="hover:text-teal-900:text-teal-100 disabled:opacity-50"
-                          >
-                            <XMarkIcon className="w-4 h-4" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <p className="mt-2 text-xs text-gray-500">
-                    {formData.tags.length === 0 && (
-                      <span className="text-red-500 font-medium">
-                        Please add at least {MIN_TAGS} tag to help others find your question
-                      </span>
-                    )}
-                    {formData.tags.length > 0 && (
-                      <span>
-                        Add up to {MAX_TAGS} tags • {formData.tags.length} of {MIN_TAGS} required added
-                      </span>
-                    )}
-                  </p>
-                </div>
-
-                <div>
-                  <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
-                    Content <span className="text-red-500">*</span>
-                  </label>
-
-                  {/* Write/Preview Tabs */}
-                  <div className="flex items-center gap-2 mb-3 border-b border-gray-200">
-                    <button
-                      type="button"
-                      onClick={() => setPreviewMode(false)}
-                      className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${!previewMode
-                        ? 'border-teal-500 text-teal-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
-                    >
-                      Write
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPreviewMode(true)}
-                      className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${previewMode
-                        ? 'border-teal-500 text-teal-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
-                    >
-                      Preview
-                    </button>
-                  </div>
-
-                  {!previewMode && (
-                    <>
-                      {/* Enhanced Formatting Toolbar */}
-                      <div className="flex flex-wrap gap-2 mb-2 p-2 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200">
-                        {/* Basic Text Formatting */}
-                        <button
-                          type="button"
-                          onClick={() => insertFormatting('bold')}
-                          className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all"
-                          title="Bold"
-                        >
-                          <span className="font-bold">B</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => insertFormatting('italic')}
-                          className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all"
-                          title="Italic"
-                        >
-                          <span className="italic">I</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => insertFormatting('underline')}
-                          className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all"
-                          title="Underline"
-                        >
-                          <span className="underline">U</span>
-                        </button>
-
-                        <div className="border-l border-gray-300 mx-1"></div>
-
-                        {/* Text Formats Dropdown */}
-                        <div className="relative text-formats-container">
-                          <button
-                            type="button"
-                            onClick={() => setShowTextFormats(!showTextFormats)}
-                            className="flex items-center gap-1 px-2 py-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all text-xs font-medium"
-                            title="Text Formats"
-                          >
-                            <span>H</span>
-                            <ChevronDownIcon className="w-3 h-3" />
-                          </button>
-                          {showTextFormats && (
-                            <div className="absolute z-50 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 min-w-[160px] py-1">
-                              <button
-                                type="button"
-                                onClick={() => { insertFormatting('heading1'); setShowTextFormats(false); }}
-                                className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors"
-                              >
-                                <span className="text-xl font-bold">Heading 1</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => { insertFormatting('heading2'); setShowTextFormats(false); }}
-                                className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors"
-                              >
-                                <span className="text-lg font-bold">Heading 2</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => { insertFormatting('heading3'); setShowTextFormats(false); }}
-                                className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors"
-                              >
-                                <span className="text-base font-bold">Heading 3</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => insertFormatting('link')}
-                          className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all"
-                          title="Link"
-                        >
-                          <LinkIcon className="w-4 h-4" />
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => insertFormatting('list')}
-                          className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all"
-                          title="Bullet List"
-                        >
-                          <ListBulletIcon className="w-4 h-4" />
-                        </button>
-
-                        <div className="border-l border-gray-300 mx-1"></div>
-
-                        {/* More Options Dropdown */}
-                        <div className="relative more-options-container">
-                          <button
-                            type="button"
-                            onClick={() => setShowMoreOptions(!showMoreOptions)}
-                            className="flex items-center gap-1 px-2 py-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all text-xs font-medium"
-                            title="More Options"
-                          >
-                            <span>···</span>
-                            <ChevronDownIcon className="w-3 h-3" />
-                          </button>
-                          {showMoreOptions && (
-                            <div className="absolute z-50 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 min-w-[180px] py-1">
-                              <button
-                                type="button"
-                                onClick={() => { insertFormatting('numberedList'); setShowMoreOptions(false); }}
-                                className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors text-sm"
-                              >
-                                <span className="flex items-center gap-2">
-                                  <span className="font-semibold">1.</span> Numbered List
-                                </span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => { insertFormatting('code'); setShowMoreOptions(false); }}
-                                className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors text-sm"
-                              >
-                                <span className="flex items-center gap-2">
-                                  <span className="font-mono">&lt;&gt;</span> Inline Code
-                                </span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => { insertFormatting('codeBlock'); setShowMoreOptions(false); }}
-                                className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors text-sm"
-                              >
-                                <span className="flex items-center gap-2">
-                                  <span className="font-mono">&#123; &#125;</span> Code Block
-                                </span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => { insertFormatting('quote'); setShowMoreOptions(false); }}
-                                className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors text-sm"
-                              >
-                                <span className="flex items-center gap-2">
-                                  <span className="text-lg">"</span> Quote
-                                </span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="border-l border-gray-300 mx-1"></div>
-
-                        {/* Color Pickers */}
-                        <div className="relative color-picker-container">
-                          <button
-                            type="button"
-                            onClick={() => setShowColorPicker(!showColorPicker)}
-                            className="p-2 hover:bg-white hover:shadow-sm rounded transition-all"
-                            title="Text Color"
-                          >
-                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
-                              <path d="M12 3L3 21h4l2-5h6l2 5h4L12 3zm0 5.84L14.5 14h-5l2.5-5.16z" fill="currentColor" />
-                              <rect x="6" y="20" width="12" height="2" className="fill-current text-red-500" />
-                            </svg>
-                          </button>
-                          {showColorPicker && (
-                            <div className="absolute z-50 mt-2 p-3 bg-white rounded-lg shadow-xl border border-gray-200 w-56">
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-semibold text-gray-700">Text Color</span>
-                                <button type="button" onClick={() => setShowColorPicker(false)} className="text-gray-400 hover:text-gray-600">
-                                  <XMarkIcon className="w-3 h-3" />
-                                </button>
-                              </div>
-                              <div className="grid grid-cols-6 gap-1.5">
-                                {['#000000', '#DC2626', '#2563EB', '#059669', '#D97706', '#7C3AED', '#EA580C', '#65A30D', '#0891B2', '#C026D3', '#DB2777', '#64748B'].map(color => (
-                                  <button
-                                    key={color}
-                                    type="button"
-                                    onClick={() => insertColor(color, false)}
-                                    className="w-7 h-7 rounded border hover:scale-110 transition-transform"
-                                    style={{ backgroundColor: color }}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="relative bg-color-picker-container">
-                          <button
-                            type="button"
-                            onClick={() => setShowBgColorPicker(!showBgColorPicker)}
-                            className="p-2 hover:bg-white hover:shadow-sm rounded transition-all"
-                            title="Highlight"
-                          >
-                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
-                              <rect x="4" y="8" width="16" height="10" rx="2" className="fill-yellow-300" stroke="currentColor" strokeWidth="1.5" />
-                            </svg>
-                          </button>
-                          {showBgColorPicker && (
-                            <div className="absolute z-50 mt-2 p-3 bg-white rounded-lg shadow-xl border border-gray-200 w-56">
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-semibold text-gray-700">Highlight</span>
-                                <button type="button" onClick={() => setShowBgColorPicker(false)} className="text-gray-400 hover:text-gray-600">
-                                  <XMarkIcon className="w-3 h-3" />
-                                </button>
-                              </div>
-                              <div className="grid grid-cols-6 gap-1.5">
-                                {['#FEF3C7', '#FED7AA', '#FECACA', '#FBCFE8', '#FDE68A', '#FCA5A5', '#DDD6FE', '#BFDBFE', '#BAE6FD', '#A7F3D0', '#BBF7D0', '#E5E7EB'].map(color => (
-                                  <button
-                                    key={color}
-                                    type="button"
-                                    onClick={() => insertColor(color, true)}
-                                    className="w-7 h-7 rounded border hover:scale-110 transition-transform"
-                                    style={{ backgroundColor: color }}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="border-l border-gray-300 mx-1"></div>
-
-                        {/* Emoji & Image */}
-                        <div className="relative emoji-picker-container">
-                          <button
-                            type="button"
-                            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                            className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all"
-                            title="Emoji"
-                          >
-                            <FaceSmileIcon className="w-4 h-4" />
-                          </button>
-                          <EmojiPicker
-                            isOpen={showEmojiPicker}
-                            onEmojiSelect={insertEmoji}
-                            onClose={() => setShowEmojiPicker(false)}
-                          />
-                        </div>
-
-                        <label
-                          htmlFor="imageUpload"
-                          className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all cursor-pointer"
-                          title="Upload Images"
-                        >
-                          <PhotoIcon className="w-4 h-4" />
-                          <input
-                            id="imageUpload"
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            onChange={handleImageUpload}
-                            className="hidden"
-                          />
-                        </label>
-
-                        <div className="flex-1"></div>
-
-                        <span className="text-xs text-gray-500 px-1">
-                          {formData.images.length}/{MAX_IMAGES}
-                        </span>
-                      </div>
-
-                      <MentionInput
-                        ref={contentRef}
-                        value={formData.content}
-                        onChange={(newValue) => setFormData(prev => ({ ...prev, content: newValue }))}
-                        placeholder="Describe your question in detail. What exactly are you trying to learn or understand? Include examples, context, and what you've already tried. The more specific you are, the better answers you'll receive."
-                        rows={12}
-                        maxLength={MAX_CONTENT_LENGTH}
-                        disabled={isSubmitting}
-                        showCharCount={false}
-                        className="font-mono text-sm"
-                      />
-                      <div className="mt-2 flex items-center justify-between text-xs">
-                        <span className={`${formData.content.length < MIN_CONTENT_LENGTH ? 'text-red-500' :
-                          formData.content.length < 100 ? 'text-yellow-500' :
-                            'text-green-500'
-                          }`}>
-                          {formData.content.length < MIN_CONTENT_LENGTH && `Minimum ${MIN_CONTENT_LENGTH} characters`}
-                          {formData.content.length >= MIN_CONTENT_LENGTH && formData.content.length < 100 && 'Add more details'}
-                          {formData.content.length >= 100 && 'Good detail level'}
-                        </span>
-                      </div>
-                    </>
-                  )}
-
-                  {previewMode && (
-                    <div className="border border-gray-300 rounded-lg p-4 min-h-[300px] bg-gray-50">
-                      {formData.content.trim() ? (
-                        <div className="prose prose-sm sm:prose max-w-none">
-                          <MentionRenderer
-                            content={formData.content}
-                            theme="teal"
-                          />
-                        </div>
-                      ) : (
-                        <div className="text-gray-400 text-center py-12">
-                          Nothing to preview yet. Switch to Write tab to add content.
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {formData.images.length > 0 && (
+                  {/* Category Selector */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                      Uploaded Images ({formData.images.length}/{MAX_IMAGES})
+                    <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+                      Category <span className="text-red-500">*</span>
                     </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                      {formData.images.map((image, index) => (
-                        <div key={index} className="relative group">
-                          <img
-                            src={image.data}
-                            alt={image.name}
-                            className="w-full h-24 object-cover rounded-lg border-2 border-gray-200"
-                          />
+                    <select
+                      id="category"
+                      name="category"
+                      value={formData.category}
+                      onChange={handleChange}
+                      disabled={isSubmitting}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50"
+                      required
+                    >
+                      <option value="">Select a category</option>
+                      {Array.isArray(categories) && categories
+                        .filter(cat => !['all', 'home', 'members', 'community-chat'].includes(cat.id))
+                        .map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  {/* Tags Input */}
+                  <div>
+                    <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
+                      Tags <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex gap-2 mb-2">
+                      <input
+                        type="text"
+                        id="tags"
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        placeholder="Add keywords like #question, #javascript, #python"
+                        maxLength={30}
+                        disabled={isSubmitting || formData.tags.length >= MAX_TAGS}
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent placeholder-gray-400 disabled:opacity-50"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleAddTag()}
+                        disabled={isSubmitting || !tagInput.trim() || formData.tags.length >= MAX_TAGS}
+                        className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <PlusIcon className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {suggestedTags.length > 0 && formData.tags.length < MAX_TAGS && (
+                      <div className="mb-2">
+                        <p className="text-xs text-gray-500 mb-2">Suggested tags:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {suggestedTags
+                            .filter(tag => !formData.tags.includes(tag.replace('#', '')))
+                            .map((tag, index) => (
+                              <button
+                                key={index}
+                                type="button"
+                                onClick={() => handleAddTag(tag)}
+                                className="px-3 py-1 text-xs bg-gray-100 hover:bg-teal-100 text-gray-600 hover:text-teal-700 rounded-full border border-gray-200 hover:border-teal-300 transition-colors"
+                              >
+                                {tag}
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {formData.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {formData.tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center gap-2 px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-sm"
+                          >
+                            <TagIcon className="w-3 h-3" />
+                            #{tag}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveTag(tag)}
+                              disabled={isSubmitting}
+                              className="hover:text-teal-900 disabled:opacity-50"
+                            >
+                              <XMarkIcon className="w-4 h-4" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <p className="mt-2 text-xs text-gray-500">
+                      {formData.tags.length === 0 && (
+                        <span className="text-red-500 font-medium">
+                          Please add at least {MIN_TAGS} tag to help others find your question
+                        </span>
+                      )}
+                      {formData.tags.length > 0 && (
+                        <span>
+                          Add up to {MAX_TAGS} tags • {formData.tags.length} of {MIN_TAGS} required added
+                        </span>
+                      )}
+                    </p>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label htmlFor="content" className="block text-sm font-medium text-gray-700">
+                        Content <span className="text-red-500">*</span>
+                      </label>
+                      <span className={`text-xs ${formData.content.length > MAX_CONTENT_LENGTH * 0.9 ? 'text-red-500 font-medium' : 'text-gray-400'}`}>
+                        {formData.content.length}/{MAX_CONTENT_LENGTH}
+                      </span>
+                    </div>
+
+                    {/* Write/Preview Tabs */}
+                    <div className="flex items-center gap-2 mb-3 border-b border-gray-200">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewMode(false)}
+                        className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${!previewMode
+                          ? 'border-teal-500 text-teal-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700'
+                          }`}
+                      >
+                        Write
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewMode(true)}
+                        className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${previewMode
+                          ? 'border-teal-500 text-teal-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700'
+                          }`}
+                      >
+                        Preview
+                      </button>
+                    </div>
+
+                    {!previewMode && (
+                      <>
+                        {/* Enhanced Formatting Toolbar */}
+                        <div className="flex flex-wrap gap-2 mb-2 p-2 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200">
+                          {/* Basic Text Formatting */}
                           <button
                             type="button"
-                            onClick={() => handleRemoveImage(index)}
-                            className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                            title="Remove image"
+                            onClick={() => insertFormatting('bold')}
+                            className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all"
+                            title="Bold"
                           >
-                            <XMarkIcon className="w-4 h-4" />
+                            <span className="font-bold">B</span>
                           </button>
-                          <div className="mt-1 text-xs text-gray-500 truncate">
-                            {image.name}
+                          <button
+                            type="button"
+                            onClick={() => insertFormatting('italic')}
+                            className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all"
+                            title="Italic"
+                          >
+                            <span className="italic">I</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => insertFormatting('underline')}
+                            className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all"
+                            title="Underline"
+                          >
+                            <span className="underline">U</span>
+                          </button>
+
+                          <div className="border-l border-gray-300 mx-1"></div>
+
+                          {/* Text Formats Dropdown */}
+                          <div className="relative text-formats-container">
+                            <button
+                              type="button"
+                              onClick={() => setShowTextFormats(!showTextFormats)}
+                              className="flex items-center gap-1 px-2 py-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all text-xs font-medium"
+                              title="Text Formats"
+                            >
+                              <span>H</span>
+                              <ChevronDownIcon className="w-3 h-3" />
+                            </button>
+                            {showTextFormats && (
+                              <div className="absolute z-50 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 min-w-[160px] py-1">
+                                <button
+                                  type="button"
+                                  onClick={() => { insertFormatting('heading1'); setShowTextFormats(false); }}
+                                  className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors"
+                                >
+                                  <span className="text-xl font-bold">Heading 1</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { insertFormatting('heading2'); setShowTextFormats(false); }}
+                                  className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors"
+                                >
+                                  <span className="text-lg font-bold">Heading 2</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { insertFormatting('heading3'); setShowTextFormats(false); }}
+                                  className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors"
+                                >
+                                  <span className="text-base font-bold">Heading 3</span>
+                                </button>
+                              </div>
+                            )}
                           </div>
+
+                          <button
+                            type="button"
+                            onClick={() => insertFormatting('link')}
+                            className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all"
+                            title="Link"
+                          >
+                            <LinkIcon className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => insertFormatting('list')}
+                            className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all"
+                            title="Bullet List"
+                          >
+                            <ListBulletIcon className="w-4 h-4" />
+                          </button>
+
+                          <div className="border-l border-gray-300 mx-1"></div>
+
+                          {/* More Options Dropdown */}
+                          <div className="relative more-options-container">
+                            <button
+                              type="button"
+                              onClick={() => setShowMoreOptions(!showMoreOptions)}
+                              className="flex items-center gap-1 px-2 py-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all text-xs font-medium"
+                              title="More Options"
+                            >
+                              <span>···</span>
+                              <ChevronDownIcon className="w-3 h-3" />
+                            </button>
+                            {showMoreOptions && (
+                              <div className="absolute z-50 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 min-w-[180px] py-1">
+                                <button
+                                  type="button"
+                                  onClick={() => { insertFormatting('numberedList'); setShowMoreOptions(false); }}
+                                  className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors text-sm"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <span className="font-semibold">1.</span> Numbered List
+                                  </span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { insertFormatting('code'); setShowMoreOptions(false); }}
+                                  className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors text-sm"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <span className="font-mono">&lt;&gt;</span> Inline Code
+                                  </span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { insertFormatting('codeBlock'); setShowMoreOptions(false); }}
+                                  className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors text-sm"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <span className="font-mono">&#123; &#125;</span> Code Block
+                                  </span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { insertFormatting('quote'); setShowMoreOptions(false); }}
+                                  className="w-full px-4 py-2 text-left hover:bg-teal-50 transition-colors text-sm"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <span className="text-lg">"</span> Quote
+                                  </span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="border-l border-gray-300 mx-1"></div>
+
+                          {/* Color Pickers */}
+                          <div className="relative color-picker-container">
+                            <button
+                              type="button"
+                              onClick={() => setShowColorPicker(!showColorPicker)}
+                              className="p-2 hover:bg-white hover:shadow-sm rounded transition-all"
+                              title="Text Color"
+                            >
+                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 3L3 21h4l2-5h6l2 5h4L12 3zm0 5.84L14.5 14h-5l2.5-5.16z" fill="currentColor" />
+                                <rect x="6" y="20" width="12" height="2" className="fill-current text-red-500" />
+                              </svg>
+                            </button>
+                            {showColorPicker && (
+                              <div className="absolute z-50 mt-2 p-3 bg-white rounded-lg shadow-xl border border-gray-200 w-56">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-xs font-semibold text-gray-700">Text Color</span>
+                                  <button type="button" onClick={() => setShowColorPicker(false)} className="text-gray-400 hover:text-gray-600">
+                                    <XMarkIcon className="w-3 h-3" />
+                                  </button>
+                                </div>
+                                <div className="grid grid-cols-6 gap-1.5">
+                                  {['#000000', '#DC2626', '#2563EB', '#059669', '#D97706', '#7C3AED', '#EA580C', '#65A30D', '#0891B2', '#C026D3', '#DB2777', '#64748B'].map(color => (
+                                    <button
+                                      key={color}
+                                      type="button"
+                                      onClick={() => insertColor(color, false)}
+                                      className="w-7 h-7 rounded border hover:scale-110 transition-transform"
+                                      style={{ backgroundColor: color }}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="relative bg-color-picker-container">
+                            <button
+                              type="button"
+                              onClick={() => setShowBgColorPicker(!showBgColorPicker)}
+                              className="p-2 hover:bg-white hover:shadow-sm rounded transition-all"
+                              title="Highlight"
+                            >
+                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                                <rect x="4" y="8" width="16" height="10" rx="2" className="fill-yellow-300" stroke="currentColor" strokeWidth="1.5" />
+                              </svg>
+                            </button>
+                            {showBgColorPicker && (
+                              <div className="absolute z-50 mt-2 p-3 bg-white rounded-lg shadow-xl border border-gray-200 w-56">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-xs font-semibold text-gray-700">Highlight</span>
+                                  <button type="button" onClick={() => setShowBgColorPicker(false)} className="text-gray-400 hover:text-gray-600">
+                                    <XMarkIcon className="w-3 h-3" />
+                                  </button>
+                                </div>
+                                <div className="grid grid-cols-6 gap-1.5">
+                                  {['#FEF3C7', '#FED7AA', '#FECACA', '#FBCFE8', '#FDE68A', '#FCA5A5', '#DDD6FE', '#BFDBFE', '#BAE6FD', '#A7F3D0', '#BBF7D0', '#E5E7EB'].map(color => (
+                                    <button
+                                      key={color}
+                                      type="button"
+                                      onClick={() => insertColor(color, true)}
+                                      className="w-7 h-7 rounded border hover:scale-110 transition-transform"
+                                      style={{ backgroundColor: color }}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="border-l border-gray-300 mx-1"></div>
+
+                          {/* Emoji & Image */}
+                          <div className="relative emoji-picker-container">
+                            <button
+                              type="button"
+                              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                              className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all"
+                              title="Emoji"
+                            >
+                              <FaceSmileIcon className="w-4 h-4" />
+                            </button>
+                            <EmojiPicker
+                              isOpen={showEmojiPicker}
+                              onEmojiSelect={insertEmoji}
+                              onClose={() => setShowEmojiPicker(false)}
+                            />
+                          </div>
+
+                          <label
+                            htmlFor="imageUpload"
+                            className="p-2 hover:bg-white hover:shadow-sm rounded text-gray-700 transition-all cursor-pointer"
+                            title="Upload Images"
+                          >
+                            <PhotoIcon className="w-4 h-4" />
+                            <input
+                              id="imageUpload"
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              onChange={handleImageUpload}
+                              className="hidden"
+                            />
+                          </label>
+
+                          <div className="flex-1"></div>
+
+                          <span className="text-xs text-gray-500 px-1">
+                            {formData.images.length}/{MAX_IMAGES}
+                          </span>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="subscribe"
-                    checked={subscribeToUpdates}
-                    onChange={(e) => setSubscribeToUpdates(e.target.checked)}
-                    className="w-4 h-4 text-teal-600 bg-gray-100 border-gray-300 rounded focus:ring-teal-500:ring-teal-600 focus:ring-2"
-                  />
-                  <label htmlFor="subscribe" className="ml-2 text-sm text-gray-700">
-                    Subscribe to thread updates (receive notifications about replies)
-                  </label>
-                </div>
-              </div>
-
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
-                <div className="flex flex-col sm:flex-row gap-3 justify-between items-center">
-                  <button
-                    type="button"
-                    onClick={handleCancel}
-                    disabled={isSubmitting}
-                    className="w-full sm:w-auto px-6 py-3 bg-white hover:bg-gray-50:bg-gray-700 text-gray-700 border border-gray-300 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="submit"
-                    disabled={isSubmitting || !formData.title.trim() || !formData.content.trim() || !formData.category || formData.tags.length < MIN_TAGS}
-                    className="flex-1 sm:flex-none px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        {editMode ? 'Updating...' : 'Posting Question...'}
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircleIcon className="w-5 h-5" />
-                        {editMode ? 'Update Discussion' : 'Ask Question'}
+                        <MentionInput
+                          ref={contentRef}
+                          value={formData.content}
+                          onChange={(newValue) => setFormData(prev => ({ ...prev, content: newValue }))}
+                          placeholder="Describe your question in detail. What exactly are you trying to learn or understand? Include examples, context, and what you've already tried. The more specific you are, the better answers you'll receive."
+                          rows={12}
+                          maxLength={MAX_CONTENT_LENGTH}
+                          disabled={isSubmitting}
+                          showCharCount={false}
+                          className="font-mono text-sm"
+                        />
+                        <div className="mt-2 flex items-center justify-between text-xs">
+                          <span className={`${formData.content.length < MIN_CONTENT_LENGTH ? 'text-red-500' :
+                            formData.content.length < 100 ? 'text-yellow-500' :
+                              'text-green-500'
+                            }`}>
+                            {formData.content.length < MIN_CONTENT_LENGTH && `Minimum ${MIN_CONTENT_LENGTH} characters`}
+                            {formData.content.length >= MIN_CONTENT_LENGTH && formData.content.length < 100 && 'Add more details'}
+                            {formData.content.length >= 100 && 'Good detail level'}
+                          </span>
+                        </div>
                       </>
                     )}
-                  </button>
+
+                    {previewMode && (
+                      <div className="border border-gray-300 rounded-lg p-4 min-h-[300px] bg-gray-50">
+                        {formData.content.trim() ? (
+                          <div className="prose prose-sm sm:prose max-w-none">
+                            <MentionRenderer
+                              content={formData.content}
+                              theme="teal"
+                            />
+                          </div>
+                        ) : (
+                          <div className="text-gray-400 text-center py-12">
+                            Nothing to preview yet. Switch to Write tab to add content.
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {formData.images.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        Uploaded Images ({formData.images.length}/{MAX_IMAGES})
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                        {formData.images.map((image, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={image.data}
+                              alt={image.name}
+                              className="w-full h-24 object-cover rounded-lg border-2 border-gray-200"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImage(index)}
+                              className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                              title="Remove image"
+                            >
+                              <XMarkIcon className="w-4 h-4" />
+                            </button>
+                            <div className="mt-1 text-xs text-gray-500 truncate">
+                              {image.name}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="subscribe"
+                      checked={subscribeToUpdates}
+                      onChange={(e) => setSubscribeToUpdates(e.target.checked)}
+                      className="w-4 h-4 text-teal-600 bg-gray-100 border-gray-300 rounded focus:ring-teal-500:ring-teal-600 focus:ring-2"
+                    />
+                    <label htmlFor="subscribe" className="ml-2 text-sm text-gray-700">
+                      Subscribe to thread updates (receive notifications about replies)
+                    </label>
+                  </div>
                 </div>
-              </div>
-            </form>
-          </div>
 
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
-                How to Ask a Good Question
-              </h3>
-              <ul className="space-y-3 text-sm text-gray-600">
-                <li className="flex items-start gap-2">
-                  <CheckCircleIcon className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span>Be specific about what you want to learn or understand</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircleIcon className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span>Include examples and context to help others help you</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircleIcon className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span>Mention what you've already tried or researched</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircleIcon className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span>Use relevant tags so experts in that area can find you</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircleIcon className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span>Search existing questions to avoid duplicates</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircleIcon className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span>Be patient and respectful while waiting for answers</span>
-                </li>
-              </ul>
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
+                  <div className="flex flex-col sm:flex-row gap-3 justify-between items-center">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || !formData.title.trim() || !formData.content.trim() || !formData.category || formData.tags.length < MIN_TAGS}
+                      className="flex-1 sm:flex-none px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          {editMode ? 'Updating...' : 'Posting Question...'}
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircleIcon className="w-5 h-5" />
+                          {editMode ? 'Update Discussion' : 'Ask Question'}
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
 
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <h4 className="text-sm font-semibold text-gray-900 mb-3">
-                  Community Guidelines
-                </h4>
-                <p className="text-xs text-gray-600 mb-3">
-                  Help us maintain a welcoming and helpful community for all members.
-                </p>
-                <a
-                  href="/discussions/guidelines"
-                  className="text-sm text-teal-600"
-                >
-                  Read full guidelines →
-                </a>
-              </div>
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">
+                  How to Ask a Good Question
+                </h3>
+                <ul className="space-y-3 text-sm text-gray-600">
+                  <li className="flex items-start gap-2">
+                    <CheckCircleIcon className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
+                    <span>Be specific about what you want to learn or understand</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircleIcon className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
+                    <span>Include examples and context to help others help you</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircleIcon className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
+                    <span>Mention what you've already tried or researched</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircleIcon className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
+                    <span>Use relevant tags so experts in that area can find you</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircleIcon className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
+                    <span>Search existing questions to avoid duplicates</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircleIcon className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
+                    <span>Be patient and respectful while waiting for answers</span>
+                  </li>
+                </ul>
 
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 p-3 rounded-lg">
-                  <ExclamationTriangleIcon className="w-4 h-4 flex-shrink-0 mt-0.5" aria-hidden="true" />
-                  <div>
-                    <p className="font-medium mb-1">Before asking:</p>
-                    <p>Search existing questions to see if someone already asked something similar.</p>
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <h4 className="text-sm font-semibold text-gray-900 mb-3">
+                    Community Guidelines
+                  </h4>
+                  <p className="text-xs text-gray-600 mb-3">
+                    Help us maintain a welcoming and helpful community for all members.
+                  </p>
+                  <a
+                    href="/discussions/guidelines"
+                    className="text-sm text-teal-600"
+                  >
+                    Read full guidelines →
+                  </a>
+                </div>
+
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 p-3 rounded-lg">
+                    <ExclamationTriangleIcon className="w-4 h-4 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                    <div>
+                      <p className="font-medium mb-1">Before asking:</p>
+                      <p>Search existing questions to see if someone already asked something similar.</p>
+                    </div>
                   </div>
                 </div>
               </div>
