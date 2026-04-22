@@ -391,9 +391,9 @@ const DiscussionThread = () => {
 
                   <div className="flex items-center gap-3 text-sm text-gray-600">
                     <Link to={`/users/${discussion.author_id}`} className="flex items-center gap-2">
-                      <div className="avatar-unified bg-gradient-to-br from-teal-400 to-blue-500">
-                        {discussion.user_data?.display_picture ? (
-                          <img src={discussion.user_data.display_picture} alt={discussion.user_data?.username} className="w-full h-full object-cover" />
+                      <div className="avatar-unified bg-gradient-to-br from-teal-400 to-blue-500 overflow-hidden">
+                        {(discussion.author_profile_photo || discussion.user_data?.display_picture || discussion.user_data?.profile_photo_url) ? (
+                          <img src={discussion.author_profile_photo || discussion.user_data?.display_picture || discussion.user_data?.profile_photo_url} alt={discussion.user_data?.username} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                         ) : (
                           <span className="text-sm font-bold text-white">{(discussion.user_data?.username || 'A')[0].toUpperCase()}</span>
                         )}
@@ -632,6 +632,7 @@ const DiscussionThread = () => {
                                     src={related.author_profile_photo || related.user_data?.display_picture}
                                     alt={related.author_name || related.user_data?.username}
                                     className="w-full h-full object-cover"
+                                    referrerPolicy="no-referrer"
                                     onError={(e) => { e.target.style.display = 'none'; }}
                                   />
                                 ) : (

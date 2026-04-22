@@ -254,6 +254,7 @@ const MentionInput = forwardRef(({
                           src={user.profile_photo_url}
                           alt={user.username}
                           className="avatar-unified bg-gray-100"
+                          referrerPolicy="no-referrer"
                         />
                       ) : (
                         <div className="avatar-unified bg-teal-100">

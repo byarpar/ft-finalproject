@@ -90,6 +90,8 @@ export const authAPI = {
   changePassword: (data) => api.post('/auth/change-password', data).then(res => res.data),
   updatePreferences: (data) => api.put('/users/me/profile', data).then(res => res.data),
   deleteAccount: (confirmation) => api.delete('/users/me/account', { data: { confirmation } }).then(res => res.data),
+  getGoogleLinkStatus: () => api.get('/auth/google/status').then(res => res.data),
+  unlinkGoogle: () => api.delete('/auth/google/unlink').then(res => res.data),
 };
 
 // Words API

@@ -40,7 +40,7 @@ const ReplyItem = ({
             <Link to={`/users/${answer.author_id}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity min-w-0 flex-1 sm:flex-none">
               <div className="avatar-unified bg-gradient-to-br from-blue-400 to-purple-500 text-white font-semibold text-sm sm:text-base">
                 {answer.author_profile_photo ? (
-                  <img src={answer.author_profile_photo} alt={answer.author_name || 'User'} className="w-full h-full object-cover" />
+                  <img src={answer.author_profile_photo} alt={answer.author_name || 'User'} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
                   <span>{(answer.author_name || 'A')[0].toUpperCase()}</span>
                 )}
@@ -192,7 +192,7 @@ const ReplyItem = ({
                   <Link to={`/users/${nestedReply.author_id}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity min-w-0 flex-1">
                     <div className="avatar-unified bg-gradient-to-br from-purple-400 to-pink-500 text-white font-semibold text-xs sm:text-sm">
                       {nestedReply.author_profile_photo ? (
-                        <img src={nestedReply.author_profile_photo} alt={nestedReply.author_name || 'User'} className="w-full h-full object-cover" />
+                        <img src={nestedReply.author_profile_photo} alt={nestedReply.author_name || 'User'} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       ) : (
                         <span>{(nestedReply.author_name || 'A')[0].toUpperCase()}</span>
                       )}

@@ -100,7 +100,7 @@ const Members = () => {
 
   return (
     <PageLayout
-      title="Community Members - Lisu Dictionary"
+      title="Community Members - AMDF"
       fullWidth={true}
       background=""
     >

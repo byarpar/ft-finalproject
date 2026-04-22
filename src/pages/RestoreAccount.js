@@ -107,7 +107,7 @@ const RestoreAccount = () => {
 
   return (
     <PageLayout
-      title="Restore Account - Lisu Dictionary"
+      title="Restore Account - AMDF"
       background="bg-gradient-to-br from-blue-50 to-indigo-50"
       fullWidth
     >

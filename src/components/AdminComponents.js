@@ -876,7 +876,7 @@ export const ReportsAnalytics = () => {
                       {i + 1}
                     </span>
                     {user.profile_photo_url ? (
-                      <img src={user.profile_photo_url} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
+                      <img src={user.profile_photo_url} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" referrerPolicy="no-referrer" />
                     ) : (
                       <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
                         <UsersIcon className="w-4 h-4 text-gray-400" />

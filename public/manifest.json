@@ -1,7 +1,7 @@
 {
-  "short_name": "Lisu Dictionary",
-  "name": "English-Lisu Dictionary - Learn Lisu Language",
-  "description": "Comprehensive English-Lisu bilingual dictionary with detailed etymology, pronunciation guides, and cultural context. Master the Lisu language with interactive learning tools.",
+  "short_name": "AMDF",
+  "name": "A Modern Discussion Forum (AMDF)",
+  "description": "A modern community discussion forum for sharing ideas, asking questions, and connecting with others.",
   "icons": [
     {
       "src": "favicon.ico",

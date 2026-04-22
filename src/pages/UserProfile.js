@@ -249,6 +249,7 @@ const UserProfile = () => {
                 alt={profile?.full_name || profile?.username}
                 className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
                 key={`profile-${profile?.id}-${profile.profile_photo_url}`}
+                referrerPolicy="no-referrer"
                 onLoad={(e) => {
                   setImageLoaded(true);
                   e.target.style.opacity = '1';

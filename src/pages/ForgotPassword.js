@@ -16,7 +16,7 @@ const AuthSidebar = () => (
   <div
     className="lg:w-[58%] relative overflow-hidden flex items-center justify-center p-8 lg:p-8 min-h-[400px] lg:min-h-screen"
     style={{
-      backgroundImage: 'linear-gradient(to bottom right, rgba(15, 118, 110, 0.92), rgba(13, 148, 136, 0.88)), url(/images/hero/dev-community.jpg)',
+      backgroundImage: 'linear-gradient(to bottom right, rgba(15, 118, 110, 0.92), rgba(13, 148, 136, 0.88)), url(/images/hero/lisu-people.jpg)',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat'
@@ -234,7 +234,7 @@ const ForgotPassword = () => {
   if (submitted) {
     return (
       <PageLayout
-        title="Check Your Email - Lisu Dictionary"
+        title="Check Your Email - AMDF"
         background="bg-gray-50"
         fullWidth
       >
@@ -293,7 +293,7 @@ const ForgotPassword = () => {
 
   return (
     <PageLayout
-      title="Forgot Password - Lisu Dictionary"
+      title="Forgot Password - AMDF"
       fullWidth={true}
       background="bg-gray-50"
     >

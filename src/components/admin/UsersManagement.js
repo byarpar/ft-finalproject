@@ -277,6 +277,7 @@ const UsersList = () => {
                             src={user.profile_photo_url}
                             alt={user.username || user.email || 'User'}
                             className="avatar-unified"
+                            referrerPolicy="no-referrer"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
                               const fallback = e.currentTarget.nextElementSibling;
@@ -463,7 +464,7 @@ const UserDetail = () => {
       {/* Profile Card */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex flex-col sm:flex-row gap-5 items-start">
         {user.profile_photo_url
-          ? <img src={user.profile_photo_url} alt={user.username} className="avatar-unified shrink-0" />
+          ? <img src={user.profile_photo_url} alt={user.username} className="avatar-unified shrink-0" referrerPolicy="no-referrer" />
           : <div className="avatar-unified bg-teal-500 text-white text-2xl font-bold shrink-0">
             {(user.username || '?')[0].toUpperCase()}
           </div>

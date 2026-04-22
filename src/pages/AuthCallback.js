@@ -127,7 +127,7 @@ const AuthCallback = () => {
 
   return (
     <PageLayout
-      title="Completing Sign In - Lisu Dictionary"
+      title="Completing Sign In - AMDF"
       background="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50"
       fullWidth
     >

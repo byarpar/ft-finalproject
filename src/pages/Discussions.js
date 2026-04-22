@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { discussionsAPI, usersAPI } from '../services/api';
 import { Pagination } from '../components/UIComponents';
@@ -51,8 +51,6 @@ const Discussions = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [layoutView, setLayoutView] = useState('grid'); // 'grid' or 'list'
   const [showBackToTop, setShowBackToTop] = useState(false);
-
-  const location = useLocation();
 
   const fetchDiscussions = useCallback(async () => {
     try {
@@ -255,7 +253,7 @@ const Discussions = () => {
 
   return (
     <PageLayout
-      title="Community Discussions - Lisu Dictionary"
+      title="Community Discussions - AMDF"
       fullWidth={true}
       background=""
     >
@@ -440,7 +438,7 @@ const Discussions = () => {
                   <p className="text-gray-600 mb-8 text-base">
                     {searchQuery
                       ? 'Try adjusting your search terms or filters to find what you\'re looking for.'
-                      : 'Be the first to ask a question and get help from our community of Lisu language learners and experts.'}
+                      : 'Be the first to ask a question and get help from our community of developers and enthusiasts.'}
                   </p>
                   {user && !searchQuery && (
                     <Link
@@ -493,19 +491,19 @@ const Discussions = () => {
                                       }}
                                       className="cursor-pointer relative"
                                     >
-                                      <div className="avatar-unified bg-gray-100">
+                                      <div className="avatar-unified bg-gray-100 overflow-hidden">
                                         {discussion.user_data?.display_picture ? (
                                           <img
                                             src={discussion.user_data.display_picture}
                                             alt={discussion.user_data?.username || 'User'}
                                             className="w-full h-full object-cover"
-                                            onError={(e) => { e.target.style.display = 'none'; }}
+                                            referrerPolicy="no-referrer"
+                                            onError={(e) => { e.target.style.display = 'none'; if (e.target.nextSibling) e.target.nextSibling.style.display = ''; }}
                                           />
-                                        ) : (
-                                          <span className="text-xs font-bold text-gray-600">
-                                            {(discussion.user_data?.username || 'A').charAt(0).toUpperCase()}
-                                          </span>
-                                        )}
+                                        ) : null}
+                                        <span className="text-xs font-bold text-gray-600" style={{ display: discussion.user_data?.display_picture ? 'none' : undefined }}>
+                                          {(discussion.user_data?.username || 'A').charAt(0).toUpperCase()}
+                                        </span>
                                       </div>
                                       {discussion.user_data?.role === 'admin' && (
                                         <CheckBadgeIcon className="w-4 h-4 text-red-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
@@ -634,19 +632,19 @@ const Discussions = () => {
                                       }}
                                       className="cursor-pointer relative"
                                     >
-                                      <div className="avatar-unified bg-gray-100">
+                                      <div className="avatar-unified bg-gray-100 overflow-hidden">
                                         {discussion.user_data?.display_picture ? (
                                           <img
                                             src={discussion.user_data.display_picture}
                                             alt={discussion.user_data?.username || 'User'}
                                             className="w-full h-full object-cover"
-                                            onError={(e) => { e.target.style.display = 'none'; }}
+                                            referrerPolicy="no-referrer"
+                                            onError={(e) => { e.target.style.display = 'none'; if (e.target.nextSibling) e.target.nextSibling.style.display = ''; }}
                                           />
-                                        ) : (
-                                          <span className="text-xs font-bold text-gray-600">
-                                            {(discussion.user_data?.username || 'A').charAt(0).toUpperCase()}
-                                          </span>
-                                        )}
+                                        ) : null}
+                                        <span className="text-xs font-bold text-gray-600" style={{ display: discussion.user_data?.display_picture ? 'none' : undefined }}>
+                                          {(discussion.user_data?.username || 'A').charAt(0).toUpperCase()}
+                                        </span>
                                       </div>
                                       {discussion.user_data?.role === 'admin' && (
                                         <CheckBadgeIcon className="w-4 h-4 text-red-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
@@ -835,19 +833,19 @@ const Discussions = () => {
                           >
                             <div className="flex gap-3">
                               <div className="relative flex-shrink-0">
-                                <div className="avatar-unified bg-gray-100">
+                                <div className="avatar-unified bg-gray-100 overflow-hidden">
                                   {discussion.user_data?.display_picture ? (
                                     <img
                                       src={discussion.user_data.display_picture}
                                       alt={discussion.user_data?.username || 'User'}
                                       className="w-full h-full object-cover"
-                                      onError={(e) => { e.target.style.display = 'none'; }}
+                                      referrerPolicy="no-referrer"
+                                      onError={(e) => { e.target.style.display = 'none'; if (e.target.nextSibling) e.target.nextSibling.style.display = ''; }}
                                     />
-                                  ) : (
-                                    <span className="text-sm font-bold text-gray-600">
-                                      {(discussion.user_data?.username || 'A').charAt(0).toUpperCase()}
-                                    </span>
-                                  )}
+                                  ) : null}
+                                  <span className="text-sm font-bold text-gray-600" style={{ display: discussion.user_data?.display_picture ? 'none' : undefined }}>
+                                    {(discussion.user_data?.username || 'A').charAt(0).toUpperCase()}
+                                  </span>
                                 </div>
                                 {discussion.user_data?.role === 'admin' && (
                                   <CheckBadgeIcon className="w-3.5 h-3.5 text-red-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />

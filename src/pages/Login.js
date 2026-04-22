@@ -165,7 +165,8 @@ const Login = () => {
   };
 
   const handleGoogleOAuth = () => {
-    if (!recaptchaToken) {
+    // In development the backend skips reCAPTCHA — allow Google OAuth without it
+    if (process.env.NODE_ENV !== 'development' && !recaptchaToken) {
       setErrors((prev) => ({
         ...prev,
         recaptcha: 'Please complete the reCAPTCHA verification before using Google login.'
@@ -313,7 +314,7 @@ const Login = () => {
         <div
           className="lg:w-[58%] relative overflow-hidden flex items-center justify-center p-8 lg:p-8 min-h-[400px] lg:min-h-screen"
           style={{
-            backgroundImage: 'linear-gradient(to bottom right, rgba(15, 118, 110, 0.92), rgba(13, 148, 136, 0.88)), url(/images/hero/dev-community.jpg)',
+            backgroundImage: 'linear-gradient(to bottom right, rgba(15, 118, 110, 0.92), rgba(13, 148, 136, 0.88)), url(/images/hero/lisu-people.jpg)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'

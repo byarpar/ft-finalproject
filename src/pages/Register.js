@@ -184,7 +184,8 @@ const Register = () => {
   };
 
   const handleGoogleOAuth = () => {
-    if (!recaptchaToken) {
+    // In development the backend skips reCAPTCHA — allow Google OAuth without it
+    if (process.env.NODE_ENV !== 'development' && !recaptchaToken) {
       setErrors((prev) => ({
         ...prev,
         recaptcha: 'Please complete the reCAPTCHA verification before using Google sign up.'
@@ -311,7 +312,7 @@ const Register = () => {
 
   return (
     <PageLayout
-      title="Create Account - Lisu Dictionary"
+      title="Create Account - AMDF"
       fullWidth
       background="bg-gray-50"
     >
@@ -398,7 +399,7 @@ const Register = () => {
 
             {/* Supporting Tagline */}
             <p className="text-lg lg:text-xl text-teal-50 font-light max-w-md mx-auto">
-              Connect with a vibrant community preserving and celebrating the Lisu language
+              Connect with a vibrant community sharing ideas and building a better forum
             </p>
           </div>
         </div>
@@ -492,6 +493,21 @@ const Register = () => {
                   )}
                 </div>
                 <FieldError error={errors.email} />
+                {errors.accountExists && (
+                  <div className="mt-2 text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+                    Already have an account?{' '}
+                    <Link to="/login" className="text-teal-600 hover:text-teal-700 font-medium underline">Sign in</Link>
+                    {' '}or{' '}
+                    <Link
+                      to="/verify-email"
+                      state={{ email: formData.email }}
+                      className="text-teal-600 hover:text-teal-700 font-medium underline"
+                    >
+                      verify your email
+                    </Link>
+                    {' '}if you registered but didn't receive a verification code.
+                  </div>
+                )}
               </div>
 
               {/* Password Field */}

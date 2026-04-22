@@ -452,6 +452,7 @@ const NewDiscussion = () => {
     }
   }, [formData, subscribeToUpdates, navigate, editMode, editId]);
 
+  // eslint-disable-next-line no-unused-vars
   const handleCancel = useCallback(() => {
     if (formData.title || formData.content) {
       if (window.confirm('Are you sure you want to discard this question?')) {

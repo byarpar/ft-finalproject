@@ -260,7 +260,7 @@ const VerifyEmail = () => {
 
   return (
     <PageLayout
-      title="Verify Email - Lisu Dictionary"
+      title="Verify Email - AMDF"
       fullWidth={true}
       background=""
     >

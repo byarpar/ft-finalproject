@@ -1,22 +1,3 @@
-/**
- * ResetPassword Component
- * 
- * Allows users to set a new password using a token from their email.
- * Features:
- * - Password strength indicator (Weak/Fair/Strong)
- * - Show/hide password toggles for both fields
- * - Real-time validation with touched state tracking
- * - Visual password match indicator with checkmark
- * - Keyboard shortcuts (Escape to clear form)
- * - Auto-focus on password input
- * - Enhanced accessibility with ARIA attributes
- * - Full keyboard navigation support
- * - Responsive design with dark mode support
- * 
- * @component
- * @requires {string} searchParams.token - Password reset token from email link
- * @redirects /login - After successful password reset (3 second delay)
- */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
@@ -25,9 +6,82 @@ import {
   ExclamationCircleIcon,
   LockClosedIcon,
   EyeIcon,
-  EyeSlashIcon
+  EyeSlashIcon,
+  ShieldCheckIcon,
+  KeyIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { PageLayout } from '../components/LayoutComponents';
+
+const AuthSidebar = () => (
+  <div
+    className="lg:w-[58%] relative overflow-hidden flex items-center justify-center p-8 lg:p-8 min-h-[400px] lg:min-h-screen"
+    style={{
+      backgroundImage: 'linear-gradient(to bottom right, rgba(15, 118, 110, 0.92), rgba(13, 148, 136, 0.88)), url(/images/hero/lisu-people.jpg)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat'
+    }}
+  >
+    <div className="absolute inset-0 opacity-5">
+      <div className="absolute top-0 right-0 w-full h-full bg-white transform origin-top-right rotate-12 translate-x-1/2"></div>
+    </div>
+
+    <div className="relative z-10 text-center max-w-lg">
+      <div className="mb-8 flex justify-center">
+        <div className="relative w-64 h-64">
+          <div className="absolute inset-0 bg-gradient-to-br from-teal-800/90 to-teal-600/80 rounded-full shadow-2xl flex items-center justify-center backdrop-blur-sm">
+            <div className="relative w-48 h-48">
+              {/* Center icon */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center shadow-xl">
+                  <KeyIcon className="w-11 h-11 text-white" />
+                </div>
+              </div>
+              {/* Top */}
+              <div className="absolute top-2 left-1/2 -translate-x-1/2">
+                <div className="w-14 h-14 bg-teal-400 rounded-full flex items-center justify-center shadow-lg">
+                  <ShieldCheckIcon className="w-7 h-7 text-teal-900" />
+                </div>
+              </div>
+              {/* Bottom */}
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
+                <div className="w-14 h-14 bg-orange-400 rounded-full flex items-center justify-center shadow-lg">
+                  <LockClosedIcon className="w-7 h-7 text-orange-900" />
+                </div>
+              </div>
+              {/* Left */}
+              <div className="absolute top-1/2 left-0 -translate-y-1/2">
+                <div className="w-14 h-14 bg-orange-300 rounded-full flex items-center justify-center shadow-lg">
+                  <ArrowPathIcon className="w-7 h-7 text-orange-900" />
+                </div>
+              </div>
+              {/* Right */}
+              <div className="absolute top-1/2 right-0 -translate-y-1/2">
+                <div className="w-14 h-14 bg-teal-300 rounded-full flex items-center justify-center shadow-lg">
+                  <CheckCircleIcon className="w-7 h-7 text-teal-900" />
+                </div>
+              </div>
+              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 192 192">
+                <circle cx="96" cy="96" r="70" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="2" strokeDasharray="4 4" />
+                <circle cx="96" cy="96" r="50" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="3 3" />
+              </svg>
+            </div>
+          </div>
+          <div className="absolute -top-4 -left-4 w-16 h-16 border-4 border-teal-400/30 rounded-full"></div>
+          <div className="absolute -bottom-4 -right-4 w-12 h-12 border-4 border-orange-400/30 rounded-full"></div>
+        </div>
+      </div>
+
+      <h1 className="text-4xl lg:text-5xl xl:text-6xl font-extrabold text-white mb-4 tracking-tight leading-tight">
+        SET YOUR<br />NEW PASSWORD
+      </h1>
+      <p className="text-lg lg:text-xl text-teal-50 font-light max-w-md mx-auto">
+        Choose a strong password to keep your account safe and secure.
+      </p>
+    </div>
+  </div>
+);
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -209,62 +263,45 @@ const ResetPassword = () => {
 
   if (success) {
     return (
-      <PageLayout
-        title="Password Reset Successful - Lisu Dictionary"
-        background="bg-gradient-to-br from-gray-50 to-green-50"
-        fullWidth
-      >
-        <div className="min-h-screen flex flex-col">
-          {/* Hero Section - Very Minimal */}
-          <div className="bg-gradient-to-r from-green-600 to-teal-600 py-16 md:py-20">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-              <div className="flex justify-center mb-4">
-                <CheckCircleIcon className="w-16 h-16 text-white" aria-hidden="true" />
-              </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
-                Password Reset Successful!
-              </h1>
-              <p className="text-green-50 text-lg">
-                Your password has been successfully reset.
-              </p>
-            </div>
-          </div>
-
-          {/* Main Content - Success Message */}
-          <div className="flex-1 flex items-center justify-center px-4 py-16 bg-gray-50">
+      <PageLayout title="Password Reset Successful - AMDF" background="bg-gray-50" fullWidth>
+        <div className="min-h-screen flex flex-col lg:flex-row">
+          <AuthSidebar />
+          <div className="lg:w-[42%] bg-gray-50 flex items-center justify-center p-6 lg:p-8 min-h-screen lg:min-h-0">
             <div className="w-full max-w-md">
-              <div className="bg-white rounded-lg shadow-lg p-10 md:p-12 text-center space-y-6">
-                <div className="mb-2">
-                  <LockClosedIcon className="mx-auto h-20 w-20 text-green-600" aria-hidden="true" />
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-gray-900 text-lg font-semibold">
-                    All Set!
-                  </p>
-                  <p className="text-gray-600 text-base">
-                    You can now log in with your new password.
-                  </p>
-                </div>
-
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <p className="text-sm text-green-800">
-                    ✓ Password successfully updated<br />
-                    ✓ You can now access your account
-                  </p>
-                </div>
-
-                <Link
-                  to="/login"
-                  className="inline-block w-full px-6 py-3.5 bg-teal-600 hover:bg-teal-700:bg-teal-700 text-white font-semibold rounded-lg transition-all duration-200 text-base shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
-                >
-                  Continue to Log In
-                </Link>
-
-                <p className="mt-4 text-sm text-gray-500" aria-live="polite">
-                  Redirecting automatically in 3 seconds...
-                </p>
+              <div className="mb-8">
+                <h2 className="text-3xl font-bold text-gray-900">Password Updated!</h2>
+                <p className="mt-2 text-sm text-gray-600">Your password has been successfully reset.</p>
               </div>
+
+              <div className="mb-6 border border-teal-200 rounded-lg p-4 bg-teal-50">
+                <div className="flex items-start gap-3">
+                  <CheckCircleIcon className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm text-teal-900 font-medium">All done!</p>
+                    <p className="text-sm text-teal-700 mt-0.5">You can now sign in with your new password.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800 font-medium mb-2">What happened:</p>
+                <ul className="text-sm text-blue-700 space-y-1">
+                  <li className="flex items-center gap-2"><CheckCircleIcon className="w-4 h-4 flex-shrink-0" /> Password successfully updated</li>
+                  <li className="flex items-center gap-2"><CheckCircleIcon className="w-4 h-4 flex-shrink-0" /> Old reset link has been invalidated</li>
+                  <li className="flex items-center gap-2"><CheckCircleIcon className="w-4 h-4 flex-shrink-0" /> Your account is ready to use</li>
+                </ul>
+              </div>
+
+              <Link
+                to="/login"
+                className="block w-full text-center px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+              >
+                Continue to Sign In
+              </Link>
+
+              <p className="mt-4 text-sm text-gray-500 text-center">
+                Redirecting automatically in 3 seconds...
+              </p>
             </div>
           </div>
         </div>
@@ -273,211 +310,149 @@ const ResetPassword = () => {
   }
 
   return (
-    <PageLayout
-      title="Reset Password - Lisu Dictionary"
-      fullWidth={true}
-      background=""
-    >
-      <div className="min-h-screen flex flex-col">
-        {/* Hero Section - Very Minimal */}
-        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 py-16 md:py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                <LockClosedIcon className="w-10 h-10 text-white" aria-hidden="true" />
-              </div>
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
-              Set Your New Password
-            </h1>
-            <p className="text-teal-50 text-lg">
-              Enter and confirm your new password below.
-            </p>
-          </div>
-        </div>
+    <PageLayout title="Reset Password - AMDF" fullWidth background="bg-gray-50">
+      <div className="min-h-screen flex flex-col lg:flex-row">
+        <AuthSidebar />
 
-        {/* Main Content Area - Centralized Card */}
-        <div className="flex-1 flex items-center justify-center px-4 py-16 bg-gray-50">
+        <div className="lg:w-[42%] bg-gray-50 flex items-center justify-center p-6 lg:p-8 min-h-screen lg:min-h-0">
           <div className="w-full max-w-md">
-            <div className="bg-white rounded-lg shadow-lg p-10 md:p-12">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-8 text-center">
-                Set a New Password
-              </h2>
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold text-gray-900">Set New Password</h2>
+              <p className="mt-2 text-sm text-gray-600">Enter and confirm your new password below.</p>
+            </div>
 
-              {/* Error Message */}
-              {error && (
-                <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-3" role="alert" aria-live="assertive">
-                  <div className="flex items-start gap-2">
-                    <ExclamationCircleIcon className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
-                    <p className="text-sm text-red-600">{error}</p>
-                  </div>
+            {/* Error Message */}
+            {error && (
+              <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-3" role="alert" aria-live="assertive">
+                <div className="flex items-center gap-2">
+                  <ExclamationCircleIcon className="w-5 h-5 text-red-600 flex-shrink-0" />
+                  <p className="text-sm text-red-600">{error}</p>
                 </div>
-              )}
-
-              {/* Form */}
-              <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="space-y-5" noValidate aria-label="Reset password form">
-                {/* New Password */}
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                    New Password
-                    <span className="text-red-500 ml-1" aria-label="required">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      ref={passwordInputRef}
-                      type={showPassword ? 'text' : 'password'}
-                      id="password"
-                      name="password"
-                      autoComplete="new-password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      required
-                      aria-required="true"
-                      aria-invalid={touched.password && getFieldError('password', formData.password) ? 'true' : 'false'}
-                      aria-describedby="password-hint password-error"
-                      className="w-full px-4 py-3.5 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors bg-white text-gray-900 placeholder-gray-400 text-base"
-                      placeholder="Enter new password"
-                    />
-                    {/* Show/Hide Password Toggle */}
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700:text-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500 rounded p-1 transition-colors"
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
-                      tabIndex={-1}
-                    >
-                      {showPassword ? (
-                        <EyeSlashIcon className="w-5 h-5" aria-hidden="true" />
-                      ) : (
-                        <EyeIcon className="w-5 h-5" aria-hidden="true" />
-                      )}
-                    </button>
-                  </div>
-                  {/* Password Error */}
-                  {touched.password && getFieldError('password', formData.password) && (
-                    <p id="password-error" className="mt-2 text-sm text-red-600 flex items-center gap-1" role="alert">
-                      <ExclamationCircleIcon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                      {getFieldError('password', formData.password)}
-                    </p>
-                  )}
-                  {/* Password strength indicator */}
-                  {formData.password && (
-                    <div className="mt-2">
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full transition-all duration-300 ${passwordStrength.level === 1 ? 'w-1/3 bg-red-500' :
-                              passwordStrength.level === 2 ? 'w-2/3 bg-yellow-500' :
-                                passwordStrength.level === 3 ? 'w-full bg-green-500' : 'w-0'
-                              }`}
-                            aria-hidden="true"
-                          />
-                        </div>
-                        <span className={`text-xs font-medium ${passwordStrength.color}`}>
-                          {passwordStrength.text}
-                        </span>
-                      </div>
-                      <p id="password-hint" className="text-xs text-gray-500 mt-1">
-                        Use 12+ characters with uppercase, numbers for best security
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Confirm Password */}
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                    Confirm New Password
-                    <span className="text-red-500 ml-1" aria-label="required">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      ref={confirmPasswordInputRef}
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      autoComplete="new-password"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      required
-                      aria-required="true"
-                      aria-invalid={touched.confirmPassword && getFieldError('confirmPassword', formData.confirmPassword) ? 'true' : 'false'}
-                      aria-describedby="confirmPassword-error"
-                      className="w-full px-4 py-3.5 pr-20 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors bg-white text-gray-900 placeholder-gray-400 text-base"
-                      placeholder="Re-enter new password"
-                    />
-                    {/* Checkmark when passwords match */}
-                    {passwordsMatch && (
-                      <CheckCircleIcon
-                        className="absolute right-10 top-1/2 transform -translate-y-1/2 w-5 h-5 text-green-500"
-                        aria-hidden="true"
-                      />
-                    )}
-                    {/* Show/Hide Password Toggle */}
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700:text-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500 rounded p-1 transition-colors"
-                      aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
-                      tabIndex={-1}
-                    >
-                      {showConfirmPassword ? (
-                        <EyeSlashIcon className="w-5 h-5" aria-hidden="true" />
-                      ) : (
-                        <EyeIcon className="w-5 h-5" aria-hidden="true" />
-                      )}
-                    </button>
-                  </div>
-                  {/* Confirm Password Error */}
-                  {touched.confirmPassword && getFieldError('confirmPassword', formData.confirmPassword) && (
-                    <p id="confirmPassword-error" className="mt-2 text-sm text-red-600 flex items-center gap-1" role="alert">
-                      <ExclamationCircleIcon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                      {getFieldError('confirmPassword', formData.confirmPassword)}
-                    </p>
-                  )}
-                  {/* Success - Passwords Match */}
-                  {passwordsMatch && (
-                    <p className="mt-2 text-sm text-green-600 flex items-center gap-1">
-                      <CheckCircleIcon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                      Passwords match
-                    </p>
-                  )}
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading || !token || !passwordsMatch}
-                  aria-busy={loading}
-                  className="w-full px-6 py-3.5 bg-teal-600 hover:bg-teal-700:bg-teal-700 text-white font-semibold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-teal-600 text-base mt-6 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2:ring-offset-gray-800"
-                >
-                  {loading ? (
-                    <span className="flex items-center justify-center" aria-live="polite">
-                      <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24" aria-hidden="true">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      Resetting...
-                    </span>
-                  ) : (
-                    'Reset Password'
-                  )}
-                </button>
-              </form>
-
-              {/* Back to Login Link */}
-              <div className="mt-8 pt-6 border-t border-gray-200 text-center">
-                <p className="text-sm text-gray-600 mb-3">
-                  Remember your password?
-                </p>
-                <Link
-                  to="/login"
-                  className="text-teal-600 hover:text-teal-700:text-teal-300 font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 rounded px-2 py-1"
-                >
-                  Sign in here
-                </Link>
               </div>
+            )}
+
+            <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="space-y-4" noValidate>
+              {/* New Password */}
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  New Password <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    ref={passwordInputRef}
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    name="password"
+                    autoComplete="new-password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    required
+                    className={`w-full px-3 py-2 pr-10 border ${touched.password && getFieldError('password', formData.password) ? 'border-red-500' : 'border-gray-300'} text-sm rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-400`}
+                    placeholder="Enter new password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                    tabIndex={-1}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                  </button>
+                </div>
+                {touched.password && getFieldError('password', formData.password) && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                    <ExclamationCircleIcon className="w-4 h-4 flex-shrink-0" />
+                    {getFieldError('password', formData.password)}
+                  </p>
+                )}
+                {formData.password && (
+                  <div className="mt-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div className={`h-full transition-all duration-300 rounded-full ${passwordStrength.level === 1 ? 'w-1/3 bg-red-500' :
+                          passwordStrength.level === 2 ? 'w-2/3 bg-yellow-500' :
+                            passwordStrength.level === 3 ? 'w-full bg-green-500' : 'w-0'
+                          }`} />
+                      </div>
+                      <span className={`text-xs font-medium ${passwordStrength.color}`}>{passwordStrength.text}</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Use 12+ characters with uppercase and numbers</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Confirm Password */}
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Confirm New Password <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    ref={confirmPasswordInputRef}
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    autoComplete="new-password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    required
+                    className={`w-full px-3 py-2 pr-16 border ${touched.confirmPassword && getFieldError('confirmPassword', formData.confirmPassword) ? 'border-red-500' : passwordsMatch ? 'border-green-400' : 'border-gray-300'} text-sm rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-400`}
+                    placeholder="Re-enter new password"
+                  />
+                  {passwordsMatch && (
+                    <CheckCircleIcon className="absolute right-9 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                    tabIndex={-1}
+                    aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                  >
+                    {showConfirmPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                  </button>
+                </div>
+                {touched.confirmPassword && getFieldError('confirmPassword', formData.confirmPassword) && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                    <ExclamationCircleIcon className="w-4 h-4 flex-shrink-0" />
+                    {getFieldError('confirmPassword', formData.confirmPassword)}
+                  </p>
+                )}
+                {passwordsMatch && (
+                  <p className="mt-1 text-sm text-green-600 flex items-center gap-1">
+                    <CheckCircleIcon className="w-4 h-4 flex-shrink-0" />
+                    Passwords match
+                  </p>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading || !token || !passwordsMatch}
+                className="w-full px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold text-sm rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 mt-2"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Updating...
+                  </span>
+                ) : 'Set New Password'}
+              </button>
+            </form>
+
+            <div className="mt-6 pt-6 border-t border-gray-200 text-center">
+              <p className="text-sm text-gray-600">
+                Remember your password?{' '}
+                <Link to="/login" className="text-teal-600 hover:text-teal-700 font-medium transition-colors">
+                  Sign in
+                </Link>
+              </p>
             </div>
           </div>
         </div>

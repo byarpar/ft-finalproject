@@ -6,7 +6,6 @@ import {
   MagnifyingGlassIcon,
   XMarkIcon,
   UserCircleIcon,
-  ChatBubbleLeftRightIcon,
   ArrowLeftIcon,
   FunnelIcon,
 } from '@heroicons/react/24/outline';
@@ -245,8 +244,11 @@ const Messages = () => {
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex items-center gap-3 flex-1">
-                            <div className="avatar-unified bg-gradient-to-r from-teal-400 to-teal-600 text-white font-semibold">
-                              {(conv.other_username || '?')[0].toUpperCase()}
+                            <div className="avatar-unified bg-gradient-to-r from-teal-400 to-teal-600 text-white font-semibold overflow-hidden">
+                              {conv.other_photo ? (
+                                <img src={conv.other_photo} alt={conv.other_username || 'User'} className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.nextSibling.style.display = ''); }} />
+                              ) : null}
+                              <span style={{ display: conv.other_photo ? 'none' : undefined }}>{(conv.other_username || '?')[0].toUpperCase()}</span>
                             </div>
                             <div className="flex-1 min-w-0">
                               <h3 className="font-semibold text-gray-900 text-sm">{conv.other_username}</h3>
@@ -280,8 +282,11 @@ const Messages = () => {
                     >
                       <ArrowLeftIcon className="w-5 h-5" />
                     </button>
-                    <div className="avatar-unified bg-gradient-to-r from-teal-400 to-teal-600 text-white font-semibold">
-                      {(selectedConversation.other_username || '?')[0].toUpperCase()}
+                    <div className="avatar-unified bg-gradient-to-r from-teal-400 to-teal-600 text-white font-semibold overflow-hidden">
+                      {selectedConversation.other_photo ? (
+                        <img src={selectedConversation.other_photo} alt={selectedConversation.other_username || 'User'} className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.nextSibling.style.display = ''); }} />
+                      ) : null}
+                      <span style={{ display: selectedConversation.other_photo ? 'none' : undefined }}>{(selectedConversation.other_username || '?')[0].toUpperCase()}</span>
                     </div>
                     <div>
                       <h2 className="font-semibold text-gray-900">{selectedConversation.other_username}</h2>
@@ -301,7 +306,16 @@ const Messages = () => {
                       messages.map(msg => {
                         const isMe = msg.sender_id === user?.id;
                         return (
-                          <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                          <div key={msg.id} className={`flex items-end gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                            {!isMe && (
+                              <div className="w-7 h-7 rounded-full bg-gradient-to-r from-teal-400 to-teal-600 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                {(msg.profile_photo_url || selectedConversation.other_photo) ? (
+                                  <img src={msg.profile_photo_url || selectedConversation.other_photo} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; }} />
+                                ) : (
+                                  <span className="text-white text-[10px] font-bold">{(msg.username || selectedConversation.other_username || '?')[0].toUpperCase()}</span>
+                                )}
+                              </div>
+                            )}
                             <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${isMe ? 'bg-teal-600 text-white' : 'bg-white text-gray-900 shadow-sm'}`}>
                               <p className="text-sm">{msg.content}</p>
                               <p className={`text-xs mt-1 ${isMe ? 'text-teal-100' : 'text-gray-400'}`}>

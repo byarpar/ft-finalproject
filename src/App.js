@@ -72,18 +72,21 @@ const PageLoadingBar = () => {
   );
 };
 
+const AUTH_PATHS = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/restore-account', '/auth/callback'];
+
 const ConditionalContent = () => {
   const location = useLocation();
   const isAdminPage = location.pathname.startsWith('/admin');
+  const isAuthPage = AUTH_PATHS.some(p => location.pathname.startsWith(p));
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <PageLoadingBar />
-      {/* Render navbar only for non-admin pages */}
-      {!isAdminPage && <Navbar />}
+      {/* Hide navbar on admin and auth pages */}
+      {!isAdminPage && !isAuthPage && <Navbar />}
 
       {/* Main content with conditional padding */}
-      <main className={`flex-grow ${!isAdminPage ? 'pt-14' : ''}`}>
+      <main className={`flex-grow ${!isAdminPage && !isAuthPage ? 'pt-14' : ''}`}>
         <Routes>
           <Route path="/" element={<Discussions />} />
 
@@ -176,9 +179,10 @@ const ConditionalFooter = () => {
   const isTagsPage = location.pathname.startsWith('/tags');
   const isAdminPage = location.pathname.startsWith('/admin');
   const isMessagesPage = location.pathname.startsWith('/messages');
+  const isAuthPage = AUTH_PATHS.some(p => location.pathname.startsWith(p));
 
-  // Don't render footer on discussions, tags, admin, or messages pages
-  if (isDiscussionsPage || isTagsPage || isAdminPage || isMessagesPage) {
+  // Don't render footer on discussions, tags, admin, messages, or auth pages
+  if (isDiscussionsPage || isTagsPage || isAdminPage || isMessagesPage || isAuthPage) {
     return null;
   }
 
