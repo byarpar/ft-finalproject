@@ -55,6 +55,26 @@ const Login = () => {
   const [recaptchaToken, setRecaptchaToken] = useState(null);
   const recaptchaRef = useRef(null);
 
+  // Brute-force protection state
+  const [attemptsRemaining, setAttemptsRemaining] = useState(null); // null = no warning yet
+  const [lockedUntil, setLockedUntil] = useState(null);             // timestamp ms
+  const [lockCountdown, setLockCountdown] = useState(0);            // seconds remaining
+
+  // Countdown timer for lockout
+  useEffect(() => {
+    if (!lockedUntil) return;
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil((lockedUntil - Date.now()) / 1000));
+      setLockCountdown(remaining);
+      if (remaining === 0) setLockedUntil(null);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [lockedUntil]);
+
+  const isLockedOut = lockedUntil && lockCountdown > 0;
+
   // Custom hooks for form management
   const { showPassword, togglePasswordVisibility } = usePasswordToggle();
   const { touched, markTouched, markAllTouched, resetTouched } = useFieldTouch({
@@ -200,6 +220,10 @@ const Login = () => {
       const result = await login(formData.email, formData.password, recaptchaToken);
 
       if (result.success) {
+        // Clear brute-force state on successful login
+        setAttemptsRemaining(null);
+        setLockedUntil(null);
+
         // Show success state briefly before navigation
         setLoginSuccess(true);
 
@@ -213,6 +237,22 @@ const Login = () => {
         // Handle backend errors
         const errorData = result.error?.data || {};
         const backendMessage = result.error?.message || result.error?.details || 'Login failed. Please try again.';
+
+        // --- Brute-force / rate-limit handling ---
+        if (result.error?.code === 'RATE_LIMIT_ERROR') {
+          const bannedUntil = errorData.bannedUntil || (Date.now() + (errorData.retryAfter || 3600) * 1000);
+          setLockedUntil(bannedUntil);
+          setAttemptsRemaining(0);
+          setErrors({ general: backendMessage });
+          setRecaptchaToken(null);
+          recaptchaRef.current?.reset();
+          return;
+        }
+
+        // Show attempts-remaining warning (1–4 attempts before lockout)
+        if (typeof errorData.attemptsRemaining === 'number') {
+          setAttemptsRemaining(errorData.attemptsRemaining);
+        }
 
         // Set appropriate error states
         const newErrors = {
@@ -613,6 +653,25 @@ const Login = () => {
 
               {/* reCAPTCHA */}
               <div>
+
+                {/* Brute-force lockout banner */}
+                {isLockedOut && (
+                  <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-300 text-red-700 text-sm" role="alert">
+                    <strong>Account temporarily blocked.</strong> Too many failed login attempts.<br />
+                    Try again in{' '}
+                    <strong>
+                      {Math.floor(lockCountdown / 60)}m {lockCountdown % 60}s
+                    </strong>.
+                  </div>
+                )}
+
+                {/* Attempts remaining warning (shown after 1st failure) */}
+                {!isLockedOut && attemptsRemaining !== null && attemptsRemaining > 0 && (
+                  <div className="mb-4 p-3 rounded-lg bg-yellow-50 border border-yellow-300 text-yellow-800 text-sm" role="alert">
+                    Warning: <strong>{attemptsRemaining} attempt{attemptsRemaining !== 1 ? 's' : ''} remaining</strong> before your IP is temporarily blocked.
+                  </div>
+                )}
+
                 <div className="flex justify-center">
                   <ReCAPTCHA
                     ref={recaptchaRef}
@@ -639,7 +698,7 @@ const Login = () => {
               <div className="pt-2">
                 <button
                   type="submit"
-                  disabled={loading || loginSuccess}
+                  disabled={loading || loginSuccess || !!isLockedOut}
                   aria-busy={loading}
                   className={`w-full px-6 py-3.5 font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2:ring-offset-gray-900 disabled:hover:shadow-md ${loginSuccess
                     ? 'bg-green-600 hover:bg-green-600'
