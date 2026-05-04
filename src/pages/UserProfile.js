@@ -3,9 +3,9 @@ import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ClockIcon, ChatBubbleLeftRightIcon, BookOpenIcon, BookmarkIcon,
   PencilIcon, PlusIcon, HandThumbUpIcon, HandThumbDownIcon, StarIcon, UserPlusIcon,
-  ChatBubbleLeftIcon, QuestionMarkCircleIcon
+  ChatBubbleLeftIcon, QuestionMarkCircleIcon, ArrowPathRoundedSquareIcon
 } from '@heroicons/react/24/outline';
-import { CheckBadgeIcon } from '@heroicons/react/24/solid';
+import { CheckBadgeIcon, ShieldCheckIcon } from '@heroicons/react/24/solid';
 import { PageLayout } from '../components/LayoutComponents';
 import { usersAPI, discussionsAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -15,6 +15,7 @@ const TABS = {
   ACTIVITY: 'activity',
   DISCUSSIONS: 'discussions',
   CONTRIBUTIONS: 'contributions',
+  RESHARED: 'reshared',
   SAVED: 'saved'
 };
 
@@ -35,6 +36,7 @@ const UserProfile = () => {
   const [followingCount, setFollowingCount] = useState(0);
   const [discussions, setDiscussions] = useState([]);
   const [savedDiscussions, setSavedDiscussions] = useState([]);
+  const [resharedDiscussions, setResharedDiscussions] = useState([]);
   const [userStats, setUserStats] = useState(null);
   const [activeTab, setActiveTab] = useState(TABS.ACTIVITY);
   const [loading, setLoading] = useState({ profile: true, content: false });
@@ -119,16 +121,20 @@ const UserProfile = () => {
   }, [profileIdentifier, user, isOwnProfile]);
 
   const fetchContent = useCallback(async (tab) => {
-    if (!isOwnProfile && tab === TABS.SAVED) return;
+    if (!isOwnProfile && (tab === TABS.SAVED || tab === TABS.RESHARED)) return;
 
     setLoading(prev => ({ ...prev, content: true }));
     try {
       if (tab === TABS.SAVED) {
         const res = await discussionsAPI.getSavedDiscussions({ limit: 20 });
         setSavedDiscussions(res.discussions || res.data?.discussions || []);
+      } else if (tab === TABS.RESHARED) {
+        const res = await discussionsAPI.getResharedDiscussions({ limit: 20 });
+        setResharedDiscussions(res.discussions || res.data?.discussions || []);
       }
     } catch {
       if (tab === TABS.SAVED) setSavedDiscussions([]);
+      if (tab === TABS.RESHARED) setResharedDiscussions([]);
     } finally {
       setLoading(prev => ({ ...prev, content: false }));
     }
@@ -168,7 +174,7 @@ const UserProfile = () => {
   }, [searchParams, isOwnProfile, fetchProfile]);
 
   useEffect(() => {
-    if (activeTab === TABS.SAVED) {
+    if (activeTab === TABS.SAVED || activeTab === TABS.RESHARED) {
       fetchContent(activeTab);
     }
   }, [activeTab, fetchContent]);
@@ -278,8 +284,11 @@ const UserProfile = () => {
               <h1 className="text-2xl font-bold text-gray-900">
                 {profile?.full_name || profile?.username}
               </h1>
-              {profile?.role && profile.role !== 'user' && (
+              {profile?.role === 'admin' && (
                 <CheckBadgeIcon className="w-5 h-5 text-red-600" />
+              )}
+              {profile?.role === 'moderator' && (
+                <ShieldCheckIcon className="w-5 h-5 text-amber-500" />
               )}
             </div>
             <p className="text-gray-600 mb-3">@{profile?.username}</p>
@@ -372,6 +381,7 @@ const UserProfile = () => {
             { id: TABS.DISCUSSIONS, label: 'Questions', icon: ChatBubbleLeftRightIcon },
             { id: TABS.CONTRIBUTIONS, label: 'Contributions', icon: BookOpenIcon },
             ...(isOwnProfile ? [
+              { id: TABS.RESHARED, label: 'Reshared', icon: ArrowPathRoundedSquareIcon },
               { id: TABS.SAVED, label: 'Saved', icon: BookmarkIcon }
             ] : [])
           ].map(tab => (
@@ -581,6 +591,62 @@ const UserProfile = () => {
     }
 
 
+
+    if (activeTab === TABS.RESHARED && isOwnProfile) {
+      return (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="font-bold text-gray-900">Reshared Questions</h2>
+          </div>
+          <div className="divide-y divide-gray-200">
+            {loading.content ? (
+              <div className="p-8 text-center">
+                <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-teal-600"></div>
+              </div>
+            ) : resharedDiscussions.length === 0 ? (
+              <div className="p-8 text-center">
+                <ArrowPathRoundedSquareIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 mb-2">No reshared questions yet</p>
+                <p className="text-sm text-gray-500 mb-4">Reshare questions to show them on your profile</p>
+                <Link
+                  to="/discussions"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                  Browse Questions
+                </Link>
+              </div>
+            ) : (
+              resharedDiscussions.map((discussion) => (
+                <div key={discussion.id} className="p-4 hover:bg-gray-50">
+                  <Link to={`/discussions/${discussion.id}`} className="block">
+                    <div className="flex items-start gap-3">
+                      <ArrowPathRoundedSquareIcon className="w-5 h-5 text-teal-600 mt-1 flex-shrink-0" />
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-900 hover:text-teal-600 mb-1">
+                          {discussion.title}
+                        </h3>
+                        {discussion.content && (
+                          <p className="text-sm text-gray-600 mb-2 line-clamp-2 text-justify">
+                            {discussion.content?.replace(/<[^>]*>/g, '').substring(0, 120)}...
+                          </p>
+                        )}
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <span>{discussion.vote_count || 0} votes</span>
+                          <span>{discussion.answers_count || 0} answers</span>
+                          <span>{discussion.reshare_count || 0} reshares</span>
+                          <span>Reshared {getTimeAgo(discussion.reshared_at || discussion.created_at)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      );
+    }
 
     if (activeTab === TABS.SAVED && isOwnProfile) {
       return (

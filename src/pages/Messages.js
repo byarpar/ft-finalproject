@@ -8,9 +8,10 @@ import {
   UserCircleIcon,
   ArrowLeftIcon,
   FunnelIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
-import { messagesAPI } from '../services/api';
+import { messagesAPI, usersAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
 /**
@@ -25,6 +26,10 @@ const Messages = () => {
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [userSearchResults, setUserSearchResults] = useState([]);
+  const [searchingUsers, setSearchingUsers] = useState(false);
+  const [showUserResults, setShowUserResults] = useState(false);
+  const searchRef = useRef(null);
   const [conversationFilter, setConversationFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -45,6 +50,68 @@ const Messages = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // User search with debounce
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setUserSearchResults([]);
+      setShowUserResults(false);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setSearchingUsers(true);
+      try {
+        const res = await usersAPI.getAllUsers({ search: searchQuery.trim(), limit: 8 });
+        if (!cancelled) {
+          const users = (res.data?.users || []).filter(u => u.id !== user?.id);
+          setUserSearchResults(users);
+          setShowUserResults(true);
+        }
+      } catch {
+        if (!cancelled) setUserSearchResults([]);
+      } finally {
+        if (!cancelled) setSearchingUsers(false);
+      }
+    }, 300);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [searchQuery, user?.id]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setShowUserResults(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const handleSelectUser = async (selectedUser) => {
+    setSearchQuery('');
+    setShowUserResults(false);
+    setUserSearchResults([]);
+
+    // Check if conversation already exists
+    const existing = conversations.find(c => String(c.other_user_id) === String(selectedUser.id));
+    if (existing) {
+      setSelectedConversation(existing);
+      return;
+    }
+
+    // Create new conversation
+    try {
+      await messagesAPI.getOrCreateConversation(selectedUser.id);
+      const refetch = await messagesAPI.getConversations();
+      const refreshed = refetch.data?.conversations || [];
+      setConversations(refreshed);
+      const created = refreshed.find(c => String(c.other_user_id) === String(selectedUser.id));
+      if (created) setSelectedConversation(created);
+    } catch {
+      toast.error('Failed to start conversation');
+    }
+  };
 
   const fetchConversations = async () => {
     try {
@@ -140,11 +207,23 @@ const Messages = () => {
 
   const unreadConversations = conversations.filter((c) => parseInt(c.unread_count || 0, 10) > 0).length;
 
+  const handleClearAll = async () => {
+    if (!window.confirm('Delete all conversations? This cannot be undone.')) return;
+    try {
+      await messagesAPI.deleteAllConversations();
+      setConversations([]);
+      setSelectedConversation(null);
+      setMessages([]);
+      toast.success('All conversations deleted');
+    } catch {
+      toast.error('Failed to delete conversations');
+    }
+  };
+
   const filteredConversations = conversations
     .filter((conv) => {
-      const matchSearch = (conv.other_username || '').toLowerCase().includes(searchQuery.toLowerCase());
       const matchUnread = conversationFilter === 'unread' ? parseInt(conv.unread_count || 0, 10) > 0 : true;
-      return matchSearch && matchUnread;
+      return matchUnread;
     })
     .sort((a, b) => new Date(b.last_message_at || 0).getTime() - new Date(a.last_message_at || 0).getTime());
 
@@ -195,22 +274,63 @@ const Messages = () => {
                       className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border text-xs font-medium transition-colors ${conversationFilter === 'unread' ? 'border-teal-200 bg-teal-50 text-teal-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
                     >
                       <FunnelIcon className="w-3.5 h-3.5" />
-                      {conversationFilter === 'unread' ? 'Unread only' : 'All'}
+                      {conversationFilter === 'unread' ? 'Unread' : 'All'}
                     </button>
+                    {conversations.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleClearAll}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-gray-200 text-xs font-medium text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors"
+                        title="Delete all conversations"
+                      >
+                        <TrashIcon className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
-                  <div className="relative">
+                  <div className="relative" ref={searchRef}>
                     <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
                     <input
                       type="text"
-                      placeholder="Search conversations..."
+                      placeholder="Search users..."
                       value={searchQuery}
+                      autoComplete="off"
                       onChange={(e) => setSearchQuery(e.target.value)}
+                      onFocus={() => { if (searchQuery.trim() && userSearchResults.length > 0) setShowUserResults(true); }}
                       className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-400 text-sm"
                     />
                     {searchQuery && (
-                      <button type="button" onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                      <button type="button" onClick={() => { setSearchQuery(''); setShowUserResults(false); setUserSearchResults([]); }} className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
                         <XMarkIcon className="w-4 h-4" />
                       </button>
+                    )}
+                    {/* User Search Dropdown */}
+                    {showUserResults && (
+                      <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                        {searchingUsers ? (
+                          <div className="p-3 text-center text-sm text-gray-400">Searching...</div>
+                        ) : userSearchResults.length === 0 ? (
+                          <div className="p-3 text-center text-sm text-gray-400">No users found</div>
+                        ) : (
+                          userSearchResults.map(u => (
+                            <button
+                              key={u.id}
+                              onClick={() => handleSelectUser(u)}
+                              className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-teal-50 transition-colors text-left"
+                            >
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-teal-400 to-teal-600 flex items-center justify-center text-white text-xs font-semibold overflow-hidden flex-shrink-0">
+                                {u.profile_photo_url ? (
+                                  <img src={u.profile_photo_url} alt={u.username} className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.nextSibling.style.display = ''); }} />
+                                ) : null}
+                                <span style={{ display: u.profile_photo_url ? 'none' : undefined }}>{(u.username || '?')[0].toUpperCase()}</span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate">{u.username}</p>
+                                {u.full_name && <p className="text-xs text-gray-500 truncate">{u.full_name}</p>}
+                              </div>
+                            </button>
+                          ))
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>

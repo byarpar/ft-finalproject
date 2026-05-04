@@ -125,13 +125,13 @@ const ResetPassword = () => {
    */
   const getFieldError = useCallback((name, value) => {
     if (name === 'password') {
-      if (!value.trim()) return 'Password is required';
-      if (value.length < 8) return 'Password must be at least 8 characters';
+      if (!value.trim()) return 'Please enter a new password';
+      if (value.length < 8) return 'Must be at least 8 characters';
       return '';
     }
     if (name === 'confirmPassword') {
       if (!value.trim()) return 'Please confirm your password';
-      if (value !== formData.password) return 'Passwords do not match';
+      if (value !== formData.password) return 'Passwords don\'t match';
       return '';
     }
     return '';
@@ -217,22 +217,22 @@ const ResetPassword = () => {
     setError('');
 
     if (!token) {
-      setError('Invalid or expired link. Please request a new reset.');
+      setError('This reset link is invalid or expired');
       return;
     }
 
     if (!formData.password || !formData.confirmPassword) {
-      setError('Please fill in all fields.');
+      setError('Please fill in both fields');
       return;
     }
 
     if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters long.');
+      setError('Password must be at least 8 characters');
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match.');
+      setError('Passwords don\'t match');
       return;
     }
 

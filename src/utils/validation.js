@@ -13,14 +13,14 @@
  */
 export const validateEmail = (value) => {
   if (!value || !value.trim()) {
-    return 'Email required';
+    return 'Please enter your email';
   }
   // Standard email regex pattern
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-    return 'Invalid email format';
+    return 'Please enter a valid email';
   }
   if (value.length > 255) {
-    return 'Email too long (max 255 characters)';
+    return 'Email is too long';
   }
   return '';
 };
@@ -33,13 +33,13 @@ export const validateEmail = (value) => {
  */
 export const validateLoginPassword = (value) => {
   if (!value || !value.trim()) {
-    return 'Password required';
+    return 'Please enter your password';
   }
   if (value.length < 8) {
-    return 'Minimum 8 characters';
+    return 'Password must be at least 8 characters';
   }
   if (value.length > 128) {
-    return 'Maximum 128 characters';
+    return 'Password is too long';
   }
   return '';
 };
@@ -52,17 +52,17 @@ export const validateLoginPassword = (value) => {
  */
 export const validateRegisterPassword = (value) => {
   if (!value || !value.trim()) {
-    return 'Password required';
+    return 'Please create a password';
   }
   if (value.length < 8) {
-    return 'Minimum 8 characters';
+    return 'Password must be at least 8 characters';
   }
   if (value.length > 128) {
-    return 'Maximum 128 characters';
+    return 'Password is too long';
   }
   // Check for uppercase, lowercase, number, and special character
   if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&\-_#])/.test(value)) {
-    return 'Must include uppercase, lowercase, number, and special character (@$!%*?&-_#)';
+    return 'Add uppercase, lowercase, number & special character';
   }
   return '';
 };
@@ -75,14 +75,14 @@ export const validateRegisterPassword = (value) => {
  */
 export const validateFullName = (value) => {
   if (!value || !value.trim()) {
-    return 'Full name required';
+    return 'Please enter your name';
   }
   const trimmed = value.trim();
   if (trimmed.length < 2) {
-    return 'Minimum 2 characters';
+    return 'Name must be at least 2 characters';
   }
   if (trimmed.length > 100) {
-    return 'Maximum 100 characters';
+    return 'Name is too long';
   }
   return '';
 };
@@ -96,7 +96,7 @@ export const validateFullName = (value) => {
  */
 export const validateConfirmPassword = (confirmPassword, password) => {
   if (!confirmPassword || !confirmPassword.trim()) {
-    return 'Confirm password required';
+    return 'Please confirm your password';
   }
   if (confirmPassword !== password) {
     return 'Passwords don\'t match';
@@ -111,7 +111,7 @@ export const validateConfirmPassword = (confirmPassword, password) => {
  */
 export const validateTermsAgreement = (value) => {
   if (!value) {
-    return 'Please accept terms to continue';
+    return 'Please accept the terms to continue';
   }
   return '';
 };

@@ -69,12 +69,15 @@ export const DiscussionActions = ({
   discussion,
   isAuthor,
   isAdmin,
+  isModerator,
   onToggleSolved,
   onTogglePinned,
   onToggleLocked,
   showSolved = true
 }) => {
   if (!discussion) return null;
+
+  const canModerate = isAdmin || isModerator;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -114,39 +117,40 @@ export const DiscussionActions = ({
         </span>
       )}
 
-      {/* Admin Actions */}
-      {isAdmin && (
-        <>
-          <button
-            onClick={onTogglePinned}
-            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium transition-colors border ${discussion.is_pinned
-              ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-              : 'bg-white text-gray-700 hover:bg-yellow-100 hover:text-yellow-700'
-              }`}
-          >
-            {discussion.is_pinned ? (
-              <MapPinIcon className="w-4 h-4" />
-            ) : (
-              <MapPinOutlineIcon className="w-4 h-4" />
-            )}
-            {discussion.is_pinned ? 'Unpin' : 'Pin'}
-          </button>
+      {/* Moderator+: Pin/Unpin */}
+      {canModerate && (
+        <button
+          onClick={onTogglePinned}
+          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium transition-colors border ${discussion.is_pinned
+            ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+            : 'bg-white text-gray-700 hover:bg-yellow-100 hover:text-yellow-700'
+            }`}
+        >
+          {discussion.is_pinned ? (
+            <MapPinIcon className="w-4 h-4" />
+          ) : (
+            <MapPinOutlineIcon className="w-4 h-4" />
+          )}
+          {discussion.is_pinned ? 'Unpin' : 'Pin'}
+        </button>
+      )}
 
-          <button
-            onClick={onToggleLocked}
-            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium transition-colors border ${discussion.is_locked
-              ? 'bg-red-100 text-red-700 hover:bg-red-200'
-              : 'bg-white text-gray-700 hover:bg-red-100 hover:text-red-700'
-              }`}
-          >
-            {discussion.is_locked ? (
-              <LockClosedIcon className="w-4 h-4" />
-            ) : (
-              <LockClosedOutlineIcon className="w-4 h-4" />
-            )}
-            {discussion.is_locked ? 'Unlock' : 'Lock'}
-          </button>
-        </>
+      {/* Moderator+: Lock/Unlock */}
+      {canModerate && (
+        <button
+          onClick={onToggleLocked}
+          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium transition-colors border ${discussion.is_locked
+            ? 'bg-red-100 text-red-700 hover:bg-red-200'
+            : 'bg-white text-gray-700 hover:bg-red-100 hover:text-red-700'
+            }`}
+        >
+          {discussion.is_locked ? (
+            <LockClosedIcon className="w-4 h-4" />
+          ) : (
+            <LockClosedOutlineIcon className="w-4 h-4" />
+          )}
+          {discussion.is_locked ? 'Unlock' : 'Lock'}
+        </button>
       )}
     </div>
   );

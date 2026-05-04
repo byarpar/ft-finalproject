@@ -321,18 +321,18 @@ const NewDiscussion = () => {
     if (files.length === 0) return;
 
     if (formData.images.length + files.length > MAX_IMAGES) {
-      toast.error(`Maximum ${MAX_IMAGES} images allowed`);
+      toast.error(`Max ${MAX_IMAGES} images allowed`);
       return;
     }
 
     files.forEach(file => {
       if (file.size > MAX_IMAGE_SIZE) {
-        toast.error(`${file.name} is too large. Maximum size is 5MB`);
+        toast.error(`${file.name} is too large (max 5MB)`);
         return;
       }
 
       if (!file.type.startsWith('image/')) {
-        toast.error(`${file.name} is not an image file`);
+        toast.error(`${file.name} is not an image`);
         return;
       }
 
@@ -368,27 +368,27 @@ const NewDiscussion = () => {
     e.preventDefault();
 
     if (!formData.title.trim()) {
-      toast.error('Please enter a title');
+      toast.error('Please add a title');
       return;
     }
     if (formData.title.trim().length < MIN_TITLE_LENGTH) {
-      toast.error(`Title must be at least ${MIN_TITLE_LENGTH} characters`);
+      toast.error(`Title needs at least ${MIN_TITLE_LENGTH} characters`);
       return;
     }
     if (!formData.content.trim()) {
-      toast.error('Please enter some content');
+      toast.error('Please add some content');
       return;
     }
     if (formData.content.trim().length < MIN_CONTENT_LENGTH) {
-      toast.error(`Content must be at least ${MIN_CONTENT_LENGTH} characters`);
+      toast.error(`Content needs at least ${MIN_CONTENT_LENGTH} characters`);
       return;
     }
     if (!formData.category) {
-      toast.error('Please select a category');
+      toast.error('Please pick a category');
       return;
     }
     if (formData.tags.length < MIN_TAGS) {
-      toast.error(`Please add at least ${MIN_TAGS} tag to help others find your discussion`);
+      toast.error('Please add at least 1 tag');
       return;
     }
 
@@ -401,7 +401,7 @@ const NewDiscussion = () => {
       // Check total payload size (rough estimate)
       const totalSize = formData.images.reduce((sum, img) => sum + (img.size || 0), 0);
       if (totalSize > 8 * 1024 * 1024) { // 8MB limit (leaving buffer for other data)
-        toast.error('Total image size too large. Please reduce image sizes or quantity.');
+        toast.error('Total images too large — please reduce');
         setIsSubmitting(false);
         return;
       }
@@ -443,7 +443,7 @@ const NewDiscussion = () => {
 
       // Handle specific error cases
       if (error.response?.status === 413 || error.message?.includes('too large')) {
-        toast.error('Images are too large. Please use smaller images (max 5MB each, 8MB total).');
+        toast.error('Images too large — max 5MB each, 8MB total');
       } else {
         toast.error(error.response?.data?.error || `Failed to ${editMode ? 'update' : 'create'} discussion`);
       }

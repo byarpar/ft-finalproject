@@ -10,7 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { VoteButtons } from '../DiscussionComponents';
 import { formatRelativeDate } from '../../utils/dateUtils';
-import { CheckBadgeIcon } from '@heroicons/react/24/solid';
+import { CheckBadgeIcon, ShieldCheckIcon } from '@heroicons/react/24/solid';
 import { MentionRenderer } from '../UIComponents';
 const ReplyItem = ({
   answer,
@@ -52,6 +52,9 @@ const ReplyItem = ({
                   </span>
                   {answer.author_role === 'admin' && (
                     <CheckBadgeIcon className="w-4 h-4 flex-shrink-0 text-red-600" title="Verified Admin" />
+                  )}
+                  {answer.author_role === 'moderator' && (
+                    <ShieldCheckIcon className="w-4 h-4 flex-shrink-0 text-amber-500" title="Moderator" />
                   )}
                 </div>
                 <span className="text-xs sm:text-sm text-gray-500">
@@ -204,6 +207,9 @@ const ReplyItem = ({
                         </span>
                         {nestedReply.author_role === 'admin' && (
                           <CheckBadgeIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0 text-red-500" />
+                        )}
+                        {nestedReply.author_role === 'moderator' && (
+                          <ShieldCheckIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0 text-amber-500" />
                         )}
                       </div>
                       <span className="text-xs text-gray-500">{formatRelativeDate(nestedReply.created_at)}</span>

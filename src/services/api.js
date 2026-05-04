@@ -130,13 +130,18 @@ export const discussionsAPI = {
   saveDiscussion: (id) => api.post(`/discussions/${id}/save`).then(res => res.data),
   unsaveDiscussion: (id) => api.delete(`/discussions/${id}/save`).then(res => res.data),
   getSavedDiscussions: (params = {}) => api.get('/discussions/user/saved', { params }).then(res => res.data),
+  reshareDiscussion: (id) => api.post(`/discussions/${id}/reshare`).then(res => res.data),
+  unreshareDiscussion: (id) => api.delete(`/discussions/${id}/reshare`).then(res => res.data),
+  getResharedDiscussions: (params = {}) => api.get('/discussions/user/reshared', { params }).then(res => res.data),
 
   // Solved status
+  markAsSolved: (id) => api.put(`/discussions/${id}/solve`).then(res => res.data),
   unmarkAsSolved: (id) => api.delete(`/discussions/${id}/solve`).then(res => res.data),
 
-  // Pin/Lock (admin only)
+  // Pin/Lock
   pinDiscussion: (id) => api.put(`/discussions/${id}/pin`).then(res => res.data),
   unpinDiscussion: (id) => api.delete(`/discussions/${id}/pin`).then(res => res.data),
+  lockDiscussion: (id) => api.put(`/discussions/${id}/lock`).then(res => res.data),
   unlockDiscussion: (id) => api.delete(`/discussions/${id}/lock`).then(res => res.data),
 
   // Report functionality
@@ -218,6 +223,8 @@ export const messagesAPI = {
   getOrCreateConversation: (userId) => api.get(`/messages/conversations/${userId}`).then(res => res.data),
   getMessages: (conversationId, params = {}) => api.get(`/messages/${conversationId}`, { params }).then(res => res.data),
   sendMessage: (conversationId, content) => api.post(`/messages/${conversationId}`, { content }).then(res => res.data),
+  deleteConversation: (conversationId) => api.delete(`/messages/conversations/${conversationId}`).then(res => res.data),
+  deleteAllConversations: () => api.delete('/messages/conversations').then(res => res.data),
   deleteMessage: (messageId) => api.delete(`/messages/message/${messageId}`).then(res => res.data),
 };
 

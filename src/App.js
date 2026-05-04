@@ -167,7 +167,15 @@ const ConditionalContent = () => {
       </main>
 
       <ConditionalFooter />
-      <Toaster position="top-right" />
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          duration: 4000,
+          style: { fontSize: '14px', maxWidth: '360px', borderRadius: '10px' },
+          success: { iconTheme: { primary: '#0d9488', secondary: '#fff' } },
+          error: { iconTheme: { primary: '#dc2626', secondary: '#fff' } },
+        }}
+      />
     </div>
   );
 };

@@ -23,6 +23,7 @@ import {
   ChevronRightIcon,
   ArrowLeftIcon
 } from '@heroicons/react/24/outline';
+import { ShieldCheckIcon } from '@heroicons/react/24/solid';
 
 /**
  * Consolidated Layout Components
@@ -287,6 +288,9 @@ export const MobileMenu = ({
             </div>
             {user.role === 'admin' && (
               <span className="ml-auto text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Admin</span>
+            )}
+            {user.role === 'moderator' && (
+              <span className="ml-auto flex items-center gap-0.5 text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full"><ShieldCheckIcon className="w-3 h-3" />Mod</span>
             )}
           </div>
         </div>
@@ -910,6 +914,9 @@ export const Navbar = () => {
                                 {m.role === 'admin' && (
                                   <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full ml-auto">Admin</span>
                                 )}
+                                {m.role === 'moderator' && (
+                                  <span className="flex items-center gap-0.5 text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded-full ml-auto"><ShieldCheckIcon className="w-3 h-3" />Mod</span>
+                                )}
                               </Link>
                             ))}
                           </div>
@@ -1074,6 +1081,9 @@ export const Navbar = () => {
                         </div>
                         {m.role === 'admin' && (
                           <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">Admin</span>
+                        )}
+                        {m.role === 'moderator' && (
+                          <span className="flex items-center gap-0.5 text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded-full"><ShieldCheckIcon className="w-3 h-3" />Mod</span>
                         )}
                         <ChevronRightIcon className="w-4 h-4 text-slate-300 flex-shrink-0" />
                       </Link>

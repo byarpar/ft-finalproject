@@ -206,9 +206,15 @@ export const useDiscussionThread = (id, user) => {
   const toggleDiscussionStatus = async (action) => {
     try {
       const actions = {
-        solved: () => discussionsAPI.toggleSolved(id),
-        pinned: () => discussionsAPI.togglePinned(id),
-        locked: () => discussionsAPI.toggleLocked(id)
+        solved: () => discussion.is_solved
+          ? discussionsAPI.unmarkAsSolved(id)
+          : discussionsAPI.markAsSolved(id),
+        pinned: () => discussion.is_pinned
+          ? discussionsAPI.unpinDiscussion(id)
+          : discussionsAPI.pinDiscussion(id),
+        locked: () => discussion.is_locked
+          ? discussionsAPI.unlockDiscussion(id)
+          : discussionsAPI.lockDiscussion(id)
       };
 
       await actions[action]();

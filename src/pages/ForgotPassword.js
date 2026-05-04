@@ -136,10 +136,10 @@ const ForgotPassword = () => {
    */
   const getEmailError = useCallback((email) => {
     if (!email.trim()) {
-      return 'Email address is required';
+      return 'Please enter your email';
     }
     if (!validateEmail(email)) {
-      return 'Please enter a valid email address';
+      return 'Please enter a valid email';
     }
     return '';
   }, [validateEmail]);

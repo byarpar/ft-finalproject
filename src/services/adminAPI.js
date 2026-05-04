@@ -84,6 +84,9 @@ export const admin = {
   // System info
   getSystemInfo: () => adminAPI.get('/admin/system-info').then(res => res.data),
 
+  // Permissions
+  getPermissions: () => adminAPI.get('/admin/permissions').then(res => res.data),
+
   // Words Import/Export
   importWords: (formData) => adminAPI.post('/admin/words/import', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },

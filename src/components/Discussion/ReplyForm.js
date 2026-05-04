@@ -191,13 +191,13 @@ const ReplyForm = ({
     const remainingSlots = MAX_REPLY_IMAGES - replyImages.length;
 
     if (files.length > remainingSlots) {
-      toast.error(`You can only upload ${remainingSlots} more image(s)`);
+      toast.error(`Only ${remainingSlots} more image(s) allowed`);
       return;
     }
 
     files.forEach(file => {
       if (file.size > MAX_IMAGE_SIZE) {
-        toast.error(`${file.name} is too large. Maximum size is 5MB`);
+        toast.error(`${file.name} is too large (max 5MB)`);
         return;
       }
 

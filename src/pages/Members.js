@@ -8,7 +8,7 @@ import {
   Squares2X2Icon,
   ListBulletIcon
 } from '@heroicons/react/24/outline';
-import { CheckBadgeIcon } from '@heroicons/react/24/solid';
+import { CheckBadgeIcon, ShieldCheckIcon } from '@heroicons/react/24/solid';
 import toast from 'react-hot-toast';
 import { SkeletonLoader } from '../components/UIComponents';
 import { formatDate } from '../utils/dateUtils';
@@ -261,6 +261,9 @@ const Members = () => {
                             {member.role === 'admin' && (
                               <CheckBadgeIcon className="w-5 h-5 text-red-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
                             )}
+                            {member.role === 'moderator' && (
+                              <ShieldCheckIcon className="w-5 h-5 text-amber-500 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
+                            )}
                           </div>
                         </div>
 
@@ -331,6 +334,9 @@ const Members = () => {
                               </div>
                               {member.role === 'admin' && (
                                 <CheckBadgeIcon className="w-5 h-5 text-red-600 absolute -bottom-1 -right-1 bg-white rounded-full" />
+                              )}
+                              {member.role === 'moderator' && (
+                                <ShieldCheckIcon className="w-5 h-5 text-amber-500 absolute -bottom-1 -right-1 bg-white rounded-full" />
                               )}
                             </div>
 

@@ -13,12 +13,14 @@ import {
   ListBulletIcon,
   ArrowUpIcon,
   XCircleIcon,
-  PlusIcon
+  PlusIcon,
+  ArrowPathRoundedSquareIcon
 } from '@heroicons/react/24/outline';
 import {
   BookmarkIcon as BookmarkSolidIcon,
   MapPinIcon,
-  CheckBadgeIcon
+  CheckBadgeIcon,
+  ShieldCheckIcon
 } from '@heroicons/react/24/solid';
 import toast from 'react-hot-toast';
 import { DiscussionSkeleton } from '../components/UIComponents';
@@ -39,7 +41,6 @@ const Discussions = () => {
   const navigate = useNavigate();
 
   const [discussions, setDiscussions] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [activeMembers, setActiveMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -47,6 +48,7 @@ const Discussions = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('latest');
+  const [answerFilter, setAnswerFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [layoutView, setLayoutView] = useState('grid'); // 'grid' or 'list'
@@ -61,7 +63,8 @@ const Discussions = () => {
         limit: 8,
         category: selectedCategory !== 'all' ? selectedCategory : undefined,
         search: searchQuery || undefined,
-        sortBy
+        sortBy,
+        filter: answerFilter !== 'all' ? answerFilter : undefined
       });
 
       const rawDiscussions = response.discussions || response.data?.discussions || [];
@@ -108,40 +111,7 @@ const Discussions = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, selectedCategory, searchQuery, sortBy]);
-
-  const fetchCategories = useCallback(async () => {
-    try {
-      const response = await discussionsAPI.getCategories();
-      const categoriesData = response.data?.categories || response.categories || {};
-
-      // Convert categories object to array with 'All' category first
-      const categoriesArray = [
-        { id: 'all', name: 'All', color: '#14b8a6', IconComponent: ChatBubbleLeftRightIcon },
-        ...Object.entries(categoriesData)
-          .filter(([id]) => id !== 'members' && id !== 'home' && id !== 'community-chat' && id !== 'general')
-          .map(([id, category]) => ({
-            id,
-            ...category
-          }))
-      ];
-
-      setCategories(categoriesArray);
-    } catch (err) {
-      console.error('Error fetching categories:', err);
-      // Set default categories if fetch fails
-      setCategories([
-        { id: 'all', name: 'All', color: '#14b8a6', IconComponent: ChatBubbleLeftRightIcon },
-        { id: 'programming', name: 'Programming', color: '#ec4899', IconComponent: ChatBubbleLeftRightIcon },
-        { id: 'web-development', name: 'Web Development', color: '#f59e0b', IconComponent: ChatBubbleLeftRightIcon },
-        { id: 'cybersecurity', name: 'Cybersecurity', color: '#ef4444', IconComponent: ChatBubbleLeftRightIcon },
-        { id: 'data-science', name: 'Data Science', color: '#10b981', IconComponent: ChatBubbleLeftRightIcon },
-        { id: 'machine-learning', name: 'Machine Learning', color: '#3b82f6', IconComponent: ChatBubbleLeftRightIcon }
-      ]);
-    }
-  }, []);
-
-
+  }, [page, selectedCategory, searchQuery, sortBy, answerFilter]);
 
   const fetchActiveMembers = useCallback(async () => {
     try {
@@ -193,9 +163,8 @@ const Discussions = () => {
   }, [user, navigate]);
 
   useEffect(() => {
-    fetchCategories();
     fetchActiveMembers();
-  }, [fetchCategories, fetchActiveMembers]);
+  }, [fetchActiveMembers]);
 
   useEffect(() => {
     fetchDiscussions();
@@ -207,11 +176,12 @@ const Discussions = () => {
     if (searchQuery) params.set('search', searchQuery);
     if (selectedCategory !== 'all') params.set('category', selectedCategory);
     if (sortBy !== 'latest') params.set('sort', sortBy);
+    if (answerFilter !== 'all') params.set('filter', answerFilter);
     if (page > 1) params.set('page', String(page));
     const qs = params.toString();
     const newPath = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
     window.history.replaceState(null, '', newPath);
-  }, [searchQuery, selectedCategory, sortBy, page]);
+  }, [searchQuery, selectedCategory, sortBy, answerFilter, page]);
 
   // Back-to-top visibility
   useEffect(() => {
@@ -243,6 +213,37 @@ const Discussions = () => {
     } catch (err) {
       console.error('Error saving discussion:', err);
       toast.error('Failed to save discussion');
+    }
+  };
+
+  const handleReshareDiscussion = async (discussionId, isReshared) => {
+    if (!user) {
+      toast.error('Please login to reshare');
+      return;
+    }
+
+    try {
+      if (isReshared) {
+        await discussionsAPI.unreshareDiscussion(discussionId);
+        toast.success('Reshare removed');
+      } else {
+        await discussionsAPI.reshareDiscussion(discussionId);
+        toast.success('Reshared to your profile!');
+      }
+
+      setDiscussions(prev =>
+        prev.map(d =>
+          d.id === discussionId
+            ? { ...d, is_reshared: !isReshared, reshare_count: (d.reshare_count || 0) + (isReshared ? -1 : 1) }
+            : d
+        )
+      );
+
+      // Refresh to update sort order
+      await fetchDiscussions();
+    } catch (err) {
+      console.error('Error resharing discussion:', err);
+      toast.error('Failed to reshare');
     }
   };
 
@@ -279,32 +280,8 @@ const Discussions = () => {
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
           {/* Sticky Filtering Section */}
           <div className="sticky top-14 z-30 bg-gray-50 -mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8 px-3 sm:px-4 md:px-6 lg:px-8 pb-4 mb-6 space-y-3 pt-2">
-            {/* Category Pills - Horizontal Scroll */}
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide">
-                {categories.map((category) => {
-                  return (
-                    <button
-                      key={category.id}
-                      onClick={() => {
-                        setSelectedCategory(category.id);
-                        setPage(1);
-                      }}
-                      className={`flex-shrink-0 px-4 py-2.5 rounded-full text-sm font-medium border ${selectedCategory === category.id
-                        ? 'bg-teal-600 text-white border-teal-600'
-                        : 'bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-teal-500 hover:shadow-lg transition-all duration-300 text-center h-full"'
-                        }`}
-                    >
-                      <span>{category.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Search & Controls Row */}
             {/* Active Filter Chips */}
-            {(searchQuery || selectedCategory !== 'all' || sortBy !== 'latest') && (
+            {(searchQuery || selectedCategory !== 'all' || sortBy !== 'latest' || answerFilter !== 'all') && (
               <div className="flex flex-wrap items-center gap-2 px-1">
                 <span className="text-xs text-gray-500 font-medium">Active filters:</span>
                 {selectedCategory !== 'all' && (
@@ -312,7 +289,7 @@ const Discussions = () => {
                     onClick={() => { setSelectedCategory('all'); setPage(1); }}
                     className="inline-flex items-center gap-1 px-2.5 py-1 bg-teal-100 text-teal-800 text-xs font-medium rounded-full border border-teal-200 hover:bg-teal-200 transition-colors"
                   >
-                    Category: {selectedCategory}
+                    Category: {{ javascript: 'JavaScript', python: 'Python', java: 'Java', cpp: 'C/C++', csharp: 'C#/.NET', php: 'PHP', go: 'Go', rust: 'Rust', other: 'Other' }[selectedCategory] || selectedCategory}
                     <XCircleIcon className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -322,6 +299,15 @@ const Discussions = () => {
                     className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full border border-blue-200 hover:bg-blue-200 transition-colors"
                   >
                     Sort: {sortBy === 'popular' ? 'Most Popular' : sortBy === 'views' ? 'Most Viewed' : 'Newest First'}
+                    <XCircleIcon className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {answerFilter !== 'all' && (
+                  <button
+                    onClick={() => { setAnswerFilter('all'); setPage(1); }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded-full border border-amber-200 hover:bg-amber-200 transition-colors"
+                  >
+                    Filter: {answerFilter === 'answered' ? 'Answered' : answerFilter === 'unanswered' ? 'Unanswered' : 'No Answer'}
                     <XCircleIcon className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -335,7 +321,7 @@ const Discussions = () => {
                   </button>
                 )}
                 <button
-                  onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSortBy('latest'); setPage(1); }}
+                  onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSortBy('latest'); setAnswerFilter('all'); setPage(1); }}
                   className="text-xs text-gray-500 hover:text-red-600 underline ml-1 transition-colors"
                 >
                   Clear all
@@ -344,9 +330,9 @@ const Discussions = () => {
             )}
 
             {/* Search & Controls Row */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-12 gap-3">
               {/* Search Box */}
-              <div className="md:col-span-5">
+              <div className="col-span-2 md:col-span-4">
                 <div className="relative">
                   <MagnifyingGlassIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
@@ -363,8 +349,32 @@ const Discussions = () => {
                 </div>
               </div>
 
+              {/* Category Filter */}
+              <div className="md:col-span-2">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => {
+                    setSelectedCategory(e.target.value);
+                    setPage(1);
+                  }}
+                  className="w-full px-4 py-3 text-sm bg-white border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:outline-none"
+                  title="Filter by language"
+                >
+                  <option value="all">All</option>
+                  <option value="javascript">JavaScript</option>
+                  <option value="python">Python</option>
+                  <option value="java">Java</option>
+                  <option value="cpp">C/C++</option>
+                  <option value="csharp">C#/.NET</option>
+                  <option value="php">PHP</option>
+                  <option value="go">Go</option>
+                  <option value="rust">Rust</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
               {/* Sort Selector */}
-              <div className="md:col-span-4">
+              <div className="md:col-span-2">
                 <select
                   value={sortBy}
                   onChange={(e) => {
@@ -372,17 +382,35 @@ const Discussions = () => {
                     setPage(1);
                   }}
                   className="w-full px-4 py-3 text-sm bg-white border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:outline-none"
-                  title="Sort discussions by different criteria"
+                  title="Sort discussions"
                 >
-                  <option value="latest" title="Recently active discussions with new replies or updates">Latest Activity</option>
-                  <option value="popular" title="Discussions with most engagement (votes + replies)">Most Popular</option>
-                  <option value="views" title="Most viewed discussions">Most Viewed</option>
-                  <option value="newest" title="Brand new discussions, just posted">Newest First</option>
+                  <option value="latest">Latest Activity</option>
+                  <option value="popular">Most Popular</option>
+                  <option value="views">Most Viewed</option>
+                  <option value="newest">Newest First</option>
+                </select>
+              </div>
+
+              {/* Answer Filter */}
+              <div className="md:col-span-2">
+                <select
+                  value={answerFilter}
+                  onChange={(e) => {
+                    setAnswerFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="w-full px-4 py-3 text-sm bg-white border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:outline-none"
+                  title="Filter by answer status"
+                >
+                  <option value="all">All Questions</option>
+                  <option value="answered">Answered</option>
+                  <option value="unanswered">Unanswered</option>
+                  <option value="no-answer">No Answer</option>
                 </select>
               </div>
 
               {/* View Toggle */}
-              <div className="md:col-span-3">
+              <div className="md:col-span-2">
                 <div className="flex gap-2">
                   <button
                     onClick={() => setLayoutView('grid')}
@@ -479,6 +507,28 @@ const Discussions = () => {
                             <article
                               className="bg-white rounded-lg border border-gray-200 hover:border-teal-500 hover:shadow-md overflow-hidden transition-all cursor-pointer h-full flex flex-col"
                             >
+                              {discussion.is_reshared && (
+                                <div className="flex items-center gap-2 px-4 py-2 bg-teal-50/60 border-b border-teal-100">
+                                  <ArrowPathRoundedSquareIcon className="w-3.5 h-3.5 text-teal-500 flex-shrink-0" />
+                                  <div className="flex items-center -space-x-1.5">
+                                    <div className="w-5 h-5 rounded-full overflow-hidden bg-teal-200 ring-2 ring-white flex-shrink-0 z-10">
+                                      {user?.profile_photo_url ? (
+                                        <img src={user.profile_photo_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                      ) : (
+                                        <span className="flex items-center justify-center w-full h-full text-[9px] font-bold text-teal-700">{(user?.username || 'Y').charAt(0).toUpperCase()}</span>
+                                      )}
+                                    </div>
+                                    <div className="w-5 h-5 rounded-full overflow-hidden bg-gray-200 ring-2 ring-white flex-shrink-0">
+                                      {discussion.user_data?.display_picture ? (
+                                        <img src={discussion.user_data.display_picture} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                      ) : (
+                                        <span className="flex items-center justify-center w-full h-full text-[9px] font-bold text-gray-600">{(discussion.user_data?.username || 'A').charAt(0).toUpperCase()}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <span className="text-xs text-teal-700 font-medium truncate">You reshared <span className="text-teal-600/70 font-normal">{discussion.user_data?.username ? `from ${discussion.user_data.username}` : ''}</span></span>
+                                </div>
+                              )}
                               <div className="p-4 flex-1 flex flex-col">
                                 {/* Meta Row */}
                                 <div className="flex items-center justify-between mb-3">
@@ -507,6 +557,9 @@ const Discussions = () => {
                                       </div>
                                       {discussion.user_data?.role === 'admin' && (
                                         <CheckBadgeIcon className="w-4 h-4 text-red-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
+                                      )}
+                                      {discussion.user_data?.role === 'moderator' && (
+                                        <ShieldCheckIcon className="w-4 h-4 text-amber-500 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
                                       )}
                                     </div>
                                     <div className="app-label-uppercase text-gray-500">
@@ -592,6 +645,18 @@ const Discussions = () => {
                                       <EyeIcon className="w-4 h-4" />
                                       <span>{discussion.views_count || 0}</span>
                                     </div>
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleReshareDiscussion(discussion.id, discussion.is_reshared);
+                                      }}
+                                      className={`flex items-center gap-1 transition-colors ${discussion.is_reshared ? 'text-teal-600' : 'hover:text-teal-600'}`}
+                                      title={discussion.is_reshared ? 'Remove reshare' : 'Reshare to profile'}
+                                    >
+                                      <ArrowPathRoundedSquareIcon className="w-4 h-4" />
+                                      <span>{discussion.reshare_count || 0}</span>
+                                    </button>
                                   </div>
                                   {discussion.answers_count === 0 && (
                                     <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full font-medium">
@@ -620,6 +685,28 @@ const Discussions = () => {
                             <article
                               className="bg-white rounded-lg border border-gray-200 hover:border-teal-500 overflow-hidden transition-all cursor-pointer"
                             >
+                              {discussion.is_reshared && (
+                                <div className="flex items-center gap-2 px-4 py-2 bg-teal-50/60 border-b border-teal-100">
+                                  <ArrowPathRoundedSquareIcon className="w-3.5 h-3.5 text-teal-500 flex-shrink-0" />
+                                  <div className="flex items-center -space-x-1.5">
+                                    <div className="w-5 h-5 rounded-full overflow-hidden bg-teal-200 ring-2 ring-white flex-shrink-0 z-10">
+                                      {user?.profile_photo_url ? (
+                                        <img src={user.profile_photo_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                      ) : (
+                                        <span className="flex items-center justify-center w-full h-full text-[9px] font-bold text-teal-700">{(user?.username || 'Y').charAt(0).toUpperCase()}</span>
+                                      )}
+                                    </div>
+                                    <div className="w-5 h-5 rounded-full overflow-hidden bg-gray-200 ring-2 ring-white flex-shrink-0">
+                                      {discussion.user_data?.display_picture ? (
+                                        <img src={discussion.user_data.display_picture} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                      ) : (
+                                        <span className="flex items-center justify-center w-full h-full text-[9px] font-bold text-gray-600">{(discussion.user_data?.username || 'A').charAt(0).toUpperCase()}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <span className="text-xs text-teal-700 font-medium truncate">You reshared <span className="text-teal-600/70 font-normal">{discussion.user_data?.username ? `from ${discussion.user_data.username}` : ''}</span></span>
+                                </div>
+                              )}
                               <div className="p-4">
                                 {/* Meta Row */}
                                 <div className="flex items-center justify-between mb-3">
@@ -648,6 +735,9 @@ const Discussions = () => {
                                       </div>
                                       {discussion.user_data?.role === 'admin' && (
                                         <CheckBadgeIcon className="w-4 h-4 text-red-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
+                                      )}
+                                      {discussion.user_data?.role === 'moderator' && (
+                                        <ShieldCheckIcon className="w-4 h-4 text-amber-500 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
                                       )}
                                     </div>
                                     <div className="app-label-uppercase text-gray-500">
@@ -733,6 +823,18 @@ const Discussions = () => {
                                       <EyeIcon className="w-4 h-4" />
                                       <span>{discussion.views_count || 0}</span>
                                     </div>
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleReshareDiscussion(discussion.id, discussion.is_reshared);
+                                      }}
+                                      className={`flex items-center gap-1 transition-colors ${discussion.is_reshared ? 'text-teal-600' : 'hover:text-teal-600'}`}
+                                      title={discussion.is_reshared ? 'Remove reshare' : 'Reshare to profile'}
+                                    >
+                                      <ArrowPathRoundedSquareIcon className="w-4 h-4" />
+                                      <span>{discussion.reshare_count || 0}</span>
+                                    </button>
                                   </div>
                                   {discussion.answers_count === 0 && (
                                     <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full font-medium">
@@ -850,6 +952,9 @@ const Discussions = () => {
                                 {discussion.user_data?.role === 'admin' && (
                                   <CheckBadgeIcon className="w-3.5 h-3.5 text-red-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
                                 )}
+                                {discussion.user_data?.role === 'moderator' && (
+                                  <ShieldCheckIcon className="w-3.5 h-3.5 text-amber-500 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
+                                )}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <h4 className="text-sm font-semibold text-gray-900 group-hover:text-teal-600 line-clamp-2 leading-tight mb-1">
@@ -908,6 +1013,9 @@ const Discussions = () => {
                               {member.role === 'admin' && (
                                 <CheckBadgeIcon className="w-4 h-4 text-red-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
                               )}
+                              {member.role === 'moderator' && (
+                                <ShieldCheckIcon className="w-4 h-4 text-amber-500 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
+                              )}
                             </div>
                             <span className="text-xs text-gray-700 font-medium text-center line-clamp-1 w-full">
                               {member.username || 'User'}
@@ -925,14 +1033,24 @@ const Discussions = () => {
                   </div>
 
                   {/* Need Help */}
-                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                    <div className="p-4 border-b border-gray-200">
-                      <h3 className="text-lg font-bold text-gray-900">
-                        Need Help?
-                      </h3>
-                    </div>
-                    <div className="p-4 space-y-1">
-
+                  <div className="bg-gradient-to-br from-teal-50 to-white rounded-lg border border-teal-200 overflow-hidden">
+                    <div className="p-5 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <QuestionMarkCircleIcon className="w-6 h-6 text-teal-600" />
+                        <h3 className="text-lg font-bold text-gray-900">
+                          Need Help?
+                        </h3>
+                      </div>
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        Can't find what you're looking for? Ask the community — someone is always happy to help!
+                      </p>
+                      <Link
+                        to={user ? "/discussions/new" : "/login"}
+                        className="inline-flex items-center gap-2 w-full justify-center px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors"
+                      >
+                        <PlusIcon className="w-4 h-4" />
+                        Ask a Question
+                      </Link>
                     </div>
                   </div>
                 </aside>

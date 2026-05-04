@@ -16,6 +16,7 @@ import {
   ArrowRightOnRectangleIcon,
   GlobeAltIcon,
   ExclamationTriangleIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import { PageLayout } from '../components/LayoutComponents';
 import { SkeletonLoader } from '../components/UIComponents';
@@ -24,6 +25,7 @@ import { SkeletonLoader } from '../components/UIComponents';
 import DashboardOverview from '../components/admin/DashboardOverview';
 import UsersManagement from '../components/admin/UsersManagement';
 import DiscussionsManagement from '../components/admin/DiscussionsManagement';
+import PermissionsManagement from '../components/admin/PermissionsManagement';
 import { CategoriesAndTags, AdminSettings } from '../components/AdminComponents';
 import { ReportsAnalytics } from '../components/AdminComponents';
 
@@ -156,6 +158,12 @@ const AdminDashboard = () => {
       icon: ChatBubbleLeftRightIcon,
       path: '/admin/discussions',
       description: 'Moderate community discussions'
+    },
+    {
+      name: 'Permissions',
+      icon: ShieldCheckIcon,
+      path: '/admin/permissions',
+      description: 'View role-based access control'
     },
     {
       name: 'Categories & Tags',
@@ -371,6 +379,7 @@ const AdminDashboard = () => {
                 <Route path="/" element={<DashboardOverview />} />
                 <Route path="/users/*" element={<UsersManagement />} />
                 <Route path="/discussions/*" element={<DiscussionsManagement />} />
+                <Route path="/permissions/*" element={<PermissionsManagement />} />
                 <Route path="/categories/*" element={<CategoriesAndTags />} />
                 <Route path="/reports/*" element={<ReportsAnalytics />} />
                 <Route path="/settings/*" element={<AdminSettings />} />

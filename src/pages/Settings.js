@@ -143,13 +143,13 @@ const Settings = () => {
     if (file) {
       // Validate file type
       if (!file.type.startsWith('image/')) {
-        toast.error('Please select a valid image file');
+        toast.error('Please select a valid image');
         return;
       }
 
       // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image size must be less than 5MB');
+        toast.error('Image must be under 5MB');
         return;
       }
 
@@ -239,12 +239,12 @@ const Settings = () => {
     e.preventDefault();
 
     if (passwordForm.new_password !== passwordForm.confirm_password) {
-      toast.error('New passwords do not match');
+      toast.error('Passwords don\'t match');
       return;
     }
 
-    if (passwordForm.new_password.length < 6) {
-      toast.error('New password must be at least 6 characters long');
+    if (passwordForm.new_password.length < 8) {
+      toast.error('Password must be at least 8 characters');
       return;
     }
 
@@ -263,7 +263,7 @@ const Settings = () => {
         confirm_password: ''
       });
 
-      toast.success('Password changed successfully');
+      toast.success('Password updated successfully');
     } catch (error) {
       console.error('Password change error:', error);
       toast.error(error.response?.data?.error?.message || 'Failed to change password');
@@ -276,7 +276,7 @@ const Settings = () => {
 
   const handleAccountDeletion = async () => {
     if (deleteConfirmation !== 'DELETE') {
-      toast.error('Please type "DELETE" to confirm account deletion');
+      toast.error('Type DELETE to confirm');
       return;
     }
 

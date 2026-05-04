@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useDiscussionThread } from '../hooks/useDiscussionThread';
+import { discussionsAPI } from '../services/api';
 import { PageLayout } from '../components/LayoutComponents';
 import { SkeletonLoader } from '../components/UIComponents';
 import { DiscussionActions, VoteButtons, ImageLightbox, ReplyForm, ReplyItem } from '../components/DiscussionComponents';
@@ -9,9 +10,9 @@ import { MentionRenderer } from '../components/UIComponents';
 import {
   ChatBubbleLeftRightIcon, BookmarkIcon, ClockIcon, EllipsisHorizontalIcon, TrashIcon,
   FlagIcon, PhotoIcon, XMarkIcon, MagnifyingGlassPlusIcon, EyeIcon, PencilIcon, ShareIcon,
-  QuestionMarkCircleIcon
+  QuestionMarkCircleIcon, ArrowPathRoundedSquareIcon
 } from '@heroicons/react/24/outline';
-import { BookmarkIcon as BookmarkSolidIcon, CheckBadgeIcon } from '@heroicons/react/24/solid';
+import { BookmarkIcon as BookmarkSolidIcon, CheckBadgeIcon, ShieldCheckIcon } from '@heroicons/react/24/solid';
 import toast from 'react-hot-toast';
 import { formatRelativeDate } from '../utils/dateUtils';
 
@@ -218,6 +219,31 @@ const DiscussionThread = () => {
     }
   };
 
+  const handleReshare = async () => {
+    if (!user) {
+      toast.error('Please login to reshare');
+      return;
+    }
+    try {
+      const isReshared = discussion.is_reshared;
+      if (isReshared) {
+        await discussionsAPI.unreshareDiscussion(discussion.id);
+        toast.success('Reshare removed');
+      } else {
+        await discussionsAPI.reshareDiscussion(discussion.id);
+        toast.success('Reshared to your profile!');
+      }
+      setDiscussion(prev => ({
+        ...prev,
+        is_reshared: !isReshared,
+        reshare_count: (prev.reshare_count || 0) + (isReshared ? -1 : 1)
+      }));
+    } catch (err) {
+      console.error('Error resharing:', err);
+      toast.error('Failed to reshare');
+    }
+  };
+
   const openLightbox = (images, index) => {
     setLightboxImages(images);
     setCurrentImageIndex(index);
@@ -369,10 +395,11 @@ const DiscussionThread = () => {
                     <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">{discussion.title}</h1>
                   )}
 
-                  {!editingDiscussion && user?.role === 'admin' && (
+                  {!editingDiscussion && (user?.role === 'admin' || user?.role === 'moderator') && (
                     <DiscussionActions
                       discussion={discussion}
-                      isAdmin={true}
+                      isAdmin={user?.role === 'admin'}
+                      isModerator={user?.role === 'moderator'}
                       onToggleSolved={() => toggleDiscussionStatus('solved')}
                       onTogglePinned={() => toggleDiscussionStatus('pinned')}
                       onToggleLocked={() => toggleDiscussionStatus('locked')}
@@ -403,6 +430,9 @@ const DiscussionThread = () => {
                           <span className="font-semibold text-gray-900">{discussion.user_data?.username || 'Anonymous'}</span>
                           {discussion.user_data?.role === 'admin' && (
                             <CheckBadgeIcon className="w-4 h-4 text-red-600" />
+                          )}
+                          {discussion.user_data?.role === 'moderator' && (
+                            <ShieldCheckIcon className="w-4 h-4 text-amber-500" />
                           )}
                         </div>
                         <div className="flex items-center gap-1 text-xs text-gray-500">
@@ -497,6 +527,14 @@ const DiscussionThread = () => {
                         <span>{discussion.views_count || 0}</span>
                       </div>
                       <button
+                        onClick={handleReshare}
+                        className={`flex items-center gap-1 text-sm transition-colors ${discussion.is_reshared ? 'text-teal-600' : 'text-gray-500 hover:text-teal-600'}`}
+                        title={discussion.is_reshared ? 'Remove reshare' : 'Reshare to profile'}
+                      >
+                        <ArrowPathRoundedSquareIcon className="w-4 h-4" />
+                        <span>{discussion.reshare_count || 0}</span>
+                      </button>
+                      <button
                         onClick={() => {
                           navigator.clipboard.writeText(window.location.href);
                           toast.success('Link copied to clipboard!');
@@ -505,7 +543,6 @@ const DiscussionThread = () => {
                         title="copy link"
                       >
                         <ShareIcon className="w-4 h-4" />
-
                       </button>
                     </div>
                   </div>
@@ -643,6 +680,9 @@ const DiscussionThread = () => {
                               </div>
                               {(related.author_role === 'admin' || related.user_data?.role === 'admin') && (
                                 <CheckBadgeIcon className="w-3 h-3 text-red-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
+                              )}
+                              {(related.author_role === 'moderator' || related.user_data?.role === 'moderator') && (
+                                <ShieldCheckIcon className="w-3 h-3 text-amber-500 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
                               )}
                             </div>
                             <span className="text-xs text-gray-600 truncate font-medium">
